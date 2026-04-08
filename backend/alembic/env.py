@@ -10,8 +10,12 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Import all models so they register with Base.metadata
+from core.config import settings
 from core.database import Base
 from models import *  # noqa: F401, F403
+
+# Inject the runtime DATABASE_URL (with asyncpg normalization applied)
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 target_metadata = Base.metadata
 
