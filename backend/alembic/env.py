@@ -1,3 +1,5 @@
+import os
+import sys
 import asyncio
 from logging.config import fileConfig
 from sqlalchemy import pool
@@ -5,14 +7,23 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 
+# Ensure the backend root (parent of /alembic) is on sys.path so that
+# `from core.config import settings` works when Alembic loads this file
+# via importlib (which does NOT add the cwd to sys.path automatically).
+# This is required on Railway/Render/any container where alembic is
+# invoked from /app and core/ lives at /app/core.
+BACKEND_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if BACKEND_ROOT not in sys.path:
+    sys.path.insert(0, BACKEND_ROOT)
+
 config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Import all models so they register with Base.metadata
-from core.config import settings
-from core.database import Base
-from models import *  # noqa: F401, F403
+from core.config import settings  # noqa: E402
+from core.database import Base  # noqa: E402
+from models import *  # noqa: E402, F401, F403
 
 # Inject the runtime DATABASE_URL (with asyncpg normalization applied)
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
