@@ -23,9 +23,17 @@ class Settings(BaseSettings):
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def normalize_database_url(cls, v: str) -> str:
-        """Railway/Heroku provide postgresql:// — SQLAlchemy async needs postgresql+asyncpg://"""
-        if not v:
-            return v
+        """Railway/Heroku provide postgresql:// — SQLAlchemy async needs postgresql+asyncpg://
+
+        Also fails fast on empty values so misconfigured deploys surface a
+        clear error instead of a cryptic SQLAlchemy 'Could not parse URL' trace.
+        """
+        if v is None or str(v).strip() == "":
+            raise ValueError(
+                "DATABASE_URL is empty. On Railway, set this variable to the "
+                "reference '${{Postgres.DATABASE_URL}}' (or paste the full "
+                "postgres:// URL from the Postgres service → Variables tab)."
+            )
         if v.startswith("postgres://"):
             v = v.replace("postgres://", "postgresql+asyncpg://", 1)
         elif v.startswith("postgresql://") and "+asyncpg" not in v:
