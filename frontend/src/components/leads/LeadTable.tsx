@@ -15,7 +15,7 @@ import {
   ChevronRight,
   Inbox,
 } from 'lucide-react'
-import { useLeads, type Lead, type LeadSearchParams } from '@/hooks/useLeads'
+import { useLeads, type LeadSearchParams } from '@/hooks/useLeads'
 import { useDeleteLead } from '@/hooks/useLeads'
 import {
   cn,

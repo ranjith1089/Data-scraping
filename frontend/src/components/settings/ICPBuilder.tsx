@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback, KeyboardEvent } from 'react'
+import { useState, useEffect, useCallback, KeyboardEvent } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '@/lib/api'
-import { cn, SECTOR_NAMES, formatINR } from '@/lib/utils'
+import { cn, SECTOR_NAMES } from '@/lib/utils'
 import { Target, Save, Loader2, X, CheckCircle2 } from 'lucide-react'
 
 const SECTORS = Object.entries(SECTOR_NAMES)
