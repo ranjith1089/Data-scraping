@@ -11,7 +11,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { useBulkUpdateLeads, useDeleteLead } from '@/hooks/useLeads'
-import { cn, STAGE_LABELS, STAGE_COLORS } from '@/lib/utils'
+import { STAGE_LABELS, STAGE_COLORS } from '@/lib/utils'
 import toast from 'react-hot-toast'
 
 interface BulkActionsBarProps {

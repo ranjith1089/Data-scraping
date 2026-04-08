@@ -1,4 +1,3 @@
-import React from 'react'
 import { cn, formatINR } from '@/lib/utils'
 import { Calendar, User, GripVertical } from 'lucide-react'
 import { format } from 'date-fns'

@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import {
   Search,
-  SlidersHorizontal,
   X,
   ChevronDown,
   Check,

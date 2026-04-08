@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '@/lib/api'
-import { cn, formatDate, formatDateTime } from '@/lib/utils'
+import { formatDate, formatDateTime } from '@/lib/utils'
 import {
   Key,
   Plus,
@@ -12,8 +12,6 @@ import {
   Loader2,
   Inbox,
   Shield,
-  Eye,
-  EyeOff,
 } from 'lucide-react'
 
 interface APIKey {

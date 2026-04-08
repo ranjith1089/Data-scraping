@@ -23,7 +23,6 @@ export default function AIScoreModal({ leadIds, onClose }: AIScoreModalProps) {
   const { data: leadsData } = useLeads({})
 
   const [results, setResults] = useState<ScoreResult[]>([])
-  const [currentIdx, setCurrentIdx] = useState(0)
   const [phase, setPhase] = useState<'ready' | 'scoring' | 'done'>('ready')
 
   // Build lookup for old scores
