@@ -11,6 +11,7 @@ AI-powered B2B Lead Generation SaaS platform for sales teams targeting companies
 - [Architecture](#architecture)
 - [Quick Start (Docker)](#quick-start-docker)
 - [Local Development](#local-development)
+- [Cloud Deployment](#cloud-deployment)
 - [API Documentation](#api-documentation)
 - [Environment Variables](#environment-variables)
 - [Database Schema](#database-schema)
@@ -353,6 +354,103 @@ pytest -v
 # Frontend tests
 cd frontend
 npm run test
+```
+
+---
+
+## Cloud Deployment
+
+The recommended free-tier production setup is **Vercel (frontend) + Railway (backend + Postgres + Redis)**. A `render.yaml` blueprint is also provided as a backup.
+
+### Architecture
+
+```
+  ┌─────────────┐        HTTPS         ┌──────────────────────┐
+  │   Vercel    │  ─────────────────▶  │       Railway        │
+  │  (React UI) │   VITE_API_URL       │ FastAPI + Postgres   │
+  └─────────────┘                      │    + Redis           │
+                                       └──────────────────────┘
+```
+
+### Frontend → Vercel
+
+1. Go to [vercel.com](https://vercel.com) → **New Project** → import the GitHub repo
+2. Configure:
+   - **Framework Preset:** Vite
+   - **Root Directory:** `frontend`
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `dist`
+3. Add environment variable:
+   - `VITE_API_URL` = `https://<your-railway-backend>.up.railway.app/api/v1`
+4. Click **Deploy**
+
+Vercel will auto-redeploy on every push to `main`. Preview deployments are created for every PR.
+
+### Backend → Railway
+
+The backend ships with `railway.json`, `nixpacks.toml`, `Procfile`, and `runtime.txt` — Railway auto-detects these.
+
+1. Go to [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub repo**
+2. Select `ranjith1089/Data-scraping`
+3. Add a **PostgreSQL** database: `+ New → Database → PostgreSQL`
+4. Add a **Redis** instance: `+ New → Database → Redis`
+5. Add the **backend service**: `+ New → GitHub Repo → Data-scraping`
+   - In the service settings, set **Root Directory** to `backend`
+6. In the backend service → **Variables** tab, set:
+
+   | Variable | Value |
+   |---|---|
+   | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` (reference syntax) |
+   | `REDIS_URL` | `${{Redis.REDIS_URL}}` |
+   | `SECRET_KEY` | `openssl rand -hex 32` output |
+   | `ANTHROPIC_API_KEY` | Your Claude API key |
+   | `CORS_ORIGINS` | `https://<your-vercel-project>.vercel.app` |
+   | `SENDGRID_API_KEY` | Optional |
+   | `SENDGRID_FROM_EMAIL` | `noreply@leadforge.ai` |
+   | `AI_MAX_TOKENS_PER_CALL` | `4096` |
+   | `AI_MONTHLY_LIMIT_STARTER` | `500` |
+   | `AI_MONTHLY_LIMIT_GROWTH` | `5000` |
+   | `AI_MONTHLY_LIMIT_ENTERPRISE` | `50000` |
+   | `ACCESS_TOKEN_EXPIRE_MINUTES` | `15` |
+   | `REFRESH_TOKEN_EXPIRE_DAYS` | `7` |
+
+7. In the backend service → **Settings** → **Networking** → **Generate Domain**
+8. Railway runs on startup: `alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port $PORT`
+9. Verify: `https://<your-backend>.up.railway.app/health` should return `{"status":"ok","service":"leadforge-api"}`
+
+> **`DATABASE_URL` auto-normalization:** Railway provides the URL as `postgresql://...`, but SQLAlchemy async needs `postgresql+asyncpg://...`. The `core/config.py` validator converts this automatically, so you don't need to transform the URL manually.
+
+### Backup: Render.com Blueprint
+
+A `render.yaml` blueprint is included at the repo root. To deploy to Render instead of Railway:
+
+1. Push this repo to GitHub
+2. In Render dashboard → **New** → **Blueprint**
+3. Select the repo — Render reads `render.yaml` and provisions:
+   - `leadforge-api` web service (FastAPI)
+   - `leadforge-db` PostgreSQL
+   - `leadforge-redis` Redis
+4. After provisioning, set these **secret** env vars in the dashboard (they have `sync: false`):
+   - `ANTHROPIC_API_KEY`
+   - `SENDGRID_API_KEY` (optional)
+   - `CORS_ORIGINS` (your Vercel URL)
+
+### Continuous Integration
+
+The repo includes `.github/workflows/ci.yml` which runs on every PR and push to `main`:
+
+- **Frontend job** — `npm ci`, `tsc --noEmit`, `npm run build`, uploads `dist/` artifact
+- **Backend job** — `pip install`, import-verification of `main.py`, byte-compile all Python files
+
+This prevents broken TypeScript or Python imports from reaching `main` (the kind of errors that previously only surfaced inside the Vercel/Railway build logs).
+
+### Line-Ending Normalization
+
+`.gitattributes` at the repo root forces LF line endings for all text files. This eliminates Windows CRLF warnings (`LF will be replaced by CRLF`) when committing from Windows machines. If you cloned the repo before this was added, run:
+
+```bash
+git add --renormalize .
+git commit -m "Normalize line endings"
 ```
 
 ---

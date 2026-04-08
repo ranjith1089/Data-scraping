@@ -1,0 +1,70 @@
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info
+dist
+build
+.eggs
+.Python
+*.pyc
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.coverage
+htmlcov
+.tox
+
+# Virtual environments
+venv
+.venv
+env
+ENV
+
+# Environment files — NEVER bake secrets into an image
+.env
+.env.local
+.env.*.local
+*.env
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs
+
+# Alembic local DB dumps
+*.sql.backup
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Railway / Render / deploy configs — not needed inside the image
+railway.json
+nixpacks.toml
+render.yaml
+Procfile
+runtime.txt
+
+# Documentation
+README.md
+docs
+*.md
+
+# CI
+.github
