@@ -1,0 +1,1711 @@
+{
+	"info": {
+		"_postman_id": "leadforge-ai-collection-2026",
+		"name": "LeadForge AI - Complete API",
+		"description": "Complete API collection for LeadForge AI - AI-powered B2B Lead Generation SaaS platform.\n\nBase URL: http://localhost:8000/api/v1\n\nSetup:\n1. Register or login to get access_token\n2. The login/register requests auto-set the access_token and refresh_token variables\n3. All protected endpoints use Bearer token auth automatically",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refresh_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "tenant_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "lead_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "campaign_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "step_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "stage_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "deal_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "activity_id",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Auth",
+			"description": "Authentication endpoints: register, login, refresh, and current user info.",
+			"item": [
+				{
+					"name": "Register",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('access_token', jsonData.access_token);",
+									"    pm.collectionVariables.set('refresh_token', jsonData.refresh_token);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tenant_name\": \"Acme Technologies\",\n  \"tenant_slug\": \"acme-tech\",\n  \"email\": \"admin@acmetech.in\",\n  \"password\": \"SecurePass123!\",\n  \"full_name\": \"Rajesh Kumar\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "register"]
+						},
+						"description": "Register a new tenant and its first owner user. Returns JWT access and refresh tokens."
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('access_token', jsonData.access_token);",
+									"    pm.collectionVariables.set('refresh_token', jsonData.refresh_token);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@leadforge.ai\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "login"]
+						},
+						"description": "Login with email and password. Returns JWT access and refresh tokens."
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('access_token', jsonData.access_token);",
+									"    pm.collectionVariables.set('refresh_token', jsonData.refresh_token);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/refresh",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "refresh"]
+						},
+						"description": "Exchange a valid refresh token for a new access token and refresh token pair."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Current User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('user_id', jsonData.id);",
+									"    pm.collectionVariables.set('tenant_id', jsonData.tenant_id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/me",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "me"]
+						},
+						"description": "Get the currently authenticated user's details including tenant_id and role."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Tenants",
+			"description": "Tenant management endpoints. Requires owner role.",
+			"item": [
+				{
+					"name": "Get Current Tenant",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/tenants/current",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "tenants", "current"]
+						},
+						"description": "Get the current tenant's details. Requires owner role."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Current Tenant",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Acme Technologies Pvt Ltd\",\n  \"settings\": {\n    \"default_sector\": \"tech\",\n    \"timezone\": \"Asia/Kolkata\",\n    \"currency\": \"INR\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/tenants/current",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "tenants", "current"]
+						},
+						"description": "Update the current tenant's name, settings, or plan. Requires owner role."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"description": "User and team management endpoints.",
+			"item": [
+				{
+					"name": "List Users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users", ""]
+						},
+						"description": "List all team members for the current tenant."
+					},
+					"response": []
+				},
+				{
+					"name": "Create User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('user_id', jsonData.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"priya.sharma@acmetech.in\",\n  \"password\": \"Welcome123!\",\n  \"full_name\": \"Priya Sharma\",\n  \"role\": \"member\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users", ""]
+						},
+						"description": "Create a new team member. Requires admin or owner role."
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/{{user_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users", "{{user_id}}"]
+						},
+						"description": "Get details for a specific team member."
+					},
+					"response": []
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"role\": \"admin\",\n  \"full_name\": \"Priya Sharma (Lead)\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/{{user_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users", "{{user_id}}"]
+						},
+						"description": "Update a team member's role, name, or active status. Requires admin or owner role."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/{{user_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users", "{{user_id}}"]
+						},
+						"description": "Deactivate a team member. Requires admin or owner role."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Leads",
+			"description": "Lead management with full-text search, filtering, and bulk operations.",
+			"item": [
+				{
+					"name": "List Leads",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/leads/?page=1&per_page=50",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "leads", ""],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "per_page",
+									"value": "50"
+								},
+								{
+									"key": "sector_code",
+									"value": "tech",
+									"disabled": true
+								},
+								{
+									"key": "stage",
+									"value": "new",
+									"disabled": true
+								},
+								{
+									"key": "min_score",
+									"value": "60",
+									"disabled": true
+								},
+								{
+									"key": "max_score",
+									"value": "100",
+									"disabled": true
+								},
+								{
+									"key": "district",
+									"value": "Bangalore Urban",
+									"disabled": true
+								},
+								{
+									"key": "city",
+									"value": "Bangalore",
+									"disabled": true
+								},
+								{
+									"key": "company_size",
+									"value": "51-200",
+									"disabled": true
+								},
+								{
+									"key": "assigned_to",
+									"value": "{{user_id}}",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "infosys",
+									"disabled": true
+								},
+								{
+									"key": "sort_by",
+									"value": "lead_score",
+									"disabled": true
+								},
+								{
+									"key": "sort_order",
+									"value": "desc",
+									"disabled": true
+								}
+							]
+						},
+						"description": "List and search leads with extensive filtering options. Enable disabled query params as needed."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Lead",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('lead_id', jsonData.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sector_code\": \"tech\",\n  \"company_name\": \"Infosys Technologies Ltd\",\n  \"industry\": \"IT Services\",\n  \"sub_industry\": \"Enterprise Software Consulting\",\n  \"state\": \"Karnataka\",\n  \"district\": \"Bangalore Urban\",\n  \"city\": \"Bangalore\",\n  \"address\": \"44, Electronics City Phase 1, Hosur Road\",\n  \"pincode\": \"560100\",\n  \"website\": \"https://www.infosys.com\",\n  \"company_size\": \"1000+\",\n  \"annual_revenue_inr\": 150000000000,\n  \"contact_name\": \"Priya Sharma\",\n  \"designation\": \"VP of Engineering\",\n  \"email\": \"priya.sharma@infosys.com\",\n  \"phone\": \"+91-9876543210\",\n  \"linkedin_url\": \"https://linkedin.com/in/priyasharma\",\n  \"tags\": [\"enterprise\", \"high-value\", \"bangalore\"],\n  \"source\": \"linkedin\",\n  \"custom_fields\": {\n    \"employees_count\": 300000,\n    \"fiscal_year_end\": \"March\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/leads/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "leads", ""]
+						},
+						"description": "Create a new lead. Sector code must match a valid sector (tech, agriculture, manufacturing, education, marketing, finance, construction, retail, energy)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Lead by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/leads/{{lead_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "leads", "{{lead_id}}"]
+						},
+						"description": "Get full details for a specific lead."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Lead",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"stage\": \"contacted\",\n  \"lead_score\": 85,\n  \"tags\": [\"enterprise\", \"high-value\", \"bangalore\", \"follow-up\"],\n  \"assigned_to\": \"{{user_id}}\",\n  \"custom_fields\": {\n    \"employees_count\": 300000,\n    \"last_meeting_date\": \"2026-04-01\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/leads/{{lead_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "leads", "{{lead_id}}"]
+						},
+						"description": "Partially update a lead. Only provided fields are changed."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Lead",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/leads/{{lead_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "leads", "{{lead_id}}"]
+						},
+						"description": "Permanently delete a lead."
+					},
+					"response": []
+				},
+				{
+					"name": "Bulk Update Leads",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"lead_ids\": [\n    \"{{lead_id}}\"\n  ],\n  \"updates\": {\n    \"stage\": \"qualified\",\n    \"assigned_to\": \"{{user_id}}\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/leads/bulk-update",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "leads", "bulk-update"]
+						},
+						"description": "Bulk update up to 500 leads at once. Apply the same updates to all specified lead IDs."
+					},
+					"response": []
+				},
+				{
+					"name": "Bulk Delete Leads",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"lead_ids\": [\n    \"{{lead_id}}\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/leads/bulk-delete",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "leads", "bulk-delete"]
+						},
+						"description": "Bulk delete up to 500 leads at once."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Campaigns",
+			"description": "Campaign management, execution control, and stats.",
+			"item": [
+				{
+					"name": "List Campaigns",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/campaigns/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "campaigns", ""]
+						},
+						"description": "List all campaigns for the current tenant with enriched stats (sent, opened, replied counts)."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Campaign",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('campaign_id', jsonData.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Q2 Manufacturing Outreach - Quality Inspection AI\",\n  \"sector_codes\": [\"manufacturing\"],\n  \"channel\": \"email\",\n  \"segment_filter\": {\n    \"min_score\": 60,\n    \"company_size\": [\"51-200\", \"201-500\", \"501-1000\", \"1000+\"],\n    \"states\": [\"Maharashtra\", \"Karnataka\", \"Tamil Nadu\", \"Gujarat\"]\n  },\n  \"daily_limit\": 50,\n  \"ai_tone\": \"professional\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/campaigns/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "campaigns", ""]
+						},
+						"description": "Create a new campaign in draft status. Add steps before starting."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Campaign by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/campaigns/{{campaign_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "campaigns", "{{campaign_id}}"]
+						},
+						"description": "Get campaign details with enriched performance stats."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Campaign",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Q2 Manufacturing Outreach - Updated\",\n  \"daily_limit\": 100,\n  \"ai_tone\": \"friendly\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/campaigns/{{campaign_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "campaigns", "{{campaign_id}}"]
+						},
+						"description": "Update campaign settings. Cannot update a running campaign's core settings."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Campaign",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/campaigns/{{campaign_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "campaigns", "{{campaign_id}}"]
+						},
+						"description": "Delete a campaign and all its steps and outreach logs."
+					},
+					"response": []
+				},
+				{
+					"name": "Start Campaign",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/campaigns/{{campaign_id}}/start",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "campaigns", "{{campaign_id}}", "start"]
+						},
+						"description": "Start a draft campaign. Changes status to 'active' and records started_at timestamp."
+					},
+					"response": []
+				},
+				{
+					"name": "Pause Campaign",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/campaigns/{{campaign_id}}/pause",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "campaigns", "{{campaign_id}}", "pause"]
+						},
+						"description": "Pause a running campaign. Changes status to 'paused'."
+					},
+					"response": []
+				},
+				{
+					"name": "Execute Campaign Step",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/campaigns/{{campaign_id}}/execute-step/{{step_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "campaigns", "{{campaign_id}}", "execute-step", "{{step_id}}"]
+						},
+						"description": "Execute a specific campaign step. Sends emails to matching leads up to the daily limit."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Campaign Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/campaigns/{{campaign_id}}/stats",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "campaigns", "{{campaign_id}}", "stats"]
+						},
+						"description": "Get detailed campaign performance stats: sent, delivered, opened, clicked, replied, bounced counts."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Pipeline",
+			"description": "Pipeline stages and deal management for Kanban board.",
+			"item": [
+				{
+					"name": "Stages",
+					"item": [
+						{
+							"name": "List Stages",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/pipeline/stages",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "pipeline", "stages"]
+								},
+								"description": "List all pipeline stages ordered by order_index, with deal count and total value per stage."
+							},
+							"response": []
+						},
+						{
+							"name": "Create Stage",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (pm.response.code === 201) {",
+											"    var jsonData = pm.response.json();",
+											"    pm.collectionVariables.set('stage_id', jsonData.id);",
+											"}"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Discovery\",\n  \"order_index\": 1,\n  \"color\": \"#3B82F6\",\n  \"is_default\": false\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/pipeline/stages",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "pipeline", "stages"]
+								},
+								"description": "Create a new pipeline stage with a name, order index, and optional color."
+							},
+							"response": []
+						},
+						{
+							"name": "Update Stage",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Discovery Call\",\n  \"color\": \"#2563EB\",\n  \"order_index\": 2\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/pipeline/stages/{{stage_id}}",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "pipeline", "stages", "{{stage_id}}"]
+								},
+								"description": "Update a pipeline stage's name, order, or color."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Stage",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/pipeline/stages/{{stage_id}}",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "pipeline", "stages", "{{stage_id}}"]
+								},
+								"description": "Delete a pipeline stage. Fails if deals are still assigned to this stage."
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Deals",
+					"item": [
+						{
+							"name": "List Deals",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/pipeline/deals",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "pipeline", "deals"],
+									"query": [
+										{
+											"key": "stage_id",
+											"value": "{{stage_id}}",
+											"disabled": true
+										},
+										{
+											"key": "assigned_to",
+											"value": "{{user_id}}",
+											"disabled": true
+										}
+									]
+								},
+								"description": "List all deals. Optionally filter by stage_id or assigned_to user."
+							},
+							"response": []
+						},
+						{
+							"name": "Create Deal",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"if (pm.response.code === 201) {",
+											"    var jsonData = pm.response.json();",
+											"    pm.collectionVariables.set('deal_id', jsonData.id);",
+											"}"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"lead_id\": \"{{lead_id}}\",\n  \"stage_id\": \"{{stage_id}}\",\n  \"assigned_to\": \"{{user_id}}\",\n  \"title\": \"Infosys - QualityVision AI License\",\n  \"value_inr\": 2500000,\n  \"close_date\": \"2026-06-30\",\n  \"probability\": 40,\n  \"notes\": \"VP of Engineering interested after demo. Need to address integration concerns with their existing ERP.\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/pipeline/deals",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "pipeline", "deals"]
+								},
+								"description": "Create a new deal linked to a lead and pipeline stage."
+							},
+							"response": []
+						},
+						{
+							"name": "Get Deal by ID",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/pipeline/deals/{{deal_id}}",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "pipeline", "deals", "{{deal_id}}"]
+								},
+								"description": "Get full details for a specific deal."
+							},
+							"response": []
+						},
+						{
+							"name": "Update Deal",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"stage_id\": \"{{stage_id}}\",\n  \"probability\": 65,\n  \"value_inr\": 3000000,\n  \"notes\": \"Positive demo feedback. Moving to proposal stage. Budget approved by CTO.\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/pipeline/deals/{{deal_id}}",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "pipeline", "deals", "{{deal_id}}"]
+								},
+								"description": "Update a deal. Use this to move deals between pipeline stages (drag-and-drop on Kanban)."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Deal",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/pipeline/deals/{{deal_id}}",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "pipeline", "deals", "{{deal_id}}"]
+								},
+								"description": "Delete a deal permanently."
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Activities",
+			"description": "Activity logging for leads: calls, emails, meetings, notes, tasks.",
+			"item": [
+				{
+					"name": "List Activities",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/activities/?page=1&per_page=50",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "activities", ""],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "per_page",
+									"value": "50"
+								},
+								{
+									"key": "lead_id",
+									"value": "{{lead_id}}",
+									"disabled": true
+								},
+								{
+									"key": "user_id",
+									"value": "{{user_id}}",
+									"disabled": true
+								},
+								{
+									"key": "type",
+									"value": "call",
+									"disabled": true
+								}
+							]
+						},
+						"description": "List activities with optional filters: lead_id, user_id, type. Paginated."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Activity",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('activity_id', jsonData.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"lead_id\": \"{{lead_id}}\",\n  \"type\": \"call\",\n  \"note\": \"Introductory call with Priya Sharma, VP Engineering. Discussed their current manual QA process. They inspect 500+ units/day with 3% defect miss rate. Very interested in our computer vision solution.\",\n  \"outcome\": \"positive\",\n  \"next_action\": \"Send product demo video and case study PDF\",\n  \"next_action_at\": \"2026-04-10T10:00:00Z\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/activities/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "activities", ""]
+						},
+						"description": "Log a new activity for a lead. Types: call, email, meeting, note, task, whatsapp, linkedin, other."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Activity by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/activities/{{activity_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "activities", "{{activity_id}}"]
+						},
+						"description": "Get details for a specific activity."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Analytics",
+			"description": "Dashboard metrics and AI-generated insights.",
+			"item": [
+				{
+					"name": "Get Dashboard",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/analytics/dashboard",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "analytics", "dashboard"]
+						},
+						"description": "Get aggregated dashboard metrics: total leads, leads by stage, leads by sector, pipeline value, conversion rates, recent activity."
+					},
+					"response": []
+				},
+				{
+					"name": "Get AI Insights",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/analytics/ai-insights",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "analytics", "ai-insights"]
+						},
+						"description": "Get AI-generated insights about your leads, campaigns, and pipeline. Cached for 1 hour per tenant."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Import / Export",
+			"description": "CSV import and lead export endpoints.",
+			"item": [
+				{
+					"name": "Import CSV",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "",
+									"description": "CSV file with lead data. Max 10MB, up to 10,000 rows. Required columns: company_name, sector_code. Optional: industry, contact_name, email, phone, city, state, etc."
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/import/csv",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "import", "csv"]
+						},
+						"description": "Import leads from a CSV file. Max file size: 10MB. Max rows: 10,000. The CSV must include at minimum: company_name and sector_code columns."
+					},
+					"response": []
+				},
+				{
+					"name": "Export Leads to CSV",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/export/leads",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "export", "leads"],
+							"query": [
+								{
+									"key": "sector_code",
+									"value": "tech",
+									"disabled": true
+								},
+								{
+									"key": "stage",
+									"value": "qualified",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Export leads to CSV file download. Supports the same filter query params as the list leads endpoint."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "AI",
+			"description": "AI-powered features: email generation, lead scoring, chat assistant, sector briefs, personalisation, reply analysis.",
+			"item": [
+				{
+					"name": "Generate Email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"lead_id\": \"{{lead_id}}\",\n  \"step_number\": 1,\n  \"tone\": \"professional\",\n  \"campaign_context\": \"We help manufacturing companies automate quality inspection with computer vision AI, reducing defects by 95%.\",\n  \"user_product_desc\": \"QualityVision AI is a computer vision platform that automates visual quality inspection on manufacturing production lines. Our AI models detect surface defects, dimensional deviations, and assembly errors in real-time. We reduce defect rates by 95%, cut inspection costs by 70%, and increase throughput by 40%. Currently deployed at 50+ factories across India including Tata Motors, Mahindra, and Godrej.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/ai/generate-email",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "ai", "generate-email"]
+						},
+						"description": "Generate a personalised cold outreach email for a specific lead using Claude AI. Returns email subject, body, WhatsApp version, key hook, and personalisation note. Uses the lead's sector-specific pain points and value propositions."
+					},
+					"response": []
+				},
+				{
+					"name": "Score Leads (Batch)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"lead_ids\": [\n    \"{{lead_id}}\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/ai/score-leads",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "ai", "score-leads"]
+						},
+						"description": "Batch score up to 50 leads using Claude AI. Returns score (0-100), ICP match level (poor/fair/good/excellent), reasoning, recommended next step, best outreach time, and red/green flags for each lead."
+					},
+					"response": []
+				},
+				{
+					"name": "Chat Assistant",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "text/event-stream"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"message\": \"What are the top 5 leads I should focus on this week based on their scores and recent activity? Also suggest the best approach for each.\",\n  \"lead_id\": null,\n  \"conversation_history\": []\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/ai/chat",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "ai", "chat"]
+						},
+						"description": "AI sales chat assistant. Knows your leads, campaigns, and sector intelligence. Response is streamed via Server-Sent Events (SSE). Optionally scope to a specific lead by providing lead_id. Include conversation_history for multi-turn conversations."
+					},
+					"response": []
+				},
+				{
+					"name": "Chat Assistant (Lead-Scoped)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "text/event-stream"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"message\": \"What's the best way to approach this lead? They seem to be in the manufacturing sector with a large team.\",\n  \"lead_id\": \"{{lead_id}}\",\n  \"conversation_history\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Tell me about this lead\"\n    },\n    {\n      \"role\": \"assistant\",\n      \"content\": \"This is Infosys Technologies, a large IT services company based in Bangalore...\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/ai/chat",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "ai", "chat"]
+						},
+						"description": "AI chat assistant scoped to a specific lead. The AI will have full context about the lead's details, activities, and sector. Includes conversation history for multi-turn dialogue."
+					},
+					"response": []
+				},
+				{
+					"name": "Sector Intelligence Brief",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/ai/sector-brief/manufacturing",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "ai", "sector-brief", "manufacturing"]
+						},
+						"description": "Get an AI-generated sector intelligence brief for a specific industry sector. Cached for 24 hours. Valid sector codes: tech, agriculture, manufacturing, education, marketing, finance, construction, retail, energy."
+					},
+					"response": []
+				},
+				{
+					"name": "Sector Brief - Technology",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/ai/sector-brief/tech",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "ai", "sector-brief", "tech"]
+						},
+						"description": "Get AI-generated intelligence brief for the Technology & IT Services sector."
+					},
+					"response": []
+				},
+				{
+					"name": "Sector Brief - Finance",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/ai/sector-brief/finance",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "ai", "sector-brief", "finance"]
+						},
+						"description": "Get AI-generated intelligence brief for the Finance & Professional Services sector."
+					},
+					"response": []
+				},
+				{
+					"name": "Personalise Batch",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"lead_ids\": [\n    \"{{lead_id}}\"\n  ],\n  \"campaign_step_id\": \"{{step_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/ai/personalise-batch",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "ai", "personalise-batch"]
+						},
+						"description": "Batch personalise campaign step emails for up to 50 leads. Claude AI generates personalised subject, body, and opening line for each lead based on their company details, sector, and the campaign step template."
+					},
+					"response": []
+				},
+				{
+					"name": "Analyse Reply",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reply_text\": \"Thank you for reaching out, Rajesh. We are currently evaluating solutions for our quality inspection line at our Pune plant. Could you send over a detailed case study from a similar manufacturing setup and your pricing for 3 production lines? Also, is it possible to schedule a 30-minute demo next week? Our plant manager would like to join as well.\",\n  \"lead_id\": \"{{lead_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/ai/analyse-reply",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "ai", "analyse-reply"]
+						},
+						"description": "Analyse an incoming email reply using Claude AI. Returns sentiment (positive/neutral/negative/out_of_office), intent (interested/not_interested/asking_for_info/wants_demo/unsubscribe/referring_someone), a suggested response, pipeline stage recommendation, and confidence score."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Outreach",
+			"description": "Outreach log tracking: email send/delivery/open/click/reply status.",
+			"item": [
+				{
+					"name": "List Outreach Logs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/outreach/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "outreach", ""],
+							"query": [
+								{
+									"key": "campaign_id",
+									"value": "{{campaign_id}}",
+									"disabled": true
+								},
+								{
+									"key": "lead_id",
+									"value": "{{lead_id}}",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "sent",
+									"disabled": true
+								}
+							]
+						},
+						"description": "List outreach logs with optional filters: campaign_id, lead_id, status (pending/sent/delivered/opened/clicked/replied/bounced)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Outreach Log by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/outreach/{{lead_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "outreach", "{{lead_id}}"]
+						},
+						"description": "Get details for a specific outreach log entry."
+					},
+					"response": []
+				},
+				{
+					"name": "Track Outreach Event",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"log_id\": \"{{lead_id}}\",\n  \"event_type\": \"opened\",\n  \"timestamp\": \"2026-04-07T14:30:00Z\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/outreach/track-event",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "outreach", "track-event"]
+						},
+						"description": "Manually track an outreach event (opened, clicked, replied, bounced). Typically events come automatically via SendGrid webhooks."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Webhooks",
+			"description": "External webhook handlers for third-party services.",
+			"item": [
+				{
+					"name": "SendGrid Webhook",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n  {\n    \"email\": \"priya.sharma@infosys.com\",\n    \"event\": \"open\",\n    \"sg_message_id\": \"abc123def456.1\",\n    \"timestamp\": 1712505600,\n    \"url\": \"\",\n    \"reason\": \"\"\n  },\n  {\n    \"email\": \"priya.sharma@infosys.com\",\n    \"event\": \"click\",\n    \"sg_message_id\": \"abc123def456.1\",\n    \"timestamp\": 1712505660,\n    \"url\": \"https://leadforge.ai/demo\",\n    \"reason\": \"\"\n  }\n]"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/webhooks/sendgrid",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "webhooks", "sendgrid"]
+						},
+						"description": "SendGrid event webhook endpoint. No authentication required (SendGrid posts directly). Accepts an array of event objects. Supported events: open, click, bounce, dropped, delivered, spamreport."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Health",
+			"description": "Service health check.",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": ["{{base_url}}"],
+							"path": ["health"]
+						},
+						"description": "Basic health check endpoint. Returns {\"status\": \"ok\", \"service\": \"leadforge-api\"}."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
