@@ -1,0 +1,53 @@
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Dependencies — always reinstall inside the image
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build output
+dist
+dist-ssr
+build
+.next
+.turbo
+.cache
+.parcel-cache
+
+# Environment files — NEVER bake secrets into an image
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Test + coverage
+coverage
+.nyc_output
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# TypeScript incremental cache
+*.tsbuildinfo
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Documentation
+README.md
+*.md
+
+# CI
+.github
