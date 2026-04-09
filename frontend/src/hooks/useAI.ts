@@ -1,9 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import api from '../lib/api'
+import api, { API_URL } from '../lib/api'
 import { useAIStore, type ChatMessage } from '../store/aiStore'
 import { useAuthStore } from '../store/authStore'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
 
 // --- Email Generation ---
 
