@@ -43,9 +43,26 @@ export default function App() {
           <Route path="campaigns" element={<CampaignsPage />} />
           <Route path="campaigns/:id" element={<CampaignDetailPage />} />
           <Route path="pipeline" element={<PipelinePage />} />
-          <Route path="ai-assistant" element={<AIAssistantPage />} />
+          {/*
+            Canonical AI Assistant route is /ai — the Sidebar, TopBar breadcrumb
+            lookup, and the URL users have already bookmarked all point here.
+            `ai-assistant` is kept as a legacy alias so anything older still
+            resolves to the right page instead of white-screening.
+          */}
+          <Route path="ai" element={<AIAssistantPage />} />
+          <Route path="ai-assistant" element={<Navigate to="/ai" replace />} />
           <Route path="settings" element={<SettingsPage />} />
+          {/*
+            Catch-all fallback: any unknown nested URL redirects to the
+            dashboard instead of rendering an empty <Outlet /> (which used to
+            white-screen silently). This is our last line of defense against
+            route-path typos like the /ai vs /ai-assistant mismatch that
+            originally broke the AI Assistant page.
+          */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
+        {/* Top-level catch-all for unauthenticated URLs */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   )
