@@ -9,12 +9,12 @@ export default function AppLayout() {
   const sidebarCollapsed = useUIStore((s) => s.sidebarCollapsed)
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex min-h-screen w-full bg-background">
       <Sidebar />
       <div
         className={cn(
-          'flex flex-1 flex-col min-w-0 transition-all duration-300',
-          sidebarCollapsed ? 'ml-16' : 'ml-64'
+          'flex flex-1 flex-col min-w-0 transition-[margin] duration-300',
+          sidebarCollapsed ? 'ml-16' : 'ml-64',
         )}
       >
         <TopBar />

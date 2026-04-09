@@ -1,148 +1,176 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { X, Eye, Sparkles } from 'lucide-react'
-import { useSectorAnalytics } from '@/hooks/useAnalytics'
-import SectorBriefCard from '@/components/ai/SectorBriefCard'
-import { SECTOR_COLORS, SECTOR_NAMES, formatNumber } from '@/lib/utils'
-
-const SECTORS = Object.entries(SECTOR_NAMES)
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+  Legend,
+} from 'recharts'
+import { Briefcase, ArrowUpRight } from 'lucide-react'
+import { useDashboard } from '@/hooks/useAnalytics'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
+import { SECTOR_NAMES, SECTOR_COLORS } from '@/lib/utils'
 
 export default function SectorsPage() {
+  const { data: dashboard, isLoading } = useDashboard()
   const navigate = useNavigate()
-  const { data: sectorData, isLoading } = useSectorAnalytics()
-  const [briefSector, setBriefSector] = useState<string | null>(null)
 
-  // Build a map from sector analytics array
-  const sectorMap = new Map<string, { total_leads: number; average_score: number; conversion_rate: number }>()
-  if (Array.isArray(sectorData)) {
-    for (const s of sectorData) {
-      sectorMap.set(s.sector_code, {
-        total_leads: s.total_leads,
-        average_score: s.average_score,
-        conversion_rate: s.conversion_rate,
-      })
-    }
-  }
+  const sectors = Object.entries(dashboard?.leads_by_sector ?? {}).map(
+    ([code, count]) => ({
+      id: code,
+      code,
+      name: SECTOR_NAMES[code] ?? code,
+      color: SECTOR_COLORS[code] ?? '#3B82F6',
+      leadCount: count as number,
+    }),
+  )
 
-  if (isLoading) {
-    return <SectorsSkeleton />
-  }
+  const chartData = sectors.map((s) => ({
+    sector: s.name,
+    count: s.leadCount,
+    color: s.color,
+  }))
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-6 max-w-7xl mx-auto">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Industry Sectors</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Explore sector performance, AI-generated briefs, and lead distribution across industries.
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+          Sectors Overview
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          Analyze your lead distribution and performance across different industries.
         </p>
       </div>
 
-      {/* 3x3 Grid */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {SECTORS.map(([code, name]) => {
-          const color = SECTOR_COLORS[code] || '#6B7280'
-          const stats = sectorMap.get(code)
-
-          return (
-            <div
-              key={code}
-              className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md"
-            >
-              {/* Top accent bar */}
-              <div className="h-1.5" style={{ backgroundColor: color }} />
-
-              <div className="p-5">
-                {/* Sector Name */}
-                <h3 className="text-lg font-semibold text-gray-900">{name}</h3>
-
-                {/* Stats */}
-                <div className="mt-4 grid grid-cols-3 gap-3">
-                  <div>
-                    <p className="text-xs font-medium text-gray-500">Leads</p>
-                    <p className="text-lg font-bold text-gray-900">
-                      {stats ? formatNumber(stats.total_leads) : '-'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-gray-500">Avg Score</p>
-                    <p className="text-lg font-bold text-gray-900">
-                      {stats ? stats.average_score.toFixed(0) : '-'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-gray-500">Conv. Rate</p>
-                    <p className="text-lg font-bold text-gray-900">
-                      {stats ? `${stats.conversion_rate.toFixed(1)}%` : '-'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="mt-5 flex gap-2">
-                  <button
-                    onClick={() => setBriefSector(code)}
-                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-purple-200 bg-purple-50 px-3 py-2 text-sm font-medium text-purple-700 transition-colors hover:bg-purple-100"
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="col-span-1 lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Sector Distribution</CardTitle>
+            <CardDescription>Breakdown of your total leads by industry</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[400px]">
+            {isLoading ? (
+              <Skeleton className="w-full h-full rounded-xl" />
+            ) : chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={chartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={100}
+                    outerRadius={140}
+                    paddingAngle={5}
+                    dataKey="count"
+                    nameKey="sector"
                   >
-                    <Sparkles className="h-3.5 w-3.5" />
-                    AI Brief
-                  </button>
-                  <button
-                    onClick={() => navigate(`/leads?sector_code=${code}`)}
-                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
-                  >
-                    <Eye className="h-3.5 w-3.5" />
-                    View Leads
-                  </button>
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip
+                    formatter={(value) => [value, 'Leads']}
+                    contentStyle={{
+                      borderRadius: '8px',
+                      border: '1px solid hsl(var(--border))',
+                      backgroundColor: 'hsl(var(--card))',
+                    }}
+                  />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                No sector data available.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <div className="space-y-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle>Target Sectors</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="space-y-3">
+                  {Array(5)
+                    .fill(0)
+                    .map((_, i) => (
+                      <div key={i} className="flex justify-between items-center">
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="w-8 h-8 rounded-md" />
+                          <Skeleton className="h-4 w-24" />
+                        </div>
+                        <Skeleton className="h-4 w-12" />
+                      </div>
+                    ))}
                 </div>
-              </div>
-            </div>
-          )
-        })}
-      </div>
+              ) : sectors.length > 0 ? (
+                <div className="space-y-1">
+                  {sectors.map((sector) => (
+                    <button
+                      key={sector.id}
+                      type="button"
+                      onClick={() =>
+                        navigate(`/leads?sector_code=${encodeURIComponent(sector.code)}`)
+                      }
+                      className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors group cursor-pointer text-left"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-8 h-8 rounded-md flex items-center justify-center"
+                          style={{
+                            backgroundColor: `${sector.color}20`,
+                            color: sector.color,
+                          }}
+                        >
+                          <Briefcase className="w-4 h-4" />
+                        </div>
+                        <span className="font-medium text-foreground">
+                          {sector.name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="font-semibold text-muted-foreground">
+                          {sector.leadCount} leads
+                        </span>
+                        <ArrowUpRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-10 text-center text-muted-foreground text-sm">
+                  No sectors available.
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-      {/* Sector Brief Modal */}
-      {briefSector && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
-            onClick={() => setBriefSector(null)}
-          />
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl bg-white shadow-2xl">
-              <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  {SECTOR_NAMES[briefSector] || briefSector} - AI Brief
-                </h2>
-                <button
-                  onClick={() => setBriefSector(null)}
-                  className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-              <div className="p-6">
-                <SectorBriefCard sectorCode={briefSector} />
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
-
-function SectorsSkeleton() {
-  return (
-    <div className="space-y-6">
-      <div>
-        <div className="h-7 w-48 animate-pulse rounded bg-gray-200" />
-        <div className="mt-2 h-4 w-96 animate-pulse rounded bg-gray-200" />
-      </div>
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 9 }).map((_, i) => (
-          <div key={i} className="h-52 animate-pulse rounded-xl bg-gray-100" />
-        ))}
+          <Card className="bg-primary text-primary-foreground border-transparent">
+            <CardContent className="p-6">
+              <h3 className="font-semibold text-lg mb-2">Want to expand?</h3>
+              <p className="text-primary-foreground/80 text-sm mb-4">
+                LeadForge AI can automatically discover new high-potential sectors based
+                on your current won leads.
+              </p>
+              <Button variant="secondary" className="w-full font-medium">
+                Run Sector Analysis
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   )
