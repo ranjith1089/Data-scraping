@@ -7,7 +7,16 @@ pydantic==2.6.1
 pydantic-settings==2.1.0
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
-bcrypt==4.1.2
+# IMPORTANT: bcrypt must be pinned to <4.1 because passlib 1.7.4 reads
+# bcrypt.__about__.__version__ to detect the backend. bcrypt >=4.1 removed
+# that attribute, which breaks passlib's backend initialization on Linux —
+# pwd_context.verify() then silently returns False for EVERY password,
+# so every login returns 401 "Invalid email or password" even with correct
+# credentials. Passlib has no fix planned (last release 2020); pinning
+# bcrypt is the standard workaround. See:
+#   https://github.com/pyca/bcrypt/issues/684
+#   https://foss.heptapod.net/python-libs/passlib/-/issues/190
+bcrypt==4.0.1
 python-multipart==0.0.9
 anthropic==0.18.1
 sendgrid==6.11.0
