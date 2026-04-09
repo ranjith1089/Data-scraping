@@ -8,12 +8,24 @@ interface AIInsight {
   generated_at: string
 }
 
+// Backend returns { ai_insights: string } (see backend/routers/analytics.py
+// get_ai_insights). We normalize into the shape this banner uses.
+interface RawInsightResponse {
+  ai_insights?: string
+  insight?: string
+  generated_at?: string
+}
+
 function useAIInsights() {
   return useQuery({
     queryKey: ['ai-insights'],
     queryFn: async () => {
-      const { data } = await api.get<AIInsight>('/analytics/ai-insights')
-      return data
+      const { data } = await api.get<RawInsightResponse>('/analytics/ai-insights')
+      const insight = data?.insight ?? data?.ai_insights ?? ''
+      return {
+        insight,
+        generated_at: data?.generated_at ?? new Date().toISOString(),
+      } as AIInsight
     },
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,

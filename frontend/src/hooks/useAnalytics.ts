@@ -42,12 +42,117 @@ export interface DashboardData {
   }[]
 }
 
+// The backend /analytics/dashboard returns a different, flatter shape than
+// the frontend historically expected (see DashboardData). Rather than touch
+// every consuming component, we normalize the payload here in one place.
+// Backend shape (see backend/services/analytics_service.py + curl output):
+//   {
+//     overview: { total_leads, hot_leads, leads_added_this_week, with_email, with_phone },
+//     ai_usage: { calls_this_month, tokens_used, calls_remaining },
+//     by_sector: [{ sector, sector_name, count, hot_count, avg_score }],
+//     by_stage:  [{ stage, count, total_value_inr }],
+//     by_district: [{ district, count }],
+//     campaign_stats: [...],
+//     funnel: { awareness, interest, consideration, intent, demo, proposal, won },
+//     activity_feed: [...],
+//     ai_insights: string
+//   }
+interface RawDashboardResponse {
+  overview?: {
+    total_leads?: number
+    hot_leads?: number
+    leads_added_this_week?: number
+    with_email?: number
+    with_phone?: number
+  }
+  ai_usage?: {
+    calls_this_month?: number
+    tokens_used?: number
+    calls_remaining?: number
+  }
+  by_sector?: Array<{
+    sector: string
+    sector_name?: string
+    count: number
+    hot_count?: number
+    avg_score?: number
+  }>
+  by_stage?: Array<{
+    stage: string
+    count: number
+    total_value_inr?: number
+  }>
+  campaign_stats?: unknown[]
+  funnel?: Record<string, number>
+  activity_feed?: Array<{
+    id: string
+    type: string
+    description: string
+    lead_id: string
+    lead_name: string
+    timestamp: string
+  }>
+  ai_insights?: string
+}
+
+function normalizeDashboard(raw: RawDashboardResponse | null | undefined): DashboardData {
+  const overview = raw?.overview ?? {}
+  const bySector = Array.isArray(raw?.by_sector) ? raw!.by_sector! : []
+  const byStage = Array.isArray(raw?.by_stage) ? raw!.by_stage! : []
+  const activityFeed = Array.isArray(raw?.activity_feed) ? raw!.activity_feed! : []
+
+  const leads_by_stage: Record<string, number> = {}
+  for (const row of byStage) {
+    if (row && typeof row.stage === 'string') {
+      leads_by_stage[row.stage] = row.count ?? 0
+    }
+  }
+
+  const leads_by_sector: Record<string, number> = {}
+  for (const row of bySector) {
+    if (row && typeof row.sector === 'string') {
+      leads_by_sector[row.sector] = row.count ?? 0
+    }
+  }
+
+  const top_performing_sectors = bySector.map((s) => ({
+    sector_code: s.sector,
+    lead_count: s.count ?? 0,
+    avg_score: s.avg_score ?? 0,
+    // Derive a conversion-like rate from hot_count/count since the backend
+    // does not ship a real conversion_rate per sector yet.
+    conversion_rate:
+      s.count && s.count > 0 ? ((s.hot_count ?? 0) / s.count) * 100 : 0,
+  }))
+
+  return {
+    total_leads: overview.total_leads ?? 0,
+    leads_by_stage,
+    leads_by_sector,
+    conversion_rate: 0,
+    average_score: 0,
+    total_revenue_pipeline: 0,
+    new_leads_today: 0,
+    new_leads_this_week: overview.leads_added_this_week ?? 0,
+    new_leads_this_month: 0,
+    top_performing_sectors,
+    recent_activities: activityFeed,
+    score_distribution: [],
+    stage_funnel: byStage.map((s) => ({
+      stage: s.stage,
+      count: s.count ?? 0,
+      value: s.total_value_inr ?? 0,
+    })),
+    monthly_trends: [],
+  }
+}
+
 export function useDashboard() {
   return useQuery({
     queryKey: ['dashboard'],
     queryFn: async () => {
-      const { data } = await api.get<DashboardData>('/analytics/dashboard')
-      return data
+      const { data } = await api.get<RawDashboardResponse>('/analytics/dashboard')
+      return normalizeDashboard(data)
     },
     staleTime: 60_000,
     refetchInterval: 60_000,

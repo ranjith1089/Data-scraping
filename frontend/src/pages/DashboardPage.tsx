@@ -44,47 +44,54 @@ export default function DashboardPage() {
     return <DashboardSkeleton />
   }
 
-  const hotLeads = data
-    ? Object.entries(data.leads_by_stage).reduce((sum, [stage, count]) => {
-        if (stage === 'demo' || stage === 'proposal' || stage === 'negotiation') return sum + count
-        return sum
-      }, 0)
-    : 0
+  // NOTE: every field on `data` is defensively guarded. The backend shape
+  // is normalized in useDashboard(), but a future schema drift or a partial
+  // payload should NEVER hard-crash the dashboard render. Previously a
+  // missing `leads_by_stage` caused `Object.entries(undefined)` to throw
+  // "Cannot convert undefined or null to object" and white-screen the page.
+  const leadsByStage = data?.leads_by_stage ?? {}
+  const leadsBySector = data?.leads_by_sector ?? {}
+  const topSectors = data?.top_performing_sectors ?? []
+  const recentActivities = data?.recent_activities ?? []
+
+  const hotLeads = Object.entries(leadsByStage).reduce((sum, [stage, count]) => {
+    if (stage === 'demo' || stage === 'proposal' || stage === 'negotiation') {
+      return sum + (Number(count) || 0)
+    }
+    return sum
+  }, 0)
 
   const activeCampaigns = 0 // Will be populated from API
 
-  const sectorChartData = data
-    ? Object.entries(data.leads_by_sector).map(([sector, count]) => {
-        const topSector = data.top_performing_sectors.find((s) => s.sector_code === sector)
-        return {
-          sector,
-          sector_name: SECTOR_NAMES[sector] || sector,
-          count,
-          hot_count: topSector ? Math.round(count * (topSector.conversion_rate / 100)) : 0,
-          avg_score: topSector?.avg_score || 0,
-        }
-      })
-    : []
+  const sectorChartData = Object.entries(leadsBySector).map(([sector, count]) => {
+    const topSector = topSectors.find((s) => s.sector_code === sector)
+    const safeCount = Number(count) || 0
+    return {
+      sector,
+      sector_name: SECTOR_NAMES[sector] || sector,
+      count: safeCount,
+      hot_count: topSector ? Math.round(safeCount * (topSector.conversion_rate / 100)) : 0,
+      avg_score: topSector?.avg_score || 0,
+    }
+  })
 
-  const funnelData = data
-    ? {
-        awareness: data.leads_by_stage['new'] || 0,
-        interest: data.leads_by_stage['contacted'] || 0,
-        consideration: data.leads_by_stage['engaged'] || 0,
-        intent: data.leads_by_stage['demo'] || 0,
-        demo: data.leads_by_stage['proposal'] || 0,
-        proposal: data.leads_by_stage['negotiation'] || 0,
-        won: data.leads_by_stage['won'] || 0,
-      }
-    : { awareness: 0, interest: 0, consideration: 0, intent: 0, demo: 0, proposal: 0, won: 0 }
+  const funnelData = {
+    awareness: leadsByStage['new'] || 0,
+    interest: leadsByStage['contacted'] || 0,
+    consideration: leadsByStage['engaged'] || leadsByStage['qualified'] || 0,
+    intent: leadsByStage['demo'] || 0,
+    demo: leadsByStage['proposal'] || 0,
+    proposal: leadsByStage['negotiation'] || 0,
+    won: leadsByStage['won'] || 0,
+  }
 
-  const campaignTableData = data?.top_performing_sectors.slice(0, 5).map((s) => ({
+  const campaignTableData = topSectors.slice(0, 5).map((s) => ({
     name: SECTOR_NAMES[s.sector_code] || s.sector_code,
     sent: s.lead_count,
     opened: Math.round(s.lead_count * 0.6),
     replied: Math.round(s.lead_count * 0.2),
     open_rate: s.conversion_rate,
-  })) || []
+  }))
 
   return (
     <div className="space-y-6">
@@ -160,13 +167,13 @@ export default function DashboardPage() {
               </h3>
             </div>
             <div className="divide-y divide-gray-50">
-              {(!data?.recent_activities || data.recent_activities.length === 0) ? (
+              {recentActivities.length === 0 ? (
                 <div className="px-6 py-12 text-center">
                   <Activity className="mx-auto h-8 w-8 text-gray-200" />
                   <p className="mt-2 text-sm text-gray-400">No recent activity</p>
                 </div>
               ) : (
-                data.recent_activities.slice(0, 10).map((activity) => {
+                recentActivities.slice(0, 10).map((activity) => {
                   const Icon = ACTIVITY_ICONS[activity.type] || Activity
                   return (
                     <div
