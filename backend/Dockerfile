@@ -5,5 +5,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 # Shell form so ${PORT} expands at runtime (Railway injects PORT dynamically).
-# Alembic's env.py prepends BACKEND_ROOT to sys.path, so no PYTHONPATH needed.
-CMD sh -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"
+# Migrations run in a background task from main.py's lifespan so the HTTP
+# port binds immediately and Railway's healthcheck passes without waiting
+# for the initial (potentially slow) migration to finish.
+CMD sh -c "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"

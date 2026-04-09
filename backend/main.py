@@ -1,5 +1,8 @@
 """LeadForge AI - FastAPI application entry point."""
 
+import asyncio
+import sys
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -36,9 +39,51 @@ from routers.ai import (
 )
 
 
+async def _run_migrations_in_background() -> None:
+    """Run ``alembic upgrade head`` without blocking uvicorn startup.
+
+    Railway's healthcheck starts hitting ``/health`` within seconds of the
+    container booting. A large initial migration (tables + RLS + indexes +
+    seed data) can easily exceed that window if we run it inline before
+    uvicorn binds the port — which causes the deploy to fail even though
+    the migration itself would have succeeded a moment later.
+
+    By scheduling it as a fire-and-forget task from the lifespan, uvicorn
+    accepts connections immediately (``/health`` returns 200), and
+    migrations complete in parallel. DB-dependent routes will briefly 503
+    while the upgrade runs; once it finishes, everything works normally.
+    """
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            sys.executable,
+            "-m",
+            "alembic",
+            "upgrade",
+            "head",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT,
+        )
+        stdout, _ = await proc.communicate()
+        output = stdout.decode(errors="replace") if stdout else ""
+        if proc.returncode == 0:
+            print("[migrations] alembic upgrade head: OK", flush=True)
+            if output.strip():
+                print(output, flush=True)
+        else:
+            print(
+                f"[migrations] alembic FAILED with exit code {proc.returncode}",
+                flush=True,
+            )
+            print(output, flush=True)
+    except Exception as exc:  # pragma: no cover — last-resort diagnostic
+        print(f"[migrations] unexpected exception: {exc!r}", flush=True)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
+    # Startup: schedule migrations in the background so the port is bound
+    # immediately and Railway's healthcheck can pass.
+    asyncio.create_task(_run_migrations_in_background())
     yield
     # Shutdown
 
