@@ -45,6 +45,8 @@ try:
         personalise,
         reply_analyser,
     )
+    from routers.integrations import management as integrations_management
+    from services import scheduler as integration_scheduler
     print("[startup] all routers imported OK", flush=True)
 except Exception:
     print("[startup] FATAL: import failed:", flush=True)
@@ -99,8 +101,23 @@ async def lifespan(app: FastAPI):
     # Startup: schedule migrations in the background so the port is bound
     # immediately and Railway's healthcheck can pass.
     asyncio.create_task(_run_migrations_in_background())
+
+    # Boot APScheduler in-process. This is best-effort — if the jobstore
+    # table doesn't exist yet (first-run before migrations complete) the
+    # scheduler will log and keep retrying on the first add_job call.
+    try:
+        integration_scheduler.start()
+    except Exception as exc:  # noqa: BLE001
+        print(f"[startup] scheduler start failed: {exc!r}", flush=True)
+
     yield
-    # Shutdown
+
+    # Shutdown: stop the scheduler cleanly so Postgres connections aren't
+    # left dangling when uvicorn reloads.
+    try:
+        integration_scheduler.shutdown(wait=False)
+    except Exception:  # noqa: BLE001
+        pass
 
 
 app = FastAPI(
@@ -137,6 +154,9 @@ app.include_router(activities.router, prefix=PREFIX)
 app.include_router(analytics.router, prefix=PREFIX)
 app.include_router(import_export.router, prefix=PREFIX)
 app.include_router(webhooks.router, prefix=PREFIX)
+
+# Third-Party Integration Module
+app.include_router(integrations_management.router, prefix=PREFIX)
 
 # AI routers
 app.include_router(email_gen.router, prefix=PREFIX)

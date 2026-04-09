@@ -132,6 +132,112 @@ export function getInitials(name: string): string {
     .slice(0, 2)
 }
 
+// ---------------------------------------------------------------------------
+// Third-Party Integration Module — provider catalogue
+// ---------------------------------------------------------------------------
+// Single source of truth for provider codes, labels, descriptions, and the
+// indigo/green/pink/etc. colour each provider card uses in the UI. Keep the
+// codes aligned with the `IntegrationProvider` enum in
+// `backend/schemas/integration.py`.
+export interface IntegrationProviderMeta {
+  code: string
+  name: string
+  description: string
+  category: 'ads' | 'messaging' | 'email' | 'analytics'
+  color: string // tailwind text/bg classes
+  accent: string // tailwind border/ring accent
+  docsUrl?: string
+}
+
+export const INTEGRATION_PROVIDERS: IntegrationProviderMeta[] = [
+  {
+    code: 'meta_ads',
+    name: 'Meta Ads',
+    description:
+      'Capture Facebook & Instagram Lead Ads in real time via webhooks.',
+    category: 'ads',
+    color: 'text-blue-600 bg-blue-50',
+    accent: 'border-blue-200',
+  },
+  {
+    code: 'google_ads',
+    name: 'Google Ads',
+    description:
+      'Track campaigns and push offline conversions back to Google Ads.',
+    category: 'ads',
+    color: 'text-amber-600 bg-amber-50',
+    accent: 'border-amber-200',
+  },
+  {
+    code: 'linkedin_ads',
+    name: 'LinkedIn Ads',
+    description:
+      'Sync Lead Gen Forms from LinkedIn Campaign Manager (polled every 15m).',
+    category: 'ads',
+    color: 'text-sky-700 bg-sky-50',
+    accent: 'border-sky-200',
+  },
+  {
+    code: 'whatsapp',
+    name: 'WhatsApp Business',
+    description:
+      'Send templates, media, and automated messages through the WhatsApp Cloud API.',
+    category: 'messaging',
+    color: 'text-green-600 bg-green-50',
+    accent: 'border-green-200',
+  },
+  {
+    code: 'sendgrid',
+    name: 'SendGrid',
+    description:
+      'Transactional email sending with open/click/bounce webhook tracking.',
+    category: 'email',
+    color: 'text-indigo-600 bg-indigo-50',
+    accent: 'border-indigo-200',
+  },
+  {
+    code: 'smtp',
+    name: 'SMTP',
+    description:
+      'Generic SMTP provider as an alternative to SendGrid (Gmail, SES, etc.).',
+    category: 'email',
+    color: 'text-slate-600 bg-slate-50',
+    accent: 'border-slate-200',
+  },
+  {
+    code: 'ga4',
+    name: 'Google Analytics 4',
+    description:
+      'Send server-side events via the Measurement Protocol for attribution.',
+    category: 'analytics',
+    color: 'text-orange-600 bg-orange-50',
+    accent: 'border-orange-200',
+  },
+  {
+    code: 'fb_pixel',
+    name: 'Facebook Pixel',
+    description:
+      'Mirror offline conversions to Meta via the Conversions API.',
+    category: 'analytics',
+    color: 'text-pink-600 bg-pink-50',
+    accent: 'border-pink-200',
+  },
+]
+
+export const INTEGRATION_STATUS_LABEL: Record<string, string> = {
+  connected: 'Connected',
+  disconnected: 'Not connected',
+  error: 'Error',
+  expired: 'Token expired',
+}
+
+export const INTEGRATION_STATUS_COLOR: Record<string, string> = {
+  connected: 'text-green-700 bg-green-50 border-green-200',
+  disconnected: 'text-gray-600 bg-gray-50 border-gray-200',
+  error: 'text-red-700 bg-red-50 border-red-200',
+  expired: 'text-amber-700 bg-amber-50 border-amber-200',
+}
+
 export function buildQueryString(params: Record<string, unknown>): string {
   const searchParams = new URLSearchParams()
   for (const [key, value] of Object.entries(params)) {

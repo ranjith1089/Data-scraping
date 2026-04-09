@@ -7,6 +7,7 @@ import {
   Briefcase,
   Settings,
   Bot,
+  Plug,
   LogOut,
 } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
@@ -32,6 +33,7 @@ const mainNav: NavItem[] = [
   { title: 'Sectors', href: '/sectors', icon: Briefcase },
   { title: 'Campaigns', href: '/campaigns', icon: Megaphone },
   { title: 'Pipeline', href: '/pipeline', icon: Target },
+  { title: 'Integrations', href: '/integrations', icon: Plug },
 ]
 
 const footerNav: NavItem[] = [

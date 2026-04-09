@@ -6,6 +6,7 @@ import {
   Target,
   Cpu,
   Key,
+  Plug,
   Sliders,
   Save,
   Loader2,
@@ -15,16 +16,24 @@ import TeamMembers from '@/components/settings/TeamMembers'
 import ICPBuilder from '@/components/settings/ICPBuilder'
 import AIUsage from '@/components/settings/AIUsage'
 import APIKeys from '@/components/settings/APIKeys'
+import IntegrationsSummary from '@/components/settings/IntegrationsSummary'
 import api from '@/lib/api'
 import { cn } from '@/lib/utils'
 
-type TabKey = 'team' | 'icp' | 'ai_usage' | 'api_keys' | 'general'
+type TabKey =
+  | 'team'
+  | 'icp'
+  | 'ai_usage'
+  | 'api_keys'
+  | 'integrations'
+  | 'general'
 
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: 'team', label: 'Team', icon: Users },
   { key: 'icp', label: 'ICP Builder', icon: Target },
   { key: 'ai_usage', label: 'AI Usage', icon: Cpu },
   { key: 'api_keys', label: 'API Keys', icon: Key },
+  { key: 'integrations', label: 'Integrations', icon: Plug },
   { key: 'general', label: 'General', icon: Sliders },
 ]
 
@@ -69,6 +78,7 @@ export default function SettingsPage() {
         {activeTab === 'icp' && <ICPBuilder />}
         {activeTab === 'ai_usage' && <AIUsage />}
         {activeTab === 'api_keys' && <APIKeys />}
+        {activeTab === 'integrations' && <IntegrationsSummary />}
         {activeTab === 'general' && <GeneralSettings />}
       </div>
     </div>

@@ -12,6 +12,7 @@ import CampaignsPage from './pages/CampaignsPage'
 import CampaignDetailPage from './pages/CampaignDetailPage'
 import PipelinePage from './pages/PipelinePage'
 import AIAssistantPage from './pages/AIAssistantPage'
+import IntegrationsPage from './pages/IntegrationsPage'
 import SettingsPage from './pages/SettingsPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -51,6 +52,7 @@ export default function App() {
           */}
           <Route path="ai" element={<AIAssistantPage />} />
           <Route path="ai-assistant" element={<Navigate to="/ai" replace />} />
+          <Route path="integrations" element={<IntegrationsPage />} />
           <Route path="settings" element={<SettingsPage />} />
           {/*
             Catch-all fallback: any unknown nested URL redirects to the

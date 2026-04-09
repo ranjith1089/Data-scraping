@@ -25,3 +25,17 @@ httpx==0.26.0
 python-dotenv==1.0.1
 aiofiles==23.2.1
 orjson==3.9.13
+
+# Third-Party Integration Module
+# ------------------------------------------------------------------
+# APScheduler powers delayed follow-ups, retries with exponential
+# backoff, and periodic polling (LinkedIn Lead Gen Forms, token
+# refresh). Runs in-process inside the FastAPI event loop with a
+# SQLAlchemyJobStore on the existing Postgres database.
+apscheduler==3.10.4
+# psycopg2-binary is required by APScheduler's SQLAlchemyJobStore —
+# APScheduler uses a SYNC driver, not asyncpg, for its internal
+# jobstore connection.
+psycopg2-binary==2.9.9
+# Fernet symmetric encryption for all third-party credentials at rest.
+cryptography>=42.0.0
