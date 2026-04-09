@@ -88,13 +88,17 @@ export default function AIAssistantPage() {
     })
   }
 
-  // Derive hot leads from dashboard data
-  const hotLeadsCount = dashboardData
-    ? Object.entries(dashboardData.leads_by_stage).reduce((sum, [stage, count]) => {
-        if (stage === 'demo' || stage === 'proposal' || stage === 'negotiation') return sum + count
-        return sum
-      }, 0)
-    : 0
+  // Derive hot leads from dashboard data. Defensively guard against a
+  // missing leads_by_stage — previously `Object.entries(undefined)` threw
+  // "Cannot convert undefined or null to object" and white-screened the page.
+  const hotLeadsCount = Object.entries(
+    dashboardData?.leads_by_stage ?? {}
+  ).reduce((sum, [stage, count]) => {
+    if (stage === 'demo' || stage === 'proposal' || stage === 'negotiation') {
+      return sum + (Number(count) || 0)
+    }
+    return sum
+  }, 0)
 
   return (
     <div className="flex h-[calc(100vh-7rem)] gap-6">
