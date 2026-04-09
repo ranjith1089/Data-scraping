@@ -1,5 +1,5 @@
 from typing import Optional
-from sqlalchemy import String, Text, text, ForeignKey
+from sqlalchemy import String, Text, DateTime, text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID
 from core.database import Base
@@ -27,5 +27,9 @@ class Activity(Base):
     note: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     outcome: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     next_action: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    next_action_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
-    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+    next_action_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )

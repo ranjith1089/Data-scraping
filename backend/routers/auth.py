@@ -104,11 +104,33 @@ async def login(
             detail="Invalid email or password",
         )
 
-    # Update last_login
+    # Update last_login — defensively wrapped so a DB-side failure on this
+    # cosmetic write NEVER blocks the actual login response. We learned this
+    # the hard way: a SQLAlchemy model/column type mismatch on last_login
+    # (tz-aware datetime being bound to a column declared without
+    # timezone=True) caused every login to 500 even though the password
+    # verification succeeded. The type mismatch is fixed in models/user.py,
+    # but this try/except is cheap insurance: if anything else related to
+    # the DB write fails, we roll back the dirty session state and proceed
+    # to issue tokens rather than taking the whole login flow down.
     from datetime import datetime, timezone
 
-    user.last_login = datetime.now(timezone.utc)
-    await db.flush()
+    try:
+        user.last_login = datetime.now(timezone.utc)
+        await db.flush()
+    except Exception as exc:  # pragma: no cover — diagnostic only
+        print(
+            f"[auth.login] non-fatal: failed to update last_login for "
+            f"user {user.id}: {exc!r}",
+            flush=True,
+        )
+        await db.rollback()
+        # Re-fetch the user row into a clean session state so the token
+        # payload below still has a valid, attached ORM object.
+        result = await db.execute(
+            select(User).where(User.id == user.id)
+        )
+        user = result.scalar_one()
 
     payload = _build_token_payload(user)
     return TokenResponse(

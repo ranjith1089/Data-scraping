@@ -1,5 +1,5 @@
 from typing import Optional
-from sqlalchemy import String, Integer, Text, text, ForeignKey
+from sqlalchemy import String, Integer, Text, DateTime, text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID
 from core.database import Base
@@ -29,4 +29,6 @@ class AIInteraction(Base):
     model: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     input_summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     output_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )

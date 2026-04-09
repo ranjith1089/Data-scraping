@@ -1,10 +1,15 @@
 from typing import Optional
-from sqlalchemy import String, Integer, BigInteger, Text, text, ForeignKey
+from sqlalchemy import String, Integer, BigInteger, Text, DateTime, text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID, JSONB, ARRAY
 from core.database import Base
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
+
+
+def _utcnow() -> datetime:
+    """Timezone-aware UTC now for onupdate callbacks (see models/deal.py)."""
+    return datetime.now(timezone.utc)
 
 
 class Lead(Base):
@@ -47,8 +52,12 @@ class Lead(Base):
     tags: Mapped[Optional[list]] = mapped_column(ARRAY(String), nullable=True)
     source: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     custom_fields: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
-    last_contacted: Mapped[Optional[datetime]] = mapped_column(nullable=True)
-    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+    last_contacted: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
     updated_at: Mapped[Optional[datetime]] = mapped_column(
-        server_default=text("now()"), onupdate=datetime.utcnow
+        DateTime(timezone=True), server_default=text("now()"), onupdate=_utcnow
     )

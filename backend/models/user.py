@@ -1,5 +1,5 @@
 from typing import Optional
-from sqlalchemy import String, Boolean, text, ForeignKey, UniqueConstraint
+from sqlalchemy import String, Boolean, DateTime, text, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID
 from core.database import Base
@@ -25,5 +25,15 @@ class User(Base):
     full_name: Mapped[str] = mapped_column(String, nullable=False)
     role: Mapped[str] = mapped_column(String, default="member")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    last_login: Mapped[Optional[datetime]] = mapped_column(nullable=True)
-    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+    # IMPORTANT: last_login is written from Python code as a tz-aware datetime
+    # (datetime.now(timezone.utc) in routers/auth.py login handler). The DB
+    # column is TIMESTAMPTZ (created in 001_initial_schema.py), so the
+    # SQLAlchemy type MUST declare timezone=True. Without it, SQLAlchemy
+    # binds the parameter as a naive timestamp and asyncpg raises a
+    # DataError when it sees a tz-aware datetime, causing login to 500.
+    last_login: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )

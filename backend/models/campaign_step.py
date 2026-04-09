@@ -1,5 +1,5 @@
 from typing import Optional
-from sqlalchemy import String, Integer, Boolean, Text, text, ForeignKey
+from sqlalchemy import String, Integer, Boolean, Text, DateTime, text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID
 from core.database import Base
@@ -26,4 +26,6 @@ class CampaignStep(Base):
     subject: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     body: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     ai_generated: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
