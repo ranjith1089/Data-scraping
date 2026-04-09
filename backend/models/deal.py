@@ -1,10 +1,17 @@
 from typing import Optional
-from sqlalchemy import String, Integer, Date, Text, text, ForeignKey
+from sqlalchemy import String, Integer, Date, Text, DateTime, text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID
 from core.database import Base
 import uuid
-from datetime import datetime, date
+from datetime import datetime, date, timezone
+
+
+def _utcnow() -> datetime:
+    """Timezone-aware UTC now. Used for onupdate callbacks because
+    `datetime.utcnow` returns a naive datetime which asyncpg refuses
+    to bind to a TIMESTAMPTZ column."""
+    return datetime.now(timezone.utc)
 
 
 class Deal(Base):
@@ -31,7 +38,9 @@ class Deal(Base):
     close_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     probability: Mapped[int] = mapped_column(Integer, default=20)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
     updated_at: Mapped[Optional[datetime]] = mapped_column(
-        server_default=text("now()"), onupdate=datetime.utcnow
+        DateTime(timezone=True), server_default=text("now()"), onupdate=_utcnow
     )

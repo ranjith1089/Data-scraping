@@ -1,5 +1,5 @@
 from typing import Optional
-from sqlalchemy import String, Text, text
+from sqlalchemy import String, Text, DateTime, text
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from core.database import Base
@@ -21,4 +21,6 @@ class Sector(Base):
     ai_persona: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     pain_points: Mapped[Optional[list]] = mapped_column(ARRAY(String), nullable=True)
     value_props: Mapped[Optional[list]] = mapped_column(ARRAY(String), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )

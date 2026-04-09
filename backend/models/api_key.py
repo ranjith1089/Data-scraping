@@ -1,5 +1,5 @@
 from typing import Optional
-from sqlalchemy import String, text, ForeignKey
+from sqlalchemy import String, DateTime, text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID
 from core.database import Base
@@ -19,8 +19,12 @@ class APIKey(Base):
     )
     name: Mapped[str] = mapped_column(String, nullable=False)
     key_hash: Mapped[str] = mapped_column(String, nullable=False)
-    last_used: Mapped[Optional[datetime]] = mapped_column(nullable=True)
+    last_used: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     created_by: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id"), nullable=True
     )
-    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )

@@ -1,5 +1,5 @@
 from typing import Optional
-from sqlalchemy import String, Text, text, ForeignKey
+from sqlalchemy import String, Text, DateTime, text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID
 from core.database import Base
@@ -29,10 +29,20 @@ class OutreachLog(Base):
     channel: Mapped[str] = mapped_column(String, nullable=False)
     recipient: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[str] = mapped_column(String, default="pending")
-    sent_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
-    opened_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
-    clicked_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
-    replied_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
+    sent_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    opened_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    clicked_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    replied_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     error_msg: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     message_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )

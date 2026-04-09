@@ -1,4 +1,4 @@
-from sqlalchemy import String, Integer, text
+from sqlalchemy import String, Integer, DateTime, text
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from core.database import Base
@@ -19,4 +19,6 @@ class Plan(Base):
     max_ai_calls: Mapped[int] = mapped_column(Integer, nullable=False)
     features: Mapped[dict] = mapped_column(JSONB, default=dict)
     price_inr: Mapped[int] = mapped_column(Integer, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )

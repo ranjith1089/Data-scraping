@@ -1,4 +1,4 @@
-from sqlalchemy import String, Boolean, text
+from sqlalchemy import String, Boolean, DateTime, text
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from core.database import Base
@@ -18,4 +18,6 @@ class Tenant(Base):
     plan: Mapped[str] = mapped_column(String, default="starter")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     settings: Mapped[dict] = mapped_column(JSONB, default=dict)
-    created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
