@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import {
@@ -7,6 +8,7 @@ import {
   CheckCircle2,
   FileEdit,
   MoreHorizontal,
+  X,
 } from 'lucide-react'
 import {
   useCampaigns,
@@ -26,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn, SECTOR_NAMES, formatNumber } from '@/lib/utils'
+import CampaignBuilder from '@/components/campaigns/CampaignBuilder'
 
 function getStatusIcon(status: string) {
   switch (status) {
@@ -64,10 +67,11 @@ function rate(numerator: number, denominator: number) {
 
 export default function CampaignsPage() {
   const navigate = useNavigate()
-  const { data, isLoading } = useCampaigns()
+  const { data, isLoading, refetch } = useCampaigns()
   const startCampaign = useStartCampaign()
   const pauseCampaign = usePauseCampaign()
   const deleteCampaign = useDeleteCampaign()
+  const [showBuilder, setShowBuilder] = useState(false)
 
   const campaigns: Campaign[] = data?.items ?? []
 
@@ -110,7 +114,7 @@ export default function CampaignsPage() {
             Manage your automated outreach campaigns.
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setShowBuilder(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Create Campaign
         </Button>
@@ -138,7 +142,9 @@ export default function CampaignsPage() {
                 Create your first AI-powered outreach campaign to start engaging with
                 leads automatically.
               </p>
-              <Button className="mt-6">Create First Campaign</Button>
+              <Button className="mt-6" onClick={() => setShowBuilder(true)}>
+                Create First Campaign
+              </Button>
             </CardContent>
           </Card>
         ) : (
@@ -282,6 +288,36 @@ export default function CampaignsPage() {
           })
         )}
       </div>
+
+      {/* Campaign Builder Modal */}
+      {showBuilder && (
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-sm"
+          onClick={(e) => {
+            // Only close when clicking the backdrop itself, not the modal
+            if (e.target === e.currentTarget) setShowBuilder(false)
+          }}
+        >
+          <div className="relative my-8 w-full max-w-5xl rounded-xl bg-card shadow-2xl">
+            <button
+              type="button"
+              onClick={() => setShowBuilder(false)}
+              className="absolute right-4 top-4 z-10 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              aria-label="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <CampaignBuilder
+              onComplete={(_campaignId) => {
+                setShowBuilder(false)
+                refetch()
+                toast.success('Campaign created successfully')
+              }}
+              onCancel={() => setShowBuilder(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -13,22 +13,68 @@ import {
   ArrowUpRight,
 } from 'lucide-react'
 
-interface AIUsageData {
+// The frontend historically expected a rich { total_calls, call_limit,
+// plan_name, breakdown: { email_gen, ... } } shape, but the backend
+// /analytics/dashboard endpoint actually returns a much smaller object:
+//   ai_usage: { calls_this_month, tokens_used, calls_remaining }
+// That mismatch was silently blowing up the AI Usage tab (null on
+// plan_name.charAt). We now normalize the raw backend shape into a
+// frontend-friendly view model with safe defaults for every field, so the
+// tab renders cleanly even when the backend hasn't populated the breakdown.
+interface RawAIUsageResponse {
+  ai_usage?: {
+    calls_this_month?: number
+    tokens_used?: number
+    calls_remaining?: number
+    total_calls?: number
+    call_limit?: number
+    plan_name?: string
+    breakdown?: Partial<AIUsageBreakdown>
+  }
+}
+
+interface AIUsageBreakdown {
+  email_gen: number
+  lead_score: number
+  chat: number
+  insight: number
+}
+
+interface AIUsageViewModel {
   total_calls: number
   call_limit: number
   tokens_used: number
   remaining_calls: number
   plan_name: string
-  breakdown: {
-    email_gen: number
-    lead_score: number
-    chat: number
-    insight: number
+  breakdown: AIUsageBreakdown
+}
+
+function normalizeAIUsage(raw: RawAIUsageResponse | undefined): AIUsageViewModel | null {
+  const u = raw?.ai_usage
+  if (!u) return null
+
+  const totalCalls = u.total_calls ?? u.calls_this_month ?? 0
+  const remaining = u.calls_remaining ?? 0
+  // If backend only ships used + remaining, derive the limit.
+  const callLimit = u.call_limit ?? totalCalls + remaining
+
+  return {
+    total_calls: totalCalls,
+    call_limit: callLimit,
+    tokens_used: u.tokens_used ?? 0,
+    remaining_calls: remaining,
+    plan_name: u.plan_name ?? 'free',
+    breakdown: {
+      email_gen: u.breakdown?.email_gen ?? 0,
+      lead_score: u.breakdown?.lead_score ?? 0,
+      chat: u.breakdown?.chat ?? 0,
+      insight: u.breakdown?.insight ?? 0,
+    },
   }
 }
 
 const USAGE_TYPES: {
-  key: keyof AIUsageData['breakdown']
+  key: keyof AIUsageBreakdown
   label: string
   icon: React.ElementType
   color: string
@@ -90,13 +136,11 @@ function CircularProgress({
 }
 
 export default function AIUsage() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['ai-usage'],
     queryFn: async () => {
-      const { data } = await api.get<{ ai_usage: AIUsageData }>(
-        '/analytics/dashboard'
-      )
-      return data.ai_usage
+      const { data } = await api.get<RawAIUsageResponse>('/analytics/dashboard')
+      return normalizeAIUsage(data)
     },
     staleTime: 60_000,
   })
@@ -109,7 +153,7 @@ export default function AIUsage() {
     )
   }
 
-  if (!data) {
+  if (isError || !data) {
     return (
       <div className="rounded-xl border border-gray-200 bg-white p-8 text-center">
         <Cpu className="mx-auto h-8 w-8 text-gray-200" />
@@ -120,14 +164,25 @@ export default function AIUsage() {
     )
   }
 
-  const usagePct = data.call_limit > 0 ? (data.total_calls / data.call_limit) * 100 : 0
+  const usagePct =
+    data.call_limit > 0 ? (data.total_calls / data.call_limit) * 100 : 0
   const maxBreakdown = Math.max(
     data.breakdown.email_gen,
     data.breakdown.lead_score,
     data.breakdown.chat,
     data.breakdown.insight,
-    1
+    1,
   )
+  const planLabel =
+    data.plan_name && data.plan_name.length > 0
+      ? data.plan_name.charAt(0).toUpperCase() + data.plan_name.slice(1)
+      : 'Free'
+  const hasBreakdown =
+    data.breakdown.email_gen +
+      data.breakdown.lead_score +
+      data.breakdown.chat +
+      data.breakdown.insight >
+    0
 
   return (
     <div className="space-y-6">
@@ -142,10 +197,10 @@ export default function AIUsage() {
               ? 'bg-purple-50 text-purple-700'
               : data.plan_name === 'pro'
                 ? 'bg-blue-50 text-blue-700'
-                : 'bg-gray-100 text-gray-700'
+                : 'bg-gray-100 text-gray-700',
           )}
         >
-          {data.plan_name.charAt(0).toUpperCase() + data.plan_name.slice(1)} Plan
+          {planLabel} Plan
         </span>
       </div>
 
@@ -201,48 +256,55 @@ export default function AIUsage() {
             <h3 className="mb-4 text-sm font-semibold text-gray-900">
               Usage Breakdown
             </h3>
-            <div className="space-y-3">
-              {USAGE_TYPES.map(({ key, label, icon: TypeIcon, color }) => {
-                const count = data.breakdown[key]
-                const barPct = (count / maxBreakdown) * 100
-                return (
-                  <div key={key} className="flex items-center gap-3">
-                    <div
-                      className={cn(
-                        'flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-opacity-10',
-                        color
-                      )}
-                    >
-                      <TypeIcon
+            {hasBreakdown ? (
+              <div className="space-y-3">
+                {USAGE_TYPES.map(({ key, label, icon: TypeIcon, color }) => {
+                  const count = data.breakdown[key]
+                  const barPct = (count / maxBreakdown) * 100
+                  return (
+                    <div key={key} className="flex items-center gap-3">
+                      <div
                         className={cn(
-                          'h-3.5 w-3.5',
-                          color.replace('bg-', 'text-')
+                          'flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-opacity-10',
+                          color,
                         )}
-                      />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="mb-1 flex items-center justify-between">
-                        <span className="text-xs font-medium text-gray-700">
-                          {label}
-                        </span>
-                        <span className="text-xs font-semibold text-gray-900">
-                          {formatNumber(count)}
-                        </span>
-                      </div>
-                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
-                        <div
+                      >
+                        <TypeIcon
                           className={cn(
-                            'h-full rounded-full transition-all duration-500',
-                            color
+                            'h-3.5 w-3.5',
+                            color.replace('bg-', 'text-'),
                           )}
-                          style={{ width: `${barPct}%` }}
                         />
                       </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-1 flex items-center justify-between">
+                          <span className="text-xs font-medium text-gray-700">
+                            {label}
+                          </span>
+                          <span className="text-xs font-semibold text-gray-900">
+                            {formatNumber(count)}
+                          </span>
+                        </div>
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+                          <div
+                            className={cn(
+                              'h-full rounded-full transition-all duration-500',
+                              color,
+                            )}
+                            style={{ width: `${barPct}%` }}
+                          />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                )
-              })}
-            </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400">
+                No detailed breakdown available yet. Usage will appear here as you
+                use AI features like email generation and lead scoring.
+              </p>
+            )}
           </div>
         </div>
       </div>
