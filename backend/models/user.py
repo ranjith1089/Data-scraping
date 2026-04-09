@@ -25,6 +25,13 @@ class User(Base):
     full_name: Mapped[str] = mapped_column(String, nullable=False)
     role: Mapped[str] = mapped_column(String, default="member")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Platform super-admin flag. When true, this user can use the
+    # ``/admin/tenants/*`` routes and manage every tenant on the system.
+    # Added in migration 004. Default false so existing users are
+    # unaffected.
+    is_superuser: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=text("false")
+    )
     # IMPORTANT: last_login is written from Python code as a tz-aware datetime
     # (datetime.now(timezone.utc) in routers/auth.py login handler). The DB
     # column is TIMESTAMPTZ (created in 001_initial_schema.py), so the

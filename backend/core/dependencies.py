@@ -64,3 +64,19 @@ def require_role(*roles: str):
         return current_user
 
     return role_checker
+
+
+async def require_superuser(current_user=Depends(get_current_user)):
+    """Gate a route to platform super-admins only.
+
+    Super-admin status is a platform-level flag (``users.is_superuser``),
+    orthogonal to the tenant-scoped ``role`` column. This dependency is
+    how the ``/admin/tenants/*`` routes enforce that only the platform
+    operator can reach cross-tenant endpoints.
+    """
+    if not getattr(current_user, "is_superuser", False):
+        raise HTTPException(
+            status_code=403,
+            detail="Super-admin privileges required",
+        )
+    return current_user

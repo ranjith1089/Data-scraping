@@ -13,6 +13,9 @@ import CampaignDetailPage from './pages/CampaignDetailPage'
 import PipelinePage from './pages/PipelinePage'
 import AIAssistantPage from './pages/AIAssistantPage'
 import IntegrationsPage from './pages/IntegrationsPage'
+import AdminTenantsPage from './pages/AdminTenantsPage'
+import AdminTenantDetailPage from './pages/AdminTenantDetailPage'
+import RequireSuperuser from './components/admin/RequireSuperuser'
 import SettingsPage from './pages/SettingsPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -53,6 +56,22 @@ export default function App() {
           <Route path="ai" element={<AIAssistantPage />} />
           <Route path="ai-assistant" element={<Navigate to="/ai" replace />} />
           <Route path="integrations" element={<IntegrationsPage />} />
+          <Route
+            path="admin/tenants"
+            element={
+              <RequireSuperuser>
+                <AdminTenantsPage />
+              </RequireSuperuser>
+            }
+          />
+          <Route
+            path="admin/tenants/:id"
+            element={
+              <RequireSuperuser>
+                <AdminTenantDetailPage />
+              </RequireSuperuser>
+            }
+          />
           <Route path="settings" element={<SettingsPage />} />
           {/*
             Catch-all fallback: any unknown nested URL redirects to the

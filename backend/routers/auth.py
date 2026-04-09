@@ -31,6 +31,9 @@ def _build_token_payload(user: User) -> dict:
         "tenant_id": str(user.tenant_id),
         "role": user.role,
         "email": user.email,
+        # Platform super-admin flag. Absent on pre-004 tokens; consumers
+        # default to False, so this is backwards compatible.
+        "is_superuser": bool(getattr(user, "is_superuser", False)),
     }
 
 
@@ -103,6 +106,18 @@ async def login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
         )
+
+    # Block login if the user's tenant is suspended or cancelled.
+    # Super-admins are exempt so they can always get back in and
+    # reactivate their own tenant if something goes wrong.
+    if not getattr(user, "is_superuser", False):
+        tenant = await db.get(Tenant, user.tenant_id)
+        tenant_status = getattr(tenant, "status", None) if tenant else None
+        if tenant_status and tenant_status != "active":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Tenant is {tenant_status}. Contact support.",
+            )
 
     # Update last_login — defensively wrapped so a DB-side failure on this
     # cosmetic write NEVER blocks the actual login response. We learned this
