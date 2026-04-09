@@ -1,15 +1,12 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import {
   Plus,
   Play,
   Pause,
-  Trash2,
-  Eye,
-  Send,
-  Mail,
-  MessageSquare,
-  Inbox,
+  CheckCircle2,
+  FileEdit,
+  MoreHorizontal,
 } from 'lucide-react'
 import {
   useCampaigns,
@@ -18,234 +15,273 @@ import {
   useDeleteCampaign,
   type Campaign,
 } from '@/hooks/useCampaigns'
-import { cn, SECTOR_NAMES, SECTOR_COLORS, formatNumber } from '@/lib/utils'
-import toast from 'react-hot-toast'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { cn, SECTOR_NAMES, formatNumber } from '@/lib/utils'
 
-const STATUS_TABS = [
-  { value: '', label: 'All' },
-  { value: 'draft', label: 'Draft' },
-  { value: 'active', label: 'Active' },
-  { value: 'paused', label: 'Paused' },
-  { value: 'completed', label: 'Completed' },
-]
-
-const STATUS_BADGE: Record<string, { color: string; label: string }> = {
-  draft: { color: 'bg-gray-100 text-gray-700', label: 'Draft' },
-  active: { color: 'bg-green-50 text-green-700', label: 'Active' },
-  paused: { color: 'bg-yellow-50 text-yellow-700', label: 'Paused' },
-  completed: { color: 'bg-blue-50 text-blue-700', label: 'Completed' },
+function getStatusIcon(status: string) {
+  switch (status) {
+    case 'active':
+      return <Play className="w-3 h-3 mr-1" />
+    case 'paused':
+      return <Pause className="w-3 h-3 mr-1" />
+    case 'completed':
+      return <CheckCircle2 className="w-3 h-3 mr-1" />
+    case 'draft':
+      return <FileEdit className="w-3 h-3 mr-1" />
+    default:
+      return null
+  }
 }
 
-const CHANNEL_BADGE: Record<string, { icon: React.ElementType; label: string }> = {
-  email: { icon: Mail, label: 'Email' },
-  whatsapp: { icon: MessageSquare, label: 'WhatsApp' },
-  sms: { icon: MessageSquare, label: 'SMS' },
-  multi_channel: { icon: Send, label: 'Mixed' },
+function getStatusColor(status: string) {
+  switch (status) {
+    case 'active':
+      return 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:border-emerald-500/30 dark:text-emerald-400'
+    case 'paused':
+      return 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:border-amber-500/30 dark:text-amber-400'
+    case 'completed':
+      return 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/20 dark:border-blue-500/30 dark:text-blue-400'
+    case 'draft':
+      return 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-500/20 dark:border-slate-500/30 dark:text-slate-400'
+    default:
+      return 'bg-gray-100 text-gray-700 border-gray-200'
+  }
+}
+
+function rate(numerator: number, denominator: number) {
+  if (!denominator) return 0
+  return Math.round((numerator / denominator) * 100)
 }
 
 export default function CampaignsPage() {
   const navigate = useNavigate()
-  const [statusFilter, setStatusFilter] = useState('')
-  const { data, isLoading } = useCampaigns({
-    status: statusFilter || undefined,
-  })
+  const { data, isLoading } = useCampaigns()
   const startCampaign = useStartCampaign()
   const pauseCampaign = usePauseCampaign()
   const deleteCampaign = useDeleteCampaign()
 
-  function handleStartPause(campaign: Campaign) {
-    if (campaign.status === 'active') {
-      pauseCampaign.mutate(campaign.id, {
-        onSuccess: () => toast.success('Campaign paused'),
-        onError: () => toast.error('Failed to pause campaign'),
-      })
-    } else {
-      startCampaign.mutate(campaign.id, {
-        onSuccess: () => toast.success('Campaign started'),
-        onError: () => toast.error('Failed to start campaign'),
-      })
+  const campaigns: Campaign[] = data?.items ?? []
+
+  async function handleStart(id: string) {
+    try {
+      await startCampaign.mutateAsync(id)
+      toast.success('Campaign started')
+    } catch {
+      toast.error('Failed to start campaign')
     }
   }
 
-  function handleDelete(id: string) {
-    if (!window.confirm('Are you sure you want to delete this campaign?')) return
-    deleteCampaign.mutate(id, {
-      onSuccess: () => toast.success('Campaign deleted'),
-      onError: () => toast.error('Failed to delete campaign'),
-    })
+  async function handlePause(id: string) {
+    try {
+      await pauseCampaign.mutateAsync(id)
+      toast.success('Campaign paused')
+    } catch {
+      toast.error('Failed to pause campaign')
+    }
   }
 
-  const campaigns = data?.items || []
+  async function handleDelete(id: string) {
+    if (!window.confirm('Are you sure you want to delete this campaign?')) return
+    try {
+      await deleteCampaign.mutateAsync(id)
+      toast.success('Campaign deleted')
+    } catch {
+      toast.error('Failed to delete campaign')
+    }
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Campaigns</h1>
-        <button className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700">
-          <Plus className="h-4 w-4" />
-          Create Campaign
-        </button>
-      </div>
-
-      {/* Status Filter Tabs */}
-      <div className="flex gap-1 border-b border-gray-200">
-        {STATUS_TABS.map((tab) => (
-          <button
-            key={tab.value}
-            onClick={() => setStatusFilter(tab.value)}
-            className={cn(
-              'border-b-2 px-4 py-2.5 text-sm font-medium transition-colors',
-              statusFilter === tab.value
-                ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Content */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-56 animate-pulse rounded-xl bg-gray-100" />
-          ))}
-        </div>
-      ) : campaigns.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-gray-200 bg-white py-20">
-          <Inbox className="h-12 w-12 text-gray-300" />
-          <h3 className="mt-4 text-sm font-medium text-gray-900">No campaigns found</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            {statusFilter ? 'Try a different filter or create a new campaign.' : 'Create your first campaign to start reaching leads.'}
+    <div className="space-y-6 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+            Campaigns
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Manage your automated outreach campaigns.
           </p>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {campaigns.map((campaign) => {
-            const status = STATUS_BADGE[campaign.status] || STATUS_BADGE.draft
-            const channel = CHANNEL_BADGE[campaign.campaign_type] || CHANNEL_BADGE.email
-            const ChannelIcon = channel.icon
-            const openRate = campaign.sent_count > 0
-              ? ((campaign.opened_count / campaign.sent_count) * 100).toFixed(1)
-              : '0.0'
+        <Button>
+          <Plus className="h-4 w-4 mr-2" />
+          Create Campaign
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4">
+        {isLoading ? (
+          Array(4)
+            .fill(0)
+            .map((_, i) => (
+              <Card key={i} className="overflow-hidden">
+                <CardContent className="p-0">
+                  <Skeleton className="h-24 w-full" />
+                </CardContent>
+              </Card>
+            ))
+        ) : campaigns.length === 0 ? (
+          <Card className="py-12 border-dashed">
+            <CardContent className="flex flex-col items-center justify-center text-center">
+              <div className="bg-muted p-4 rounded-full mb-4">
+                <Play className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-medium text-foreground">No campaigns yet</h3>
+              <p className="text-muted-foreground mt-1 max-w-md mx-auto">
+                Create your first AI-powered outreach campaign to start engaging with
+                leads automatically.
+              </p>
+              <Button className="mt-6">Create First Campaign</Button>
+            </CardContent>
+          </Card>
+        ) : (
+          campaigns.map((campaign) => {
+            const openRate = rate(campaign.opened_count, campaign.sent_count)
+            const replyRate = rate(campaign.replied_count, campaign.sent_count)
+            const sectorName =
+              SECTOR_NAMES[campaign.sector_code] ?? campaign.sector_code
 
             return (
-              <div
+              <Card
                 key={campaign.id}
-                className="cursor-pointer rounded-xl border border-gray-200 bg-white p-5 transition-shadow hover:shadow-md"
+                className="overflow-hidden group hover:border-primary/50 transition-colors cursor-pointer"
                 onClick={() => navigate(`/campaigns/${campaign.id}`)}
               >
-                {/* Name + Status */}
-                <div className="flex items-start justify-between">
-                  <h3 className="text-sm font-semibold text-gray-900 line-clamp-2">
-                    {campaign.name}
-                  </h3>
-                  <span className={cn('flex-shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium', status.color)}>
-                    {status.label}
-                  </span>
-                </div>
+                <CardContent className="p-0">
+                  <div className="flex flex-col md:flex-row items-start md:items-center p-5 gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-1 flex-wrap">
+                        <h3 className="font-semibold text-lg truncate text-foreground">
+                          {campaign.name}
+                        </h3>
+                        <Badge
+                          className={cn(
+                            'capitalize flex items-center border',
+                            getStatusColor(campaign.status),
+                          )}
+                          variant="outline"
+                        >
+                          {getStatusIcon(campaign.status)}
+                          {campaign.status}
+                        </Badge>
+                        {sectorName && (
+                          <Badge
+                            variant="secondary"
+                            className="font-normal hidden sm:inline-flex"
+                          >
+                            {sectorName}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Created on{' '}
+                        {new Date(campaign.created_at).toLocaleDateString(undefined, {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </div>
+                    </div>
 
-                {/* Description */}
-                {campaign.description && (
-                  <p className="mt-1.5 text-xs text-gray-500 line-clamp-2">
-                    {campaign.description}
-                  </p>
-                )}
+                    <div className="flex flex-wrap md:flex-nowrap items-center gap-6 w-full md:w-auto shrink-0 bg-muted/30 md:bg-transparent p-4 md:p-0 rounded-lg md:rounded-none">
+                      <div className="flex flex-col">
+                        <span className="text-xs text-muted-foreground mb-1 uppercase tracking-wider font-medium">
+                          Sent
+                        </span>
+                        <span className="font-semibold text-foreground">
+                          {formatNumber(campaign.sent_count)}
+                        </span>
+                      </div>
+                      <div className="h-8 w-px bg-border hidden md:block" />
+                      <div className="flex flex-col">
+                        <span className="text-xs text-muted-foreground mb-1 uppercase tracking-wider font-medium">
+                          Opened
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-foreground">
+                            {formatNumber(campaign.opened_count)}
+                          </span>
+                          <span className="text-xs text-emerald-500 font-medium bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                            {openRate}%
+                          </span>
+                        </div>
+                      </div>
+                      <div className="h-8 w-px bg-border hidden md:block" />
+                      <div className="flex flex-col">
+                        <span className="text-xs text-muted-foreground mb-1 uppercase tracking-wider font-medium">
+                          Replied
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-foreground">
+                            {formatNumber(campaign.replied_count)}
+                          </span>
+                          <span className="text-xs text-blue-500 font-medium bg-blue-500/10 px-1.5 py-0.5 rounded">
+                            {replyRate}%
+                          </span>
+                        </div>
+                      </div>
 
-                {/* Sector + Channel badges */}
-                <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                  {campaign.sector_code && (
-                    <span
-                      className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium"
-                      style={{
-                        backgroundColor: `${SECTOR_COLORS[campaign.sector_code] || '#6B7280'}15`,
-                        color: SECTOR_COLORS[campaign.sector_code] || '#6B7280',
-                      }}
-                    >
-                      {SECTOR_NAMES[campaign.sector_code] || campaign.sector_code}
-                    </span>
-                  )}
-                  <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600">
-                    <ChannelIcon className="h-2.5 w-2.5" />
-                    {channel.label}
-                  </span>
-                </div>
-
-                {/* Stats row */}
-                <div className="mt-4 grid grid-cols-3 gap-2 border-t border-gray-100 pt-3">
-                  <div>
-                    <p className="text-[10px] font-medium text-gray-500">Sent</p>
-                    <p className="text-sm font-semibold text-gray-900">{formatNumber(campaign.sent_count)}</p>
+                      <div
+                        className="md:ml-4 ml-auto"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => navigate(`/campaigns/${campaign.id}`)}
+                            >
+                              View Analytics
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => navigate(`/campaigns/${campaign.id}`)}
+                            >
+                              Edit Campaign
+                            </DropdownMenuItem>
+                            {campaign.status === 'active' ? (
+                              <DropdownMenuItem
+                                onClick={() => handlePause(campaign.id)}
+                              >
+                                Pause Campaign
+                              </DropdownMenuItem>
+                            ) : campaign.status === 'draft' ||
+                              campaign.status === 'paused' ? (
+                              <DropdownMenuItem
+                                onClick={() => handleStart(campaign.id)}
+                              >
+                                {campaign.status === 'draft'
+                                  ? 'Start Campaign'
+                                  : 'Resume Campaign'}
+                              </DropdownMenuItem>
+                            ) : null}
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onClick={() => handleDelete(campaign.id)}
+                            >
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-[10px] font-medium text-gray-500">Opened</p>
-                    <p className="text-sm font-semibold text-gray-900">{formatNumber(campaign.opened_count)}</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-medium text-gray-500">Replied</p>
-                    <p className="text-sm font-semibold text-gray-900">{formatNumber(campaign.replied_count)}</p>
-                  </div>
-                </div>
-
-                {/* Open rate bar */}
-                <div className="mt-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-gray-500">Open rate</span>
-                    <span className="font-semibold text-gray-900">{openRate}%</span>
-                  </div>
-                  <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
-                    <div
-                      className={cn(
-                        'h-full rounded-full',
-                        Number(openRate) >= 50 ? 'bg-green-500' : Number(openRate) >= 25 ? 'bg-yellow-500' : 'bg-red-500'
-                      )}
-                      style={{ width: `${Math.min(Number(openRate), 100)}%` }}
-                    />
-                  </div>
-                </div>
-
-                {/* Action buttons */}
-                <div className="mt-4 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    onClick={() => navigate(`/campaigns/${campaign.id}`)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
-                  >
-                    <Eye className="h-3 w-3" />
-                    View
-                  </button>
-                  {(campaign.status === 'draft' || campaign.status === 'active' || campaign.status === 'paused') && (
-                    <button
-                      onClick={() => handleStartPause(campaign)}
-                      disabled={startCampaign.isPending || pauseCampaign.isPending}
-                      className={cn(
-                        'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
-                        campaign.status === 'active'
-                          ? 'border border-yellow-200 bg-yellow-50 text-yellow-700 hover:bg-yellow-100'
-                          : 'border border-green-200 bg-green-50 text-green-700 hover:bg-green-100'
-                      )}
-                    >
-                      {campaign.status === 'active' ? (
-                        <><Pause className="h-3 w-3" /> Pause</>
-                      ) : (
-                        <><Play className="h-3 w-3" /> Start</>
-                      )}
-                    </button>
-                  )}
-                  <button
-                    onClick={() => handleDelete(campaign.id)}
-                    disabled={deleteCampaign.isPending}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             )
-          })}
-        </div>
-      )}
+          })
+        )}
+      </div>
     </div>
   )
 }
