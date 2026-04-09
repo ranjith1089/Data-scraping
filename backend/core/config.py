@@ -20,6 +20,41 @@ class Settings(BaseSettings):
     AI_MONTHLY_LIMIT_GROWTH: int = 5000
     AI_MONTHLY_LIMIT_ENTERPRISE: int = 50000
 
+    # ------------------------------------------------------------------
+    # Third-Party Integration Module
+    # ------------------------------------------------------------------
+    # Fernet key used to encrypt every stored third-party credential
+    # (OAuth tokens, API keys, webhook secrets). Generate with
+    # ``python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"``
+    # and set via env. If empty, core/crypto.py derives a fallback key
+    # from SECRET_KEY (local-dev only, logs a loud warning).
+    INTEGRATIONS_ENCRYPTION_KEY: str = ""
+
+    # The public base URL at which this backend is reachable. Used when
+    # rendering webhook URLs for providers to call back into LeadForge.
+    PUBLIC_BASE_URL: str = "http://localhost:8000"
+
+    # Meta Ads (Facebook/Instagram Lead Ads) — OAuth 2.0
+    META_APP_ID: str = ""
+    META_APP_SECRET: str = ""
+    META_WEBHOOK_VERIFY_TOKEN: str = ""
+
+    # Google Ads — OAuth 2.0 + developer token
+    GOOGLE_ADS_CLIENT_ID: str = ""
+    GOOGLE_ADS_CLIENT_SECRET: str = ""
+    GOOGLE_ADS_DEVELOPER_TOKEN: str = ""
+
+    # LinkedIn Ads — OAuth 2.0
+    LINKEDIN_CLIENT_ID: str = ""
+    LINKEDIN_CLIENT_SECRET: str = ""
+
+    # SMTP alternative to SendGrid
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_USE_TLS: bool = True
+
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def normalize_database_url(cls, v: str) -> str:

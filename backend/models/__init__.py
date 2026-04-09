@@ -11,6 +11,11 @@ from .activity import Activity
 from .deal import Deal
 from .pipeline_stage import PipelineStage
 from .api_key import APIKey
+from .integration import Integration
+from .integration_event import IntegrationEvent
+from .webhook_endpoint import WebhookEndpoint
+from .automation_rule import AutomationRule
+from .lead_assignment_rule import LeadAssignmentRule
 
 __all__ = [
     "Tenant",
@@ -26,4 +31,9 @@ __all__ = [
     "Deal",
     "PipelineStage",
     "APIKey",
+    "Integration",
+    "IntegrationEvent",
+    "WebhookEndpoint",
+    "AutomationRule",
+    "LeadAssignmentRule",
 ]
