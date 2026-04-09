@@ -25,15 +25,23 @@ class Settings(BaseSettings):
     def normalize_database_url(cls, v: str) -> str:
         """Railway/Heroku provide postgresql:// — SQLAlchemy async needs postgresql+asyncpg://
 
-        Also fails fast on empty values so misconfigured deploys surface a
-        clear error instead of a cryptic SQLAlchemy 'Could not parse URL' trace.
+        Important: this MUST NOT raise on bad input. config.py is imported
+        at app startup; raising here crashes uvicorn before it can bind a
+        port, and Railway then sees no logs at all (just a failed
+        healthcheck). Instead we log a warning and let the eventual DB
+        connection surface the error in a place where logs are visible.
         """
         if v is None or str(v).strip() == "":
-            raise ValueError(
-                "DATABASE_URL is empty. On Railway, set this variable to the "
-                "reference '${{Postgres.DATABASE_URL}}' (or paste the full "
-                "postgres:// URL from the Postgres service → Variables tab)."
+            print(
+                "[config] WARNING: DATABASE_URL is empty. On Railway, set this "
+                "variable to the reference '${{Postgres.DATABASE_URL}}' or paste "
+                "the full postgres:// URL from the Postgres service → Variables.",
+                flush=True,
             )
+            # Return a syntactically valid placeholder so SQLAlchemy can be
+            # constructed; the connection will fail when actually used,
+            # which is logged from a background task in main.py.
+            return "postgresql+asyncpg://invalid:invalid@invalid:5432/invalid"
         if v.startswith("postgres://"):
             v = v.replace("postgres://", "postgresql+asyncpg://", 1)
         elif v.startswith("postgresql://") and "+asyncpg" not in v:

@@ -1,4 +1,12 @@
 FROM python:3.11-slim
+
+# Make Python output visible in Railway logs in real time. Without these,
+# stdout/stderr are buffered in non-TTY mode and we see no startup output
+# at all — making any import-time crash invisible.
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1
+
 WORKDIR /app
 RUN apt-get update && apt-get install -y gcc libpq-dev && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt .

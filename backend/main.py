@@ -2,41 +2,56 @@
 
 import asyncio
 import sys
+import traceback
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
+# Heartbeat — proves the Python process actually started. If this is the
+# only line in Railway logs, something below crashed at import time.
+print("[startup] main.py loading...", flush=True)
 
-from core.config import settings
-from core.exceptions import (
-    AIQuotaExceeded,
-    SectorNotFoundError,
-    ai_quota_handler,
-    sector_not_found_handler,
-)
+try:
+    from fastapi import FastAPI
+    from fastapi.middleware.cors import CORSMiddleware
+    from contextlib import asynccontextmanager
 
-# Import all routers
-from routers import (
-    auth,
-    tenants,
-    users,
-    leads,
-    campaigns,
-    outreach,
-    pipeline,
-    activities,
-    analytics,
-    import_export,
-    webhooks,
-)
-from routers.ai import (
-    email_gen,
-    lead_scorer,
-    chat,
-    sector_brief,
-    personalise,
-    reply_analyser,
-)
+    from core.config import settings
+    print("[startup] core.config imported OK", flush=True)
+
+    from core.exceptions import (
+        AIQuotaExceeded,
+        SectorNotFoundError,
+        ai_quota_handler,
+        sector_not_found_handler,
+    )
+
+    # Import all routers
+    from routers import (
+        auth,
+        tenants,
+        users,
+        leads,
+        campaigns,
+        outreach,
+        pipeline,
+        activities,
+        analytics,
+        import_export,
+        webhooks,
+    )
+    from routers.ai import (
+        email_gen,
+        lead_scorer,
+        chat,
+        sector_brief,
+        personalise,
+        reply_analyser,
+    )
+    print("[startup] all routers imported OK", flush=True)
+except Exception:
+    print("[startup] FATAL: import failed:", flush=True)
+    traceback.print_exc()
+    sys.stdout.flush()
+    sys.stderr.flush()
+    raise
 
 
 async def _run_migrations_in_background() -> None:
