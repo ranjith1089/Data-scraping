@@ -19,6 +19,12 @@ passlib[bcrypt]==1.7.4
 bcrypt==4.0.1
 python-multipart==0.0.9
 anthropic==0.18.1
+# OpenAI SDK is used to talk to OpenRouter (OpenAI-compatible API).
+# We standardised on OpenRouter after running out of credits on the
+# direct Anthropic billing surface — one key, one balance, free choice
+# of Claude / GPT / Gemini / Mistral / etc. See services/claude_service.py
+# for the provider dispatch.
+openai>=1.30.0,<2.0.0
 sendgrid==6.11.0
 redis[hiredis]==5.0.1
 httpx==0.26.0

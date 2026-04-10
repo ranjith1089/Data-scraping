@@ -6,7 +6,38 @@ from typing import List
 class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://leadforge:leadforge_pass@localhost:5432/leadforge"
     SECRET_KEY: str = "change-me-in-production"
+
+    # ------------------------------------------------------------------
+    # AI provider — see services/claude_service.py for the dispatch.
+    #
+    # The product was originally wired direct to Anthropic. After
+    # ``Your credit balance is too low`` started taking down chat in
+    # production, we moved to OpenRouter (OpenAI-compatible router that
+    # exposes Anthropic, OpenAI, Google, Mistral, etc. behind one key
+    # and one billing surface). The classic ANTHROPIC_API_KEY env var
+    # still works as a fallback when AI_PROVIDER=anthropic.
+    #
+    # AI_PROVIDER values: "openrouter" (default) | "anthropic"
+    # ------------------------------------------------------------------
+    AI_PROVIDER: str = "openrouter"
+
     ANTHROPIC_API_KEY: str = ""
+
+    # OpenRouter — https://openrouter.ai
+    # OPENROUTER_MODEL is the slug of the model on OpenRouter; see
+    # https://openrouter.ai/models for the list. ``anthropic/claude-sonnet-4``
+    # is the closest match to what we used to call directly. Cheaper
+    # alternatives that still work well for our prompts:
+    #   ``openai/gpt-4o-mini``        — fast & cheap, fine for chat
+    #   ``anthropic/claude-3.5-haiku`` — cheap & fast, fine for scoring
+    #   ``openai/gpt-4o``             — premium, on par with sonnet
+    OPENROUTER_API_KEY: str = ""
+    OPENROUTER_MODEL: str = "anthropic/claude-sonnet-4"
+    OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
+    # Sent as HTTP-Referer + X-Title to OpenRouter for app attribution.
+    # Optional but recommended; OpenRouter shows this in their dashboard.
+    OPENROUTER_APP_NAME: str = "LeadForge AI"
+
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     SENDGRID_API_KEY: str = ""
