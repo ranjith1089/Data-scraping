@@ -57,20 +57,37 @@ except Exception:
     raise
 
 
-async def _run_migrations_in_background() -> None:
-    """Run ``alembic upgrade head`` without blocking uvicorn startup.
+# Module-level migration result, surfaced via /health/db so we can see
+# what happened without needing access to Railway logs. The first deploy
+# of the blocking-migrations fix confirmed that `alembic upgrade head`
+# was *still* failing silently — Railway kept serving traffic with the
+# schema pinned at 002 while the code expected 004. Exposing the actual
+# subprocess stdout/stderr here is the fastest way to diagnose it from a
+# dev machine with just curl.
+_migration_result: dict = {"status": "pending"}
 
-    Railway's healthcheck starts hitting ``/health`` within seconds of the
-    container booting. A large initial migration (tables + RLS + indexes +
-    seed data) can easily exceed that window if we run it inline before
-    uvicorn binds the port — which causes the deploy to fail even though
-    the migration itself would have succeeded a moment later.
 
-    By scheduling it as a fire-and-forget task from the lifespan, uvicorn
-    accepts connections immediately (``/health`` returns 200), and
-    migrations complete in parallel. DB-dependent routes will briefly 503
-    while the upgrade runs; once it finishes, everything works normally.
+async def _run_migrations() -> None:
+    """Run ``alembic upgrade head`` synchronously at lifespan startup.
+
+    Earlier this was fire-and-forget via ``asyncio.create_task`` so that
+    Railway's healthcheck window wouldn't be blocked by a long initial
+    migration. That turned out to be worse than the disease: if the
+    alembic subprocess failed or was killed mid-run, the app happily kept
+    serving traffic with a stale schema. ORM SELECTs then crashed with
+    ``UndefinedColumn`` the instant new mapped columns landed — which is
+    exactly what took the login endpoint down after the
+    super-admin-tenant-management migration (004) shipped.
+
+    Running it synchronously here means the container simply won't serve
+    traffic until the schema is up to date. Every migration we've shipped
+    completes well under Railway's startup healthcheck window, so the
+    delay is acceptable; and if something *does* go wrong, the full
+    alembic output is captured into ``_migration_result`` and surfaced by
+    the ``/health/db`` endpoint so we can diagnose it without Railway
+    log access.
     """
+    global _migration_result
     try:
         proc = await asyncio.create_subprocess_exec(
             sys.executable,
@@ -83,25 +100,51 @@ async def _run_migrations_in_background() -> None:
         )
         stdout, _ = await proc.communicate()
         output = stdout.decode(errors="replace") if stdout else ""
+        # Tail the output so we don't blow the JSON response size up.
+        tail = output[-4000:]
         if proc.returncode == 0:
+            _migration_result = {
+                "status": "ok",
+                "returncode": 0,
+                "output_tail": tail,
+            }
             print("[migrations] alembic upgrade head: OK", flush=True)
             if output.strip():
                 print(output, flush=True)
         else:
+            _migration_result = {
+                "status": "failed",
+                "returncode": proc.returncode,
+                "output_tail": tail,
+            }
             print(
                 f"[migrations] alembic FAILED with exit code {proc.returncode}",
                 flush=True,
             )
             print(output, flush=True)
     except Exception as exc:  # pragma: no cover — last-resort diagnostic
+        _migration_result = {
+            "status": "exception",
+            "error": repr(exc),
+            "traceback": traceback.format_exc(),
+        }
         print(f"[migrations] unexpected exception: {exc!r}", flush=True)
+        traceback.print_exc()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: schedule migrations in the background so the port is bound
-    # immediately and Railway's healthcheck can pass.
-    asyncio.create_task(_run_migrations_in_background())
+    # Startup: run alembic upgrade head BEFORE serving traffic. This used
+    # to be fire-and-forget, which meant a silently-failed migration left
+    # the app serving 500s on every DB query. See ``_run_migrations`` for
+    # the full story. The call is wrapped in a try/except so the app still
+    # boots (and /health still returns 200) even if migrations blow up —
+    # we want the startup logs visible in Railway, not a crash loop.
+    try:
+        await _run_migrations()
+    except Exception as exc:  # noqa: BLE001
+        print(f"[startup] migration step raised: {exc!r}", flush=True)
+        traceback.print_exc()
 
     # Boot APScheduler in-process. This is best-effort — if the jobstore
     # table doesn't exist yet (first-run before migrations complete) the
@@ -172,3 +215,51 @@ app.include_router(reply_analyser.router, prefix=PREFIX)
 @app.get("/health")
 async def health():
     return {"status": "ok", "service": "leadforge-api"}
+
+
+@app.get("/health/db")
+async def health_db():
+    """Diagnostic: report the current alembic revision and presence of
+    key columns added by recent migrations.
+
+    This is deliberately unauthenticated — it reveals only schema
+    metadata, never user data — so we can verify post-deploy that
+    migrations landed without needing a working login. If a future
+    deploy starts 500-ing on /auth/login again, hitting this endpoint
+    tells us instantly whether it's a stale-schema problem.
+    """
+    from sqlalchemy import text
+    from core.database import AsyncSessionLocal
+
+    info: dict = {"status": "ok", "migration_result": _migration_result}
+    try:
+        async with AsyncSessionLocal() as session:
+            rev = await session.execute(text("SELECT version_num FROM alembic_version"))
+            row = rev.first()
+            info["alembic_version"] = row[0] if row else None
+
+            # Column presence checks for the two migrations most likely
+            # to be missing during a rolling upgrade.
+            checks = {
+                "users.is_superuser": (
+                    "SELECT 1 FROM information_schema.columns "
+                    "WHERE table_name = 'users' AND column_name = 'is_superuser'"
+                ),
+                "tenants.status": (
+                    "SELECT 1 FROM information_schema.columns "
+                    "WHERE table_name = 'tenants' AND column_name = 'status'"
+                ),
+                "integrations_table": (
+                    "SELECT 1 FROM information_schema.tables "
+                    "WHERE table_name = 'integrations'"
+                ),
+            }
+            present: dict = {}
+            for name, sql in checks.items():
+                res = await session.execute(text(sql))
+                present[name] = res.first() is not None
+            info["schema"] = present
+    except Exception as exc:  # noqa: BLE001
+        info["status"] = "error"
+        info["error"] = repr(exc)
+    return info

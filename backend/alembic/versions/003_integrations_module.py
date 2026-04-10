@@ -353,19 +353,38 @@ def upgrade() -> None:
     )
 
     # ------------------------------------------------------------------
-    # APScheduler jobstore table (created lazily by APScheduler if absent,
-    # but we create it here for predictable migrations across environments)
+    # APScheduler jobstore table. APScheduler creates this lazily on the
+    # first add_job() call, so on any environment where the scheduler has
+    # already booted (e.g. Railway running a pre-003 build that also
+    # called ``scheduler.start()``), the table ALREADY exists and a plain
+    # ``CREATE TABLE`` here fails with DuplicateTableError — which blocks
+    # every subsequent migration in the chain from ever running.
+    #
+    # Use ``IF NOT EXISTS`` via raw SQL so this migration is idempotent
+    # regardless of whether APScheduler got there first.
     # ------------------------------------------------------------------
-    op.create_table(
-        "apscheduler_jobs",
-        sa.Column("id", sa.Unicode(191), primary_key=True),
-        sa.Column("next_run_time", sa.Float(), index=True, nullable=True),
-        sa.Column("job_state", sa.LargeBinary(), nullable=False),
+    op.execute(
+        """
+        CREATE TABLE IF NOT EXISTS apscheduler_jobs (
+            id VARCHAR(191) NOT NULL,
+            next_run_time DOUBLE PRECISION,
+            job_state BYTEA NOT NULL,
+            PRIMARY KEY (id)
+        )
+        """
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS ix_apscheduler_jobs_next_run_time "
+        "ON apscheduler_jobs (next_run_time)"
     )
 
 
 def downgrade() -> None:
-    op.drop_table("apscheduler_jobs")
+    # Match the idempotent CREATE in upgrade() — use IF EXISTS so the
+    # downgrade also tolerates a partial state where APScheduler may have
+    # already managed the table.
+    op.execute("DROP INDEX IF EXISTS ix_apscheduler_jobs_next_run_time")
+    op.execute("DROP TABLE IF EXISTS apscheduler_jobs")
 
     outreach_table = _outreach_logs_table_name()
     op.drop_column(outreach_table, "provider_event_id")
