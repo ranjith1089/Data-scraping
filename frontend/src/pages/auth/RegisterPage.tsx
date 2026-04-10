@@ -41,21 +41,56 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
+      // IMPORTANT: backend RegisterRequest schema (schemas/auth.py)
+      // expects ``tenant_slug``, not ``slug``. Sending the wrong key
+      // makes Pydantic return 422 Unprocessable Entity and the form
+      // appears to silently fail (the user just sees their inputs sit
+      // there). Keep the local state name as `slug` for brevity but
+      // map it on the wire.
       const { data } = await api.post('/auth/register', {
         tenant_name: tenantName,
-        slug,
+        tenant_slug: slug,
         email,
         password,
         full_name: fullName,
       })
-      login(data.user, data.access_token, data.refresh_token)
+
+      // The backend returns a TokenResponse — {access_token,
+      // refresh_token, token_type, expires_in} — NOT a wrapped
+      // {user, access_token, refresh_token}. The previous code
+      // assumed the wrapped shape, which would have white-screened
+      // immediately after a successful register because data.user
+      // was undefined. Fetch /auth/me with the new token before
+      // calling login() so the auth store gets a real User object.
+      const accessToken = data.access_token as string
+      const refreshToken = data.refresh_token as string
+
+      // Temporarily set the bearer header so /auth/me succeeds.
+      const meResp = await api.get('/auth/me', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+
+      login(meResp.data, accessToken, refreshToken)
       toast.success('Account created! Welcome to LeadForge AI.')
       navigate('/')
     } catch (err: any) {
-      const msg =
-        err.response?.data?.detail ||
-        err.response?.data?.message ||
-        'Registration failed. Please try again.'
+      // FastAPI 422 returns ``detail`` as an array of
+      // ValidationError objects, not a string — joining naively
+      // produced ``[object Object]`` and made debugging painful.
+      // Surface the first ``msg`` field if it's an array.
+      const detail = err.response?.data?.detail
+      let msg: string
+      if (Array.isArray(detail)) {
+        msg = detail
+          .map((d: any) => `${d.loc?.slice(1).join('.') ?? ''}: ${d.msg}`)
+          .join('; ')
+      } else if (typeof detail === 'string') {
+        msg = detail
+      } else {
+        msg =
+          err.response?.data?.message ||
+          'Registration failed. Please try again.'
+      }
       setError(msg)
     } finally {
       setLoading(false)
