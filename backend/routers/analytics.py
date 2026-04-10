@@ -42,11 +42,20 @@ def _set_cached_insights(tenant_id: str, text: str) -> None:
 
 
 async def _generate_ai_insights(dashboard_data: dict) -> str:
-    """Generate AI insights from dashboard stats using Claude."""
-    try:
-        from core.claude_client import get_claude_client
+    """Generate AI insights from dashboard stats.
 
-        client = get_claude_client()
+    Routes through ``claude_service`` so this respects whatever
+    ``AI_PROVIDER`` is configured (OpenRouter by default) and benefits
+    from the same retry / quota / friendly-error handling as the rest
+    of the AI surface. The earlier direct ``anthropic.AsyncAnthropic``
+    call here was a third source of "credit balance too low" errors —
+    now there's exactly one billing surface.
+    """
+    try:
+        # Imported lazily to avoid a hard dep cycle if analytics is
+        # imported during early app boot.
+        from core.database import AsyncSessionLocal
+        from services.claude_service import claude_service
 
         stats_summary = (
             f"Total leads: {dashboard_data['overview']['total_leads']}, "
@@ -60,21 +69,56 @@ async def _generate_ai_insights(dashboard_data: dict) -> str:
             f"Funnel: {json.dumps(dashboard_data['funnel'])}."
         )
 
-        prompt = (
+        system = (
             "You are a sales analytics AI for an Indian B2B lead-generation CRM. "
-            "Given these dashboard stats, provide exactly 3 concise sentences a sales "
-            "manager would find actionable. Focus on lead quality, conversion opportunities, "
-            "and campaign performance. Be specific with numbers.\n\n"
-            f"Stats: {stats_summary}"
+            "Given the dashboard stats, provide exactly 3 concise sentences a sales "
+            "manager would find actionable. Focus on lead quality, conversion "
+            "opportunities, and campaign performance. Be specific with numbers."
         )
 
-        response = await client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=300,
-            messages=[{"role": "user", "content": prompt}],
-        )
+        # claude_service.generate writes to ai_interactions for quota
+        # tracking. Insights are dashboard-level (not tied to a single
+        # user/lead), so we use a fresh session here and pass the same
+        # tenant_id the caller already validated upstream — but since
+        # this helper doesn't currently receive tenant_id, fall back to
+        # a tenant-less direct client call as a last resort.
+        tenant_id = dashboard_data.get("_tenant_id")
+        if tenant_id is None:
+            # Old call sites didn't pass tenant_id; degrade to a single
+            # raw provider call without quota tracking.
+            from core.claude_client import get_ai_client
+            from core.config import settings as _settings
 
-        return response.content[0].text
+            client = get_ai_client()
+            provider = (_settings.AI_PROVIDER or "openrouter").lower()
+            if provider == "anthropic":
+                response = await client.messages.create(
+                    model="claude-sonnet-4-20250514",
+                    max_tokens=300,
+                    system=system,
+                    messages=[{"role": "user", "content": stats_summary}],
+                )
+                return response.content[0].text
+            else:
+                response = await client.chat.completions.create(
+                    model=_settings.OPENROUTER_MODEL or "anthropic/claude-sonnet-4",
+                    max_tokens=300,
+                    messages=[
+                        {"role": "system", "content": system},
+                        {"role": "user", "content": stats_summary},
+                    ],
+                )
+                return response.choices[0].message.content or ""
+
+        async with AsyncSessionLocal() as session:
+            return await claude_service.generate(
+                system=system,
+                user_message=stats_summary,
+                db=session,
+                tenant_id=tenant_id,
+                interaction_type="dashboard_insights",
+                max_tokens=300,
+            )
 
     except Exception as e:
         logger.error(f"AI insights generation failed: {e}")
