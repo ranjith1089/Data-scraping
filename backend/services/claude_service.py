@@ -22,7 +22,7 @@ from typing import Optional, AsyncGenerator
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, text as sa_text
 
 from core.claude_client import get_ai_client
 from core.config import settings
@@ -73,6 +73,77 @@ def _friendly_error(exc: Exception) -> str:
 class ClaudeService:
     def __init__(self):
         self.client = get_ai_client()
+
+    async def _log_interaction(
+        self,
+        tenant_id: UUID,
+        user_id: Optional[UUID],
+        lead_id: Optional[UUID],
+        interaction_type: str,
+        prompt_tokens: int,
+        completion_tokens: int,
+        model: str,
+        input_summary: str,
+        output_text: str,
+    ) -> None:
+        """Persist an AI interaction in an isolated short-lived session.
+
+        Why not just reuse the request's session?
+
+        1. ``ai_interactions`` is protected by a Postgres RLS policy
+           that requires ``app.current_tenant`` to be set. ``SET LOCAL``
+           only applies to the current transaction, so if the outer
+           request session has already committed or rolled back by the
+           time we get here (which is especially easy to hit with
+           ``StreamingResponse`` in FastAPI — dependency cleanup timing
+           is unreliable relative to the stream generator finishing),
+           the insert silently vanishes. That's exactly how the AI Usage
+           tab ended up permanently stuck at ``0 calls`` while Anthropic
+           was being billed: every chat completion succeeded upstream,
+           but nothing landed in the table.
+
+        2. The request session is tenant-scoped and may be in a broken
+           state after an error downstream; a dedicated session
+           isolates logging so a DB hiccup can never break the AI
+           response that the user is waiting for.
+
+        Any failure here is caught and logged — logging must never
+        propagate an exception into the caller.
+        """
+        from core.database import AsyncSessionLocal
+
+        try:
+            async with AsyncSessionLocal() as log_session:
+                # Re-apply tenant context so the RLS policy accepts the
+                # insert. SET LOCAL only lasts for the current
+                # transaction, so this must run inside whatever
+                # transaction the upcoming INSERT runs in.
+                await log_session.execute(
+                    sa_text(
+                        f"SET LOCAL app.current_tenant = '{str(tenant_id)}'"
+                    )
+                )
+                interaction = AIInteraction(
+                    tenant_id=tenant_id,
+                    user_id=user_id,
+                    lead_id=lead_id,
+                    type=interaction_type,
+                    prompt_tokens=prompt_tokens or 0,
+                    completion_tokens=completion_tokens or 0,
+                    model=model,
+                    input_summary=(input_summary or "")[:500],
+                    output_text=(output_text or "")[:2000],
+                )
+                log_session.add(interaction)
+                await log_session.commit()
+        except Exception as exc:  # noqa: BLE001
+            logger.error(
+                "Failed to log AI interaction for tenant=%s type=%s: %s",
+                tenant_id,
+                interaction_type,
+                exc,
+                exc_info=True,
+            )
 
     async def _check_quota(self, db: AsyncSession, tenant_id: UUID) -> None:
         """Check if tenant has remaining AI quota for this month."""
@@ -136,19 +207,19 @@ class ClaudeService:
                         max_tokens=max_tokens,
                     )
 
-                interaction = AIInteraction(
+                # Log to a dedicated session (see _log_interaction
+                # docstring for the RLS + streaming lifecycle rationale).
+                await self._log_interaction(
                     tenant_id=tenant_id,
                     user_id=user_id,
                     lead_id=lead_id,
-                    type=interaction_type,
+                    interaction_type=interaction_type,
                     prompt_tokens=in_tokens,
                     completion_tokens=out_tokens,
                     model=model,
-                    input_summary=user_message[:500],
-                    output_text=output_text[:2000],
+                    input_summary=user_message,
+                    output_text=output_text,
                 )
-                db.add(interaction)
-                await db.flush()
 
                 return output_text
 
@@ -294,19 +365,20 @@ class ClaudeService:
             return
 
         # Log the interaction once streaming completes successfully.
-        interaction = AIInteraction(
+        # Uses a dedicated short-lived session so that RLS + FastAPI
+        # StreamingResponse cleanup timing can't swallow the insert
+        # (see _log_interaction docstring for the full rationale).
+        await self._log_interaction(
             tenant_id=tenant_id,
             user_id=user_id,
             lead_id=lead_id,
-            type=interaction_type,
+            interaction_type=interaction_type,
             prompt_tokens=total_input,
             completion_tokens=total_output,
             model=model,
-            input_summary=user_message[:500],
-            output_text="".join(full_text)[:2000],
+            input_summary=user_message,
+            output_text="".join(full_text),
         )
-        db.add(interaction)
-        await db.flush()
 
     async def _openrouter_stream(
         self,
