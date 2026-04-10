@@ -8,6 +8,10 @@ export interface User {
   full_name: string
   role: string
   is_active: boolean
+  // Platform super-admin flag. Added in migration 004 — older
+  // persisted sessions may not carry it, so the UI must treat it as
+  // optional/defaulting to false.
+  is_superuser?: boolean
 }
 
 interface AuthState {

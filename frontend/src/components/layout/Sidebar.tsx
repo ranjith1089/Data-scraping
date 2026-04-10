@@ -8,6 +8,7 @@ import {
   Settings,
   Bot,
   Plug,
+  ShieldCheck,
   LogOut,
 } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
@@ -80,6 +81,29 @@ export default function Sidebar() {
               <SidebarLink key={item.href} item={item} collapsed={collapsed} />
             ))}
           </ul>
+
+          {/* Platform-admin section — only rendered for super-admins.
+              Gated on ``user.is_superuser`` which is populated from the
+              /auth/me response after login. */}
+          {user?.is_superuser && (
+            <div className="mt-6 border-t border-sidebar-border/50 pt-4">
+              {!collapsed && (
+                <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Platform admin
+                </p>
+              )}
+              <ul className="space-y-1">
+                <SidebarLink
+                  item={{
+                    title: 'Tenants',
+                    href: '/admin/tenants',
+                    icon: ShieldCheck,
+                  }}
+                  collapsed={collapsed}
+                />
+              </ul>
+            </div>
+          )}
         </div>
 
         {/* Footer nav */}

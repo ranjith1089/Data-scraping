@@ -27,6 +27,7 @@ try:
     from routers import (
         auth,
         tenants,
+        admin_tenants,
         users,
         leads,
         campaigns,
@@ -145,6 +146,7 @@ app.add_exception_handler(SectorNotFoundError, sector_not_found_handler)
 PREFIX = "/api/v1"
 app.include_router(auth.router, prefix=PREFIX)
 app.include_router(tenants.router, prefix=PREFIX)
+app.include_router(admin_tenants.router, prefix=PREFIX)
 app.include_router(users.router, prefix=PREFIX)
 app.include_router(leads.router, prefix=PREFIX)
 app.include_router(campaigns.router, prefix=PREFIX)

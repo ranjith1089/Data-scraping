@@ -49,5 +49,8 @@ class UserResponse(BaseModel):
     full_name: str
     role: str
     is_active: bool
+    # Platform super-admin flag. Defaults to False so older tokens /
+    # responses that don't carry it keep validating.
+    is_superuser: bool = False
 
     model_config = ConfigDict(from_attributes=True)
