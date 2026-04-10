@@ -67,6 +67,11 @@ function getScoreColor(score: number) {
   return 'text-muted-foreground'
 }
 
+// Allowed page sizes for the per-page selector. The backend caps
+// per_page at 200, so any value here must stay <= 200.
+const PAGE_SIZE_OPTIONS = [20, 50, 100] as const
+const DEFAULT_PAGE_SIZE = 20
+
 export default function LeadsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -74,19 +79,57 @@ export default function LeadsPage() {
   const [showImport, setShowImport] = useState(false)
   const searchTerm = searchParams.get('search') ?? ''
 
+  // Pagination is URL-driven so deep links and back/forward navigation
+  // restore the same view. Falls back to page 1 / DEFAULT_PAGE_SIZE if
+  // the params are missing or invalid.
+  const pageParam = Number(searchParams.get('page'))
+  const perPageParam = Number(searchParams.get('per_page'))
+  const page =
+    Number.isFinite(pageParam) && pageParam >= 1 ? Math.floor(pageParam) : 1
+  const perPage = (PAGE_SIZE_OPTIONS as readonly number[]).includes(perPageParam)
+    ? perPageParam
+    : DEFAULT_PAGE_SIZE
+
   const { data, isLoading, refetch } = useLeads({
     search: searchTerm || undefined,
-    page: 1,
-    per_page: 50,
+    page,
+    per_page: perPage,
   })
   const deleteLead = useDeleteLead()
 
   const leads = useMemo<Lead[]>(() => data?.items ?? [], [data])
+  const total = data?.total ?? 0
+  const totalPages = data?.pages ?? Math.max(1, Math.ceil(total / perPage))
+  const hasPrev = page > 1
+  const hasNext = page < totalPages
+  const rangeStart = total === 0 ? 0 : (page - 1) * perPage + 1
+  const rangeEnd = total === 0 ? 0 : Math.min(page * perPage, total)
 
   function updateSearch(value: string) {
     const next = new URLSearchParams(searchParams)
     if (value) next.set('search', value)
     else next.delete('search')
+    // Reset to page 1 whenever the search term changes — otherwise we'd
+    // ask for page 5 of a 1-page result set and render an empty table.
+    next.delete('page')
+    setSearchParams(next, { replace: true })
+  }
+
+  function goToPage(nextPage: number) {
+    const clamped = Math.min(Math.max(1, nextPage), Math.max(1, totalPages))
+    const next = new URLSearchParams(searchParams)
+    if (clamped <= 1) next.delete('page')
+    else next.set('page', String(clamped))
+    setSearchParams(next, { replace: false })
+  }
+
+  function changePerPage(value: number) {
+    const next = new URLSearchParams(searchParams)
+    if (value === DEFAULT_PAGE_SIZE) next.delete('per_page')
+    else next.set('per_page', String(value))
+    // Page-size changes always reset to page 1 — keeping the old page
+    // index would land the user past the new last page.
+    next.delete('page')
     setSearchParams(next, { replace: true })
   }
 
@@ -312,15 +355,49 @@ export default function LeadsPage() {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-border flex items-center justify-between text-sm text-muted-foreground bg-card">
-          <div>
-            Showing {leads.length} of {data?.total ?? 0} leads
+        <div className="p-4 border-t border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm text-muted-foreground bg-card">
+          <div className="flex items-center gap-4">
+            <div>
+              {total === 0
+                ? 'No leads'
+                : `Showing ${rangeStart}–${rangeEnd} of ${total} leads`}
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="leads-per-page" className="text-xs">
+                Rows per page
+              </label>
+              <select
+                id="leads-per-page"
+                value={perPage}
+                onChange={(e) => changePerPage(Number(e.target.value))}
+                className="h-8 rounded-md border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                {PAGE_SIZE_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" disabled>
+            <span className="text-xs">
+              Page {Math.min(page, totalPages)} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!hasPrev || isLoading}
+              onClick={() => goToPage(page - 1)}
+            >
               Previous
             </Button>
-            <Button variant="outline" size="sm" disabled>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!hasNext || isLoading}
+              onClick={() => goToPage(page + 1)}
+            >
               Next
             </Button>
           </div>
