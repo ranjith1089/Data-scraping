@@ -57,6 +57,16 @@ except Exception:
     raise
 
 
+# Module-level migration result, surfaced via /health/db so we can see
+# what happened without needing access to Railway logs. The first deploy
+# of the blocking-migrations fix confirmed that `alembic upgrade head`
+# was *still* failing silently — Railway kept serving traffic with the
+# schema pinned at 002 while the code expected 004. Exposing the actual
+# subprocess stdout/stderr here is the fastest way to diagnose it from a
+# dev machine with just curl.
+_migration_result: dict = {"status": "pending"}
+
+
 async def _run_migrations() -> None:
     """Run ``alembic upgrade head`` synchronously at lifespan startup.
 
@@ -73,9 +83,11 @@ async def _run_migrations() -> None:
     traffic until the schema is up to date. Every migration we've shipped
     completes well under Railway's startup healthcheck window, so the
     delay is acceptable; and if something *does* go wrong, the full
-    alembic output is printed right here in the startup logs instead of
-    being swallowed by a background task.
+    alembic output is captured into ``_migration_result`` and surfaced by
+    the ``/health/db`` endpoint so we can diagnose it without Railway
+    log access.
     """
+    global _migration_result
     try:
         proc = await asyncio.create_subprocess_exec(
             sys.executable,
@@ -88,17 +100,34 @@ async def _run_migrations() -> None:
         )
         stdout, _ = await proc.communicate()
         output = stdout.decode(errors="replace") if stdout else ""
+        # Tail the output so we don't blow the JSON response size up.
+        tail = output[-4000:]
         if proc.returncode == 0:
+            _migration_result = {
+                "status": "ok",
+                "returncode": 0,
+                "output_tail": tail,
+            }
             print("[migrations] alembic upgrade head: OK", flush=True)
             if output.strip():
                 print(output, flush=True)
         else:
+            _migration_result = {
+                "status": "failed",
+                "returncode": proc.returncode,
+                "output_tail": tail,
+            }
             print(
                 f"[migrations] alembic FAILED with exit code {proc.returncode}",
                 flush=True,
             )
             print(output, flush=True)
     except Exception as exc:  # pragma: no cover — last-resort diagnostic
+        _migration_result = {
+            "status": "exception",
+            "error": repr(exc),
+            "traceback": traceback.format_exc(),
+        }
         print(f"[migrations] unexpected exception: {exc!r}", flush=True)
         traceback.print_exc()
 
@@ -202,7 +231,7 @@ async def health_db():
     from sqlalchemy import text
     from core.database import AsyncSessionLocal
 
-    info: dict = {"status": "ok"}
+    info: dict = {"status": "ok", "migration_result": _migration_result}
     try:
         async with AsyncSessionLocal() as session:
             rev = await session.execute(text("SELECT version_num FROM alembic_version"))
