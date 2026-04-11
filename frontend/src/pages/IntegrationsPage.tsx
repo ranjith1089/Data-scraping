@@ -19,6 +19,7 @@ import {
   useCreateIntegration,
   useDeleteIntegration,
   useTestIntegration,
+  useUpdateIntegration,
   type Integration,
 } from '@/hooks/useIntegrations'
 import ProviderCard from '@/components/integrations/ProviderCard'
@@ -46,6 +47,7 @@ export default function IntegrationsPage() {
   const createMutation = useCreateIntegration()
   const deleteMutation = useDeleteIntegration()
   const testMutation = useTestIntegration()
+  const updateMutation = useUpdateIntegration()
 
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState<CategoryFilter>('all')
@@ -233,13 +235,44 @@ export default function IntegrationsPage() {
         </div>
       )}
 
-      {/* Manage modal (Phase 1 stub — just shows status + disconnect) */}
+      {/* Manage modal — shows provider-specific credential form when available */}
       {manageTarget && (
         <ManageIntegrationModal
           integration={manageTarget}
           onClose={() => setManageTarget(null)}
           onDisconnect={() => handleDisconnect(manageTarget)}
           disconnecting={deleteMutation.isPending}
+          onSaveCredentials={async (credentials, config) => {
+            try {
+              const updated = await updateMutation.mutateAsync({
+                id: manageTarget.id,
+                credentials,
+                config,
+              })
+              setManageTarget(updated)
+              toast.success('Credentials saved')
+              // Chain a live test so the user sees immediate confirmation.
+              const result = await testMutation.mutateAsync(manageTarget.id)
+              if (result.ok) {
+                toast.success(result.message || 'Connection verified')
+              } else {
+                toast.error(result.message || 'Connection test failed')
+              }
+            } catch {
+              toast.error('Failed to save credentials')
+            }
+          }}
+          savingCredentials={updateMutation.isPending || testMutation.isPending}
+          onTest={async () => {
+            try {
+              const result = await testMutation.mutateAsync(manageTarget.id)
+              if (result.ok) toast.success(result.message || 'Connected')
+              else toast.error(result.message || 'Test failed')
+            } catch {
+              toast.error('Test failed')
+            }
+          }}
+          testing={testMutation.isPending && testingId !== manageTarget.id}
         />
       )}
     </div>
@@ -279,19 +312,132 @@ function StatPill({
   )
 }
 
+// Per-provider credential-form field definitions. Adding a new WhatsApp
+// provider (or any other API-key style integration) is a matter of adding
+// a new entry here — no code changes to the modal itself.
+interface CredentialFieldDef {
+  key: string
+  label: string
+  placeholder: string
+  help?: string
+  type?: 'text' | 'password'
+  required?: boolean
+  group: 'credentials' | 'config'
+}
+
+const PROVIDER_CREDENTIAL_FIELDS: Record<string, CredentialFieldDef[]> = {
+  whatsapp: [
+    {
+      key: 'access_token',
+      label: 'Permanent Access Token',
+      placeholder: 'EAAG...',
+      help: 'System-user token from Meta Business Manager → System Users.',
+      type: 'password',
+      required: true,
+      group: 'credentials',
+    },
+    {
+      key: 'phone_number_id',
+      label: 'Phone Number ID',
+      placeholder: '15550001234',
+      help: 'Meta Business Manager → WhatsApp → Phone numbers → API Setup.',
+      type: 'text',
+      required: true,
+      group: 'credentials',
+    },
+    {
+      key: 'waba_id',
+      label: 'WhatsApp Business Account ID (optional)',
+      placeholder: '1234567890',
+      help: 'Needed for template management endpoints.',
+      type: 'text',
+      group: 'config',
+    },
+  ],
+  whatsapp_gupshup: [
+    {
+      key: 'api_key',
+      label: 'Gupshup API Key',
+      placeholder: 'abcd1234...',
+      help: 'Gupshup dashboard → API Key (keep secret).',
+      type: 'password',
+      required: true,
+      group: 'credentials',
+    },
+    {
+      key: 'source',
+      label: 'Source Phone Number',
+      placeholder: '919876543210',
+      help: 'Your approved WhatsApp Business number (country code + number, no + or spaces).',
+      type: 'text',
+      required: true,
+      group: 'credentials',
+    },
+    {
+      key: 'app_name',
+      label: 'Gupshup App Name (optional)',
+      placeholder: 'LeadForgeAI',
+      help: 'The app name you created in the Gupshup dashboard. Defaults to LeadForgeAI.',
+      type: 'text',
+      group: 'config',
+    },
+  ],
+}
+
 function ManageIntegrationModal({
   integration,
   onClose,
   onDisconnect,
   disconnecting,
+  onSaveCredentials,
+  savingCredentials,
+  onTest,
+  testing,
 }: {
   integration: Integration
   onClose: () => void
   onDisconnect: () => void
   disconnecting: boolean
+  onSaveCredentials: (
+    credentials: Record<string, string>,
+    config: Record<string, unknown>,
+  ) => Promise<void>
+  savingCredentials: boolean
+  onTest: () => Promise<void>
+  testing: boolean
 }) {
   const meta = INTEGRATION_PROVIDERS.find((p) => p.code === integration.provider)
   const [confirmDisconnect, setConfirmDisconnect] = useState(false)
+  const fieldDefs = PROVIDER_CREDENTIAL_FIELDS[integration.provider] ?? []
+  const [formValues, setFormValues] = useState<Record<string, string>>({})
+  const [formError, setFormError] = useState<string | null>(null)
+
+  const handleFieldChange = (key: string, value: string) => {
+    setFormValues((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const handleSave = async () => {
+    setFormError(null)
+    const missing = fieldDefs
+      .filter((f) => f.required && !formValues[f.key]?.trim())
+      .map((f) => f.label)
+    if (missing.length > 0) {
+      setFormError(`Required: ${missing.join(', ')}`)
+      return
+    }
+    const credentials: Record<string, string> = {}
+    const config: Record<string, unknown> = {}
+    for (const field of fieldDefs) {
+      const raw = formValues[field.key]?.trim()
+      if (!raw) continue
+      if (field.group === 'credentials') credentials[field.key] = raw
+      else config[field.key] = raw
+    }
+    await onSaveCredentials(credentials, config)
+    // Clear the inputs after a successful save so the form doesn't
+    // accidentally re-submit secrets on the next render.
+    setFormValues({})
+  }
 
   return (
     <div
@@ -356,10 +502,77 @@ function ManageIntegrationModal({
             <Field label="Last error" value={integration.last_error} error />
           )}
 
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700">
-            Provider-specific configuration (OAuth, webhook URLs, field
-            mapping, templates) will be available in the next phase.
-          </div>
+          {fieldDefs.length > 0 ? (
+            <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  {integration.has_credentials
+                    ? 'Update credentials'
+                    : 'Enter credentials'}
+                </p>
+                {integration.has_credentials && (
+                  <button
+                    type="button"
+                    onClick={onTest}
+                    disabled={testing}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    {testing && <Loader2 className="h-3 w-3 animate-spin" />}
+                    Test connection
+                  </button>
+                )}
+              </div>
+
+              {fieldDefs.map((field) => (
+                <div key={field.key} className="space-y-1">
+                  <label className="block text-[11px] font-medium text-gray-600">
+                    {field.label}
+                    {field.required && (
+                      <span className="ml-0.5 text-red-500">*</span>
+                    )}
+                  </label>
+                  <input
+                    type={field.type === 'password' ? 'password' : 'text'}
+                    value={formValues[field.key] ?? ''}
+                    onChange={(e) => handleFieldChange(field.key, e.target.value)}
+                    placeholder={field.placeholder}
+                    autoComplete="off"
+                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                  />
+                  {field.help && (
+                    <p className="text-[11px] text-gray-400">{field.help}</p>
+                  )}
+                </div>
+              ))}
+
+              {formError && (
+                <p className="text-xs text-red-600">{formError}</p>
+              )}
+
+              <div className="flex items-center justify-between gap-2 pt-1">
+                <p className="text-[11px] text-gray-400">
+                  Credentials are encrypted at rest with Fernet before hitting
+                  the database.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={savingCredentials}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
+                >
+                  {savingCredentials && (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  )}
+                  Save &amp; test
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700">
+              Provider-specific configuration (OAuth, webhook URLs, field
+              mapping, templates) will be available in the next phase.
+            </div>
+          )}
         </div>
 
         {/* Footer */}

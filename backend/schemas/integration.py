@@ -14,7 +14,8 @@ class IntegrationProvider(str, Enum):
     META_ADS = "meta_ads"
     GOOGLE_ADS = "google_ads"
     LINKEDIN_ADS = "linkedin_ads"
-    WHATSAPP = "whatsapp"
+    WHATSAPP = "whatsapp"  # Direct Meta WhatsApp Business Cloud API
+    WHATSAPP_GUPSHUP = "whatsapp_gupshup"  # WhatsApp via Gupshup BSP (India)
     SENDGRID = "sendgrid"
     SMTP = "smtp"
     GA4 = "ga4"

@@ -179,12 +179,23 @@ export const INTEGRATION_PROVIDERS: IntegrationProviderMeta[] = [
   },
   {
     code: 'whatsapp',
-    name: 'WhatsApp Business',
+    name: 'WhatsApp Business (Cloud API)',
     description:
-      'Send templates, media, and automated messages through the WhatsApp Cloud API.',
+      'Direct Meta Cloud API — cheapest per-message rate, requires a Meta Business Manager account.',
     category: 'messaging',
     color: 'text-green-600 bg-green-50',
     accent: 'border-green-200',
+    docsUrl: 'https://developers.facebook.com/docs/whatsapp/cloud-api',
+  },
+  {
+    code: 'whatsapp_gupshup',
+    name: 'WhatsApp Business (Gupshup)',
+    description:
+      'Via Gupshup BSP — fastest WA Business approval in India, simple API key, no Meta review needed.',
+    category: 'messaging',
+    color: 'text-emerald-600 bg-emerald-50',
+    accent: 'border-emerald-200',
+    docsUrl: 'https://docs.gupshup.io/reference/send-a-message',
   },
   {
     code: 'sendgrid',
