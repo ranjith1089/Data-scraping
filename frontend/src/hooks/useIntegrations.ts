@@ -16,6 +16,7 @@ export type IntegrationProviderCode =
   | 'google_ads'
   | 'linkedin_ads'
   | 'whatsapp'
+  | 'whatsapp_gupshup'
   | 'sendgrid'
   | 'smtp'
   | 'ga4'

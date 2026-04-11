@@ -40,3 +40,11 @@ __all__ = [
     "get_integration",
     "list_providers",
 ]
+
+# ---------------------------------------------------------------------------
+# Eager plugin imports — each module self-registers via the @register
+# decorator on import. Keep this block at the bottom so the decorator has the
+# ``register`` symbol available. New connectors should be added here.
+# ---------------------------------------------------------------------------
+from . import whatsapp  # noqa: E402,F401  WhatsApp Cloud API (Option B)
+from . import whatsapp_gupshup  # noqa: E402,F401  Gupshup BSP (Option D)
