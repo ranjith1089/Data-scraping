@@ -38,12 +38,20 @@ export interface CampaignStats {
   bounce_rate: number
 }
 
+// The backend currently returns a plain JSON array from GET /campaigns/.
+// The old `CampaignListResponse` envelope shape was aspirational (paginated
+// response) but never shipped, and the hook used to type the response as
+// that envelope — so `data?.items` was always undefined and the Campaigns
+// page permanently showed "No campaigns yet" regardless of what was in the
+// database. We now type the response as the raw array AND tolerate either
+// shape at runtime so a future server-side pagination upgrade doesn't break
+// the UI.
 export interface CampaignListResponse {
   items: Campaign[]
-  total: number
-  page: number
-  per_page: number
-  pages: number
+  total?: number
+  page?: number
+  per_page?: number
+  pages?: number
 }
 
 export function useCampaigns(params: {
@@ -52,12 +60,18 @@ export function useCampaigns(params: {
   page?: number
   per_page?: number
 } = {}) {
-  return useQuery({
+  return useQuery<CampaignListResponse>({
     queryKey: ['campaigns', params],
     queryFn: async () => {
-      const { data } = await api.get<CampaignListResponse>('/campaigns/', {
-        params,
-      })
+      const { data } = await api.get<Campaign[] | CampaignListResponse>(
+        '/campaigns/',
+        { params },
+      )
+      // Normalise: accept either a bare array (current backend shape) or a
+      // paginated envelope {items, total, ...} (future backend shape).
+      if (Array.isArray(data)) {
+        return { items: data, total: data.length, page: 1, per_page: data.length, pages: 1 }
+      }
       return data
     },
   })
