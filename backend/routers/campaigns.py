@@ -1,5 +1,7 @@
 """Campaign management and execution routes."""
 
+import logging
+import traceback
 from uuid import UUID
 from typing import List
 from datetime import datetime, timezone
@@ -7,6 +9,8 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
+
+logger = logging.getLogger(__name__)
 
 from core.dependencies import get_db, get_current_user
 from models.campaign import Campaign
@@ -84,20 +88,42 @@ async def create_campaign(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Create a new campaign."""
-    campaign = Campaign(
-        tenant_id=current_user.tenant_id,
-        name=body.name,
-        sector_codes=body.sector_codes,
-        channel=body.channel.value,
-        segment_filter=body.segment_filter,
-        daily_limit=body.daily_limit,
-        ai_tone=body.ai_tone,
-        created_by=current_user.id,
-    )
-    db.add(campaign)
-    await db.flush()
-    return await _enrich_campaign(db, campaign)
+    """Create a new campaign.
+
+    Wrapped in an explicit try/except so any DB-layer failure (RLS denial,
+    constraint violation, JSONB coercion error, etc.) gets logged with a full
+    traceback AND surfaced as a structured 500 to the caller — instead of
+    bubbling up as the opaque 21-byte "Internal Server Error" fallback.
+    """
+    try:
+        campaign = Campaign(
+            tenant_id=current_user.tenant_id,
+            name=body.name,
+            sector_codes=body.sector_codes,
+            channel=body.channel.value,
+            segment_filter=body.segment_filter,
+            daily_limit=body.daily_limit,
+            ai_tone=body.ai_tone,
+            created_by=current_user.id,
+        )
+        db.add(campaign)
+        await db.flush()
+        return await _enrich_campaign(db, campaign)
+    except HTTPException:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        # Log to stdout so `railway logs` shows exactly which row failed and why.
+        print(
+            f"[campaigns.create] FAILED tenant={current_user.tenant_id} "
+            f"name={body.name!r} sector_codes={body.sector_codes} "
+            f"channel={body.channel} → {type(exc).__name__}: {exc}",
+            flush=True,
+        )
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create campaign: {type(exc).__name__}: {exc}",
+        )
 
 
 @router.get("/{campaign_id}", response_model=CampaignResponse)
