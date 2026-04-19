@@ -95,14 +95,29 @@ export default function CampaignBuilder({ onComplete, onCancel }: CampaignBuilde
   const startCampaign = useStartCampaign()
   const saveSteps = useBulkUpsertCampaignSteps()
 
-  // Extract the FastAPI error detail (string or array-of-objects shape)
-  // so we can surface it in a toast instead of "Failed to ...".
+  // Extract the most useful error string we can from an axios failure.
+  // FastAPI shapes vary: {detail: "..."} or {detail: [{loc, msg}]}. Network
+  // errors have no response at all. This helper walks every common shape
+  // AND logs the raw error to the console so the user can inspect in
+  // DevTools if the toast is still opaque.
   function readErrorDetail(err: unknown, fallback: string): string {
-    const detail = (err as { response?: { data?: { detail?: unknown } } })
-      .response?.data?.detail
-    if (typeof detail === 'string') return detail
-    if (Array.isArray(detail)) {
-      const joined = detail
+    // eslint-disable-next-line no-console
+    console.error('[CampaignBuilder] request failed:', err)
+    const e = err as {
+      response?: {
+        status?: number
+        statusText?: string
+        data?: { detail?: unknown; message?: unknown; error?: unknown }
+      }
+      message?: string
+    }
+
+    const data = e.response?.data
+    // 1. FastAPI single-string detail
+    if (typeof data?.detail === 'string') return data.detail
+    // 2. FastAPI validation-error array
+    if (Array.isArray(data?.detail)) {
+      const joined = data.detail
         .map((d: { loc?: unknown[]; msg?: string }) => {
           const field = Array.isArray(d?.loc) ? d.loc.slice(1).join('.') : ''
           return field ? `${field}: ${d?.msg ?? ''}` : d?.msg ?? ''
@@ -111,6 +126,17 @@ export default function CampaignBuilder({ onComplete, onCancel }: CampaignBuilde
         .join('; ')
       if (joined) return joined
     }
+    // 3. Some endpoints return {message: "..."} or {error: "..."}
+    if (typeof data?.message === 'string') return data.message
+    if (typeof data?.error === 'string') return data.error
+    // 4. HTTP status fallback — better than nothing
+    if (e.response?.status) {
+      return `${fallback} (HTTP ${e.response.status}${
+        e.response.statusText ? ' ' + e.response.statusText : ''
+      })`
+    }
+    // 5. Axios network-level error
+    if (e.message) return `${fallback}: ${e.message}`
     return fallback
   }
 
@@ -212,24 +238,38 @@ export default function CampaignBuilder({ onComplete, onCancel }: CampaignBuilde
       toast.error('Please select at least one target sector (Step 2).')
       return
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let campaign: any
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const campaign: any = await createCampaign.mutateAsync(
+      campaign = await createCampaign.mutateAsync(
         buildCreatePayload() as unknown as Parameters<
           typeof createCampaign.mutateAsync
         >[0],
       )
-      if (campaignSteps.length > 0) {
+    } catch (err) {
+      toast.error(readErrorDetail(err, 'Could not create campaign'))
+      return
+    }
+    if (!campaign?.id) {
+      toast.error('Campaign was created but the server did not return an id.')
+      return
+    }
+    const stepsPayload = buildStepsPayload()
+    if (stepsPayload.length > 0) {
+      try {
         await saveSteps.mutateAsync({
           campaignId: campaign.id,
-          steps: buildStepsPayload(),
+          steps: stepsPayload,
         })
+      } catch (err) {
+        toast.error(
+          readErrorDetail(err, 'Campaign saved, but step persistence failed'),
+        )
+        return
       }
-      toast.success('Campaign saved as draft')
-      onComplete?.(campaign.id)
-    } catch (err) {
-      toast.error(readErrorDetail(err, 'Failed to save campaign'))
     }
+    toast.success('Campaign saved as draft')
+    onComplete?.(campaign.id)
   }
 
   async function handleLaunch() {
@@ -248,23 +288,42 @@ export default function CampaignBuilder({ onComplete, onCancel }: CampaignBuilde
       )
       return
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let campaign: any
+    // --- Phase 1: create the parent campaign row
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const campaign: any = await createCampaign.mutateAsync(
+      campaign = await createCampaign.mutateAsync(
         buildCreatePayload() as unknown as Parameters<
           typeof createCampaign.mutateAsync
         >[0],
       )
+    } catch (err) {
+      toast.error(readErrorDetail(err, 'Could not create campaign'))
+      return
+    }
+    if (!campaign?.id) {
+      toast.error('Campaign was created but the server did not return an id.')
+      return
+    }
+    // --- Phase 2: persist the step sequence
+    try {
       await saveSteps.mutateAsync({
         campaignId: campaign.id,
         steps: stepsPayload,
       })
-      await startCampaign.mutateAsync(campaign.id)
-      toast.success('Campaign launched!')
-      onComplete?.(campaign.id)
     } catch (err) {
-      toast.error(readErrorDetail(err, 'Failed to launch campaign'))
+      toast.error(readErrorDetail(err, 'Could not save campaign steps'))
+      return
     }
+    // --- Phase 3: flip status to active
+    try {
+      await startCampaign.mutateAsync(campaign.id)
+    } catch (err) {
+      toast.error(readErrorDetail(err, 'Campaign saved, but could not start'))
+      return
+    }
+    toast.success('Campaign launched!')
+    onComplete?.(campaign.id)
   }
 
   const isSaving =
