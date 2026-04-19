@@ -27,6 +27,13 @@ interface StepEditorProps {
   step: CampaignStep
   onChange: (updated: CampaignStep) => void
   stepNumber: number
+  /** Campaign-level context — used by AI template generation. */
+  context?: {
+    sectorCode?: string
+    tone?: string
+    description?: string
+    productDescription?: string
+  }
 }
 
 const TEMPLATE_VARS = [
@@ -36,7 +43,12 @@ const TEMPLATE_VARS = [
   { token: '{{pain_point}}', desc: 'AI-detected pain point' },
 ]
 
-export default function StepEditor({ step, onChange, stepNumber }: StepEditorProps) {
+export default function StepEditor({
+  step,
+  onChange,
+  stepNumber,
+  context,
+}: StepEditorProps) {
   const [showPreview, setShowPreview] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [showVars, setShowVars] = useState(false)
@@ -56,16 +68,38 @@ export default function StepEditor({ step, onChange, stepNumber }: StepEditorPro
   async function handleGenerateAI() {
     setGenerating(true)
     try {
-      const { data } = await api.post('/ai/generate-email', {
-        lead_id: 'template',
-        email_type: stepNumber === 1 ? 'cold_outreach' : 'follow_up',
-        tone: 'persuasive',
-        context: `Campaign step ${stepNumber}, channel: ${step.channel}`,
+      const { data } = await api.post<{
+        subject: string
+        body: string
+        whatsapp_version?: string | null
+      }>('/ai/generate-email-template', {
+        sector_code: context?.sectorCode || undefined,
+        step_number: stepNumber,
+        tone: context?.tone || 'professional',
+        channel: step.channel,
+        campaign_description: context?.description || undefined,
+        product_description: context?.productDescription || undefined,
       })
-      update({ subject: data.subject, body: data.body })
+      if (step.channel === 'whatsapp') {
+        update({ body: data.body || data.whatsapp_version || '' })
+      } else {
+        update({ subject: data.subject, body: data.body })
+      }
       toast.success('Content generated with AI')
-    } catch {
-      toast.error('Failed to generate content')
+    } catch (err: unknown) {
+      const detail =
+        (err as { response?: { data?: { detail?: unknown } } }).response?.data
+          ?.detail
+      let msg = 'Failed to generate content'
+      if (typeof detail === 'string') {
+        msg = detail
+      } else if (Array.isArray(detail)) {
+        msg = detail
+          .map((d: { msg?: string }) => d?.msg)
+          .filter(Boolean)
+          .join('; ') || msg
+      }
+      toast.error(msg)
     } finally {
       setGenerating(false)
     }

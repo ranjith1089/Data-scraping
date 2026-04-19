@@ -19,6 +19,35 @@ class EmailGenResponse(BaseModel):
     personalisation_note: str
 
 
+class EmailTemplateRequest(BaseModel):
+    """Campaign-step template generation — no specific lead required.
+
+    Produces reusable copy with `{{company_name}}` / `{{contact_name}}`
+    placeholders that the campaign runner will interpolate per lead.
+    """
+
+    sector_code: Optional[str] = Field(
+        None,
+        max_length=50,
+        description="Target sector for this campaign step. Optional — falls back to generic B2B.",
+    )
+    step_number: int = Field(default=1, ge=1, le=10)
+    tone: str = Field(default="professional", max_length=50)
+    channel: str = Field(default="email", pattern=r"^(email|whatsapp)$")
+    campaign_description: Optional[str] = Field(None, max_length=2000)
+    product_description: Optional[str] = Field(
+        None,
+        max_length=5000,
+        description="Short description of what you are selling. Optional.",
+    )
+
+
+class EmailTemplateResponse(BaseModel):
+    subject: str
+    body: str
+    whatsapp_version: Optional[str] = None
+
+
 class LeadScoreRequest(BaseModel):
     lead_ids: List[UUID] = Field(..., max_length=50)
 

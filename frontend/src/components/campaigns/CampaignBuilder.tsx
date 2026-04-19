@@ -418,6 +418,11 @@ export default function CampaignBuilder({ onComplete, onCancel }: CampaignBuilde
                     step={step}
                     stepNumber={idx + 1}
                     onChange={updateStep}
+                    context={{
+                      sectorCode: selectedSectors[0],
+                      tone,
+                      description,
+                    }}
                   />
                   {campaignSteps.length > 1 && (
                     <button
