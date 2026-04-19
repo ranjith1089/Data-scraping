@@ -149,10 +149,12 @@ export default function CampaignsPage() {
           </Card>
         ) : (
           campaigns.map((campaign) => {
-            const openRate = rate(campaign.opened_count, campaign.sent_count)
-            const replyRate = rate(campaign.replied_count, campaign.sent_count)
-            const sectorName =
-              SECTOR_NAMES[campaign.sector_code] ?? campaign.sector_code
+            const openRate = rate(campaign.open_count, campaign.sent_count)
+            const replyRate = rate(campaign.reply_count, campaign.sent_count)
+            const firstSector = campaign.sector_codes?.[0] ?? ''
+            const sectorName = firstSector
+              ? (SECTOR_NAMES[firstSector] ?? firstSector)
+              : ''
 
             return (
               <Card
@@ -212,7 +214,7 @@ export default function CampaignsPage() {
                         </span>
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-foreground">
-                            {formatNumber(campaign.opened_count)}
+                            {formatNumber(campaign.open_count)}
                           </span>
                           <span className="text-xs text-emerald-500 font-medium bg-emerald-500/10 px-1.5 py-0.5 rounded">
                             {openRate}%
@@ -226,7 +228,7 @@ export default function CampaignsPage() {
                         </span>
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-foreground">
-                            {formatNumber(campaign.replied_count)}
+                            {formatNumber(campaign.reply_count)}
                           </span>
                           <span className="text-xs text-blue-500 font-medium bg-blue-500/10 px-1.5 py-0.5 rounded">
                             {replyRate}%

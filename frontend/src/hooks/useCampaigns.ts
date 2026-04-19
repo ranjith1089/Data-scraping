@@ -1,41 +1,58 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '../lib/api'
 
+// Mirrors backend/schemas/campaign.py::CampaignResponse exactly. Historically
+// this interface drifted (described {campaign_type, sector_code (singular),
+// opened_count, replied_count, total_recipients, description, completed_at})
+// which crashed CampaignDetailPage with "Cannot read properties of undefined"
+// and produced NaN% stats on CampaignsPage. Don't add fields unless the
+// backend response actually includes them.
 export interface Campaign {
   id: string
   tenant_id: string
   name: string
-  description: string
-  sector_code: string
-  campaign_type: 'email' | 'whatsapp' | 'sms' | 'multi_channel'
-  status: 'draft' | 'active' | 'paused' | 'completed'
-  target_filters: Record<string, unknown>
-  template_id: string | null
-  scheduled_at: string | null
-  started_at: string | null
-  completed_at: string | null
-  total_recipients: number
+  status: 'draft' | 'active' | 'paused' | 'completed' | 'archived'
+  sector_codes: string[]
+  channel: 'email' | 'whatsapp' | 'sms' | 'linkedin' | 'multi'
+  segment_filter: Record<string, unknown> | null
+  daily_limit: number
+  ai_tone: string
+  total_leads: number
   sent_count: number
-  opened_count: number
-  clicked_count: number
-  replied_count: number
-  bounced_count: number
-  created_by: string
+  open_count: number
+  reply_count: number
   created_at: string
-  updated_at: string
+  updated_at?: string | null
+  started_at?: string | null
 }
 
+// Mirrors backend/routers/campaigns.py::get_campaign_stats response shape.
+// The old interface (opened_count / clicked_count / replied_count / bounced_count)
+// didn't match the actual API, which returns {sent, opened, clicked, replied,
+// failed} without the _count suffix — any read of stats.opened_count etc.
+// yielded undefined, and the Performance tab rendered "NaN%" or crashed.
 export interface CampaignStats {
-  total_recipients: number
-  sent_count: number
-  opened_count: number
-  clicked_count: number
-  replied_count: number
-  bounced_count: number
+  campaign_id: string
+  campaign_name: string
+  status: string
+  total_outreach: number
+  sent: number
+  opened: number
+  clicked: number
+  replied: number
+  failed: number
   open_rate: number
   click_rate: number
   reply_rate: number
-  bounce_rate: number
+  steps: Array<{
+    step_id: string
+    step_number: number
+    channel: string
+    sent: number
+    opened: number
+    replied: number
+    open_rate: number
+  }>
 }
 
 // The backend currently returns a plain JSON array from GET /campaigns/.

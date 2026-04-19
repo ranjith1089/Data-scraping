@@ -6,7 +6,6 @@ import {
   Pause,
   Pencil,
   Mail,
-  MessageSquare,
   Send,
   Calendar,
   Clock,
@@ -16,6 +15,7 @@ import {
   useCampaign,
   useStartCampaign,
   usePauseCampaign,
+  useUpdateCampaign,
 } from '@/hooks/useCampaigns'
 import CampaignStats from '@/components/campaigns/CampaignStats'
 import { cn, SECTOR_NAMES, SECTOR_COLORS, formatDate } from '@/lib/utils'
@@ -49,7 +49,28 @@ export default function CampaignDetailPage() {
   const { data: campaign, isLoading } = useCampaign(id || '')
   const startCampaign = useStartCampaign()
   const pauseCampaign = usePauseCampaign()
+  const updateCampaign = useUpdateCampaign()
   const [activeTab, setActiveTab] = useState<TabKey>('overview')
+
+  function handleRename() {
+    if (!campaign) return
+    const next = window.prompt('Rename campaign', campaign.name)
+    if (!next || next.trim() === '' || next.trim() === campaign.name) return
+    updateCampaign.mutate(
+      { id: campaign.id, name: next.trim() },
+      {
+        onSuccess: () => toast.success('Campaign renamed'),
+        onError: (err: unknown) => {
+          const detail =
+            (err as { response?: { data?: { detail?: unknown } } }).response
+              ?.data?.detail
+          toast.error(
+            typeof detail === 'string' ? detail : 'Failed to rename campaign',
+          )
+        },
+      },
+    )
+  }
 
   function handleStartPause() {
     if (!campaign) return
@@ -86,7 +107,12 @@ export default function CampaignDetailPage() {
   }
 
   const status = STATUS_BADGE[campaign.status] || STATUS_BADGE.draft
-  const sectorColor = SECTOR_COLORS[campaign.sector_code] || '#6B7280'
+  const firstSector = campaign.sector_codes?.[0] ?? ''
+  const sectorColor = SECTOR_COLORS[firstSector] || '#6B7280'
+  const description =
+    (campaign.segment_filter as Record<string, unknown> | null)?.description as
+      | string
+      | undefined
 
   return (
     <div className="space-y-6">
@@ -108,8 +134,8 @@ export default function CampaignDetailPage() {
               {status.label}
             </span>
           </div>
-          {campaign.description && (
-            <p className="mt-2 text-sm text-gray-500">{campaign.description}</p>
+          {description && (
+            <p className="mt-2 text-sm text-gray-500">{description}</p>
           )}
         </div>
         <div className="flex items-center gap-2">
@@ -131,7 +157,12 @@ export default function CampaignDetailPage() {
               )}
             </button>
           )}
-          <button className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
+          <button
+            type="button"
+            onClick={handleRename}
+            disabled={updateCampaign.isPending}
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+          >
             <Pencil className="h-4 w-4" />
             Edit
           </button>
@@ -165,33 +196,40 @@ export default function CampaignDetailPage() {
           <InfoCard
             icon={Mail}
             label="Channel"
-            value={CHANNEL_LABELS[campaign.campaign_type] || campaign.campaign_type}
+            value={CHANNEL_LABELS[campaign.channel] || campaign.channel}
           />
 
-          {/* Sector */}
+          {/* Sector(s) */}
           <div className="rounded-xl border border-gray-200 bg-white p-5">
             <div className="flex items-center gap-2 text-xs font-medium text-gray-500">
               <Hash className="h-3.5 w-3.5" />
-              Sector
+              {(campaign.sector_codes?.length ?? 0) > 1 ? 'Sectors' : 'Sector'}
             </div>
-            <div className="mt-2">
-              <span
-                className="inline-flex items-center rounded-full px-2.5 py-0.5 text-sm font-medium"
-                style={{
-                  backgroundColor: `${sectorColor}15`,
-                  color: sectorColor,
-                }}
-              >
-                {SECTOR_NAMES[campaign.sector_code] || campaign.sector_code}
-              </span>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {(campaign.sector_codes ?? []).length === 0 ? (
+                <span className="text-sm text-gray-400">No sector selected</span>
+              ) : (
+                campaign.sector_codes.map((code) => (
+                  <span
+                    key={code}
+                    className="inline-flex items-center rounded-full px-2.5 py-0.5 text-sm font-medium"
+                    style={{
+                      backgroundColor: `${SECTOR_COLORS[code] || sectorColor}15`,
+                      color: SECTOR_COLORS[code] || sectorColor,
+                    }}
+                  >
+                    {SECTOR_NAMES[code] || code}
+                  </span>
+                ))
+              )}
             </div>
           </div>
 
-          {/* Recipients */}
+          {/* Total leads */}
           <InfoCard
             icon={Send}
-            label="Total Recipients"
-            value={campaign.total_recipients.toLocaleString('en-IN')}
+            label="Total Leads"
+            value={(campaign.total_leads ?? 0).toLocaleString('en-IN')}
           />
 
           {/* Created */}
@@ -208,11 +246,11 @@ export default function CampaignDetailPage() {
             value={campaign.started_at ? formatDate(campaign.started_at) : 'Not started'}
           />
 
-          {/* Completed */}
+          {/* Daily limit */}
           <InfoCard
             icon={Clock}
-            label="Completed"
-            value={campaign.completed_at ? formatDate(campaign.completed_at) : 'In progress'}
+            label="Daily Send Limit"
+            value={String(campaign.daily_limit ?? 0)}
           />
         </div>
       )}
@@ -220,29 +258,13 @@ export default function CampaignDetailPage() {
       {activeTab === 'steps' && (
         <div className="rounded-xl border border-gray-200 bg-white p-6">
           <h3 className="mb-4 text-sm font-semibold text-gray-900">Campaign Steps</h3>
-          <div className="space-y-4">
-            {/* Placeholder steps - in real app would come from campaign.steps */}
-            <StepCard
-              stepNumber={1}
-              subject="Initial Outreach"
-              bodyPreview="Hi {name}, I noticed your company {company_name} in the {sector} space..."
-              delayDays={0}
-              channel={campaign.campaign_type}
-            />
-            <StepCard
-              stepNumber={2}
-              subject="Follow Up"
-              bodyPreview="Hi {name}, I wanted to follow up on my previous message about..."
-              delayDays={3}
-              channel={campaign.campaign_type}
-            />
-            <StepCard
-              stepNumber={3}
-              subject="Final Touch"
-              bodyPreview="Hi {name}, I understand you might be busy. Just wanted to share a quick..."
-              delayDays={7}
-              channel={campaign.campaign_type}
-            />
+          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50 py-10 text-center">
+            <p className="text-sm text-gray-500">
+              Steps are configured at campaign creation time.
+            </p>
+            <p className="mt-1 text-xs text-gray-400">
+              In-place step editing will land in a follow-up phase.
+            </p>
           </div>
         </div>
       )}
@@ -270,44 +292,6 @@ function InfoCard({
         {label}
       </div>
       <p className="mt-2 text-lg font-semibold text-gray-900">{value}</p>
-    </div>
-  )
-}
-
-function StepCard({
-  stepNumber,
-  subject,
-  bodyPreview,
-  delayDays,
-  channel,
-}: {
-  stepNumber: number
-  subject: string
-  bodyPreview: string
-  delayDays: number
-  channel: string
-}) {
-  const ChannelIcon = channel === 'whatsapp' ? MessageSquare : Mail
-
-  return (
-    <div className="flex gap-4 rounded-lg border border-gray-200 p-4">
-      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-700">
-        {stepNumber}
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <h4 className="text-sm font-medium text-gray-900">{subject}</h4>
-          <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600">
-            <ChannelIcon className="h-2.5 w-2.5" />
-            {CHANNEL_LABELS[channel] || channel}
-          </span>
-        </div>
-        <p className="mt-1 text-xs text-gray-500 line-clamp-2">{bodyPreview}</p>
-        <div className="mt-2 flex items-center gap-1 text-xs text-gray-400">
-          <Clock className="h-3 w-3" />
-          {delayDays === 0 ? 'Immediate' : `${delayDays} day${delayDays > 1 ? 's' : ''} delay`}
-        </div>
-      </div>
     </div>
   )
 }
