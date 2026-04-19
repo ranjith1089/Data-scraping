@@ -8,7 +8,14 @@ from datetime import datetime
 
 
 class OutreachLog(Base):
-    __tablename__ = "outreach_logs"
+    # Canonical table name is singular "outreach_log" — that's what migration
+    # 001_initial_schema and schema.sql create, and what production actually
+    # holds. This ORM model used to declare the plural "outreach_logs", which
+    # matched no real table and made every ORM query against OutreachLog fail
+    # with UndefinedTableError (e.g. the per-campaign stat queries in
+    # routers/campaigns.py:_enrich_campaign, which is why POST /campaigns/
+    # was returning a raw 500 on every attempt).
+    __tablename__ = "outreach_log"
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,
