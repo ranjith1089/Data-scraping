@@ -116,6 +116,31 @@ export function useUpdateCampaign() {
   })
 }
 
+export interface CampaignStepPayload {
+  step_number: number
+  channel: 'email' | 'whatsapp'
+  delay_days: number
+  subject?: string | null
+  body?: string | null
+  ai_generated?: boolean
+}
+
+export function useBulkUpsertCampaignSteps() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (vars: { campaignId: string; steps: CampaignStepPayload[] }) => {
+      const { data } = await api.post(
+        `/campaigns/${vars.campaignId}/steps`,
+        vars.steps,
+      )
+      return data
+    },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ['campaign', variables.campaignId] })
+    },
+  })
+}
+
 export function useStartCampaign() {
   const qc = useQueryClient()
   return useMutation({

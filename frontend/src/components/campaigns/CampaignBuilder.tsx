@@ -14,7 +14,12 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { cn, SECTOR_COLORS, SECTOR_NAMES } from '@/lib/utils'
-import { useCreateCampaign, useStartCampaign } from '@/hooks/useCampaigns'
+import {
+  useCreateCampaign,
+  useStartCampaign,
+  useBulkUpsertCampaignSteps,
+  type CampaignStepPayload,
+} from '@/hooks/useCampaigns'
 import StepEditor, { type CampaignStep } from './StepEditor'
 import SegmentPicker, { type SegmentFilters } from './SegmentPicker'
 import toast from 'react-hot-toast'
@@ -88,6 +93,65 @@ export default function CampaignBuilder({ onComplete, onCancel }: CampaignBuilde
 
   const createCampaign = useCreateCampaign()
   const startCampaign = useStartCampaign()
+  const saveSteps = useBulkUpsertCampaignSteps()
+
+  // Extract the FastAPI error detail (string or array-of-objects shape)
+  // so we can surface it in a toast instead of "Failed to ...".
+  function readErrorDetail(err: unknown, fallback: string): string {
+    const detail = (err as { response?: { data?: { detail?: unknown } } })
+      .response?.data?.detail
+    if (typeof detail === 'string') return detail
+    if (Array.isArray(detail)) {
+      const joined = detail
+        .map((d: { loc?: unknown[]; msg?: string }) => {
+          const field = Array.isArray(d?.loc) ? d.loc.slice(1).join('.') : ''
+          return field ? `${field}: ${d?.msg ?? ''}` : d?.msg ?? ''
+        })
+        .filter(Boolean)
+        .join('; ')
+      if (joined) return joined
+    }
+    return fallback
+  }
+
+  function buildCreatePayload() {
+    // The backend `CampaignCreate` schema wants:
+    //   { name, sector_codes[], channel, segment_filter, daily_limit, ai_tone }
+    // NOT the old `{ description, campaign_type, sector_code, target_filters }`
+    // shape this component used to send.
+    const sectorCodes =
+      selectedSectors.length > 0
+        ? selectedSectors
+        : segment.sectors.length > 0
+          ? segment.sectors
+          : []
+    return {
+      name,
+      sector_codes: sectorCodes,
+      // Backend enum: email | whatsapp | sms | linkedin | multi
+      channel: channel === 'multi_channel' ? 'multi' : channel,
+      segment_filter: {
+        description,
+        sectors: segment.sectors,
+        company_sizes: segment.company_sizes,
+        districts: segment.districts,
+        min_score: segment.min_score,
+        max_score: segment.max_score,
+      },
+      ai_tone: tone,
+    }
+  }
+
+  function buildStepsPayload(): CampaignStepPayload[] {
+    return campaignSteps.map((s, idx) => ({
+      step_number: idx + 1,
+      channel: s.channel,
+      delay_days: s.delay_days,
+      subject: s.channel === 'email' ? s.subject || null : null,
+      body: s.body || null,
+      ai_generated: Boolean(s.subject || s.body),
+    }))
+  }
 
   // Keep segment sectors in sync
   const handleSectorToggle = useCallback(
@@ -135,57 +199,68 @@ export default function CampaignBuilder({ onComplete, onCancel }: CampaignBuilde
   }
 
   async function handleSaveDraft() {
+    if (!name.trim()) {
+      toast.error('Please give this campaign a name (Step 1).')
+      return
+    }
+    if (selectedSectors.length === 0) {
+      toast.error('Please select at least one target sector (Step 2).')
+      return
+    }
     try {
-      const campaign = await createCampaign.mutateAsync({
-        name,
-        description,
-        campaign_type: channel === 'multi_channel' ? 'multi_channel' : channel,
-        sector_code: selectedSectors[0] || '',
-        target_filters: {
-          sectors: segment.sectors,
-          company_sizes: segment.company_sizes,
-          districts: segment.districts,
-          min_score: segment.min_score,
-          max_score: segment.max_score,
-          tone,
-          steps: campaignSteps,
-        },
-        status: 'draft',
-      })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const campaign: any = await createCampaign.mutateAsync(
+        buildCreatePayload() as unknown as Parameters<
+          typeof createCampaign.mutateAsync
+        >[0],
+      )
+      if (campaignSteps.length > 0) {
+        await saveSteps.mutateAsync({
+          campaignId: campaign.id,
+          steps: buildStepsPayload(),
+        })
+      }
       toast.success('Campaign saved as draft')
       onComplete?.(campaign.id)
-    } catch {
-      toast.error('Failed to save campaign')
+    } catch (err) {
+      toast.error(readErrorDetail(err, 'Failed to save campaign'))
     }
   }
 
   async function handleLaunch() {
+    if (!name.trim()) {
+      toast.error('Please give this campaign a name (Step 1).')
+      return
+    }
+    if (selectedSectors.length === 0) {
+      toast.error('Please select at least one target sector (Step 2).')
+      return
+    }
+    if (campaignSteps.length === 0) {
+      toast.error('A campaign needs at least one step before it can launch.')
+      return
+    }
     try {
-      const campaign = await createCampaign.mutateAsync({
-        name,
-        description,
-        campaign_type: channel === 'multi_channel' ? 'multi_channel' : channel,
-        sector_code: selectedSectors[0] || '',
-        target_filters: {
-          sectors: segment.sectors,
-          company_sizes: segment.company_sizes,
-          districts: segment.districts,
-          min_score: segment.min_score,
-          max_score: segment.max_score,
-          tone,
-          steps: campaignSteps,
-        },
-        status: 'draft',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const campaign: any = await createCampaign.mutateAsync(
+        buildCreatePayload() as unknown as Parameters<
+          typeof createCampaign.mutateAsync
+        >[0],
+      )
+      await saveSteps.mutateAsync({
+        campaignId: campaign.id,
+        steps: buildStepsPayload(),
       })
       await startCampaign.mutateAsync(campaign.id)
       toast.success('Campaign launched!')
       onComplete?.(campaign.id)
-    } catch {
-      toast.error('Failed to launch campaign')
+    } catch (err) {
+      toast.error(readErrorDetail(err, 'Failed to launch campaign'))
     }
   }
 
-  const isSaving = createCampaign.isPending || startCampaign.isPending
+  const isSaving =
+    createCampaign.isPending || startCampaign.isPending || saveSteps.isPending
 
   return (
     <div className="mx-auto max-w-3xl">

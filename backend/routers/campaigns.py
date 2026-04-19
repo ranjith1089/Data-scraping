@@ -169,6 +169,64 @@ async def delete_campaign(
     return {"detail": "Campaign deleted", "campaign_id": str(campaign_id)}
 
 
+@router.post(
+    "/{campaign_id}/steps",
+    response_model=List[CampaignStepResponse],
+    status_code=status.HTTP_201_CREATED,
+)
+async def bulk_upsert_campaign_steps(
+    campaign_id: UUID,
+    steps: List[CampaignStepCreate],
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Replace the campaign's step sequence with the supplied list.
+
+    This is a bulk upsert: we delete any existing steps for the campaign
+    and re-insert from ``steps``. Called by the campaign builder after
+    ``POST /campaigns/`` lands the parent row. Keeps the builder
+    transaction-friendly (one round trip, not N).
+    """
+    # Scope to tenant
+    result = await db.execute(
+        select(Campaign).where(
+            Campaign.id == campaign_id,
+            Campaign.tenant_id == current_user.tenant_id,
+        )
+    )
+    campaign = result.scalar_one_or_none()
+    if not campaign:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Campaign not found"
+        )
+
+    # Remove existing steps so subsequent edits are deterministic.
+    existing = await db.execute(
+        select(CampaignStep).where(CampaignStep.campaign_id == campaign_id)
+    )
+    for old in existing.scalars().all():
+        await db.delete(old)
+
+    created: list[CampaignStep] = []
+    for body in steps:
+        step = CampaignStep(
+            campaign_id=campaign_id,
+            step_number=body.step_number,
+            channel=body.channel.value,
+            delay_days=body.delay_days,
+            subject=body.subject,
+            body=body.body,
+            ai_generated=body.ai_generated,
+        )
+        db.add(step)
+        created.append(step)
+
+    await db.flush()
+    # Order returned list by step_number for stable UI rendering.
+    created.sort(key=lambda s: s.step_number)
+    return [CampaignStepResponse.model_validate(s) for s in created]
+
+
 @router.post("/{campaign_id}/start", response_model=CampaignResponse)
 async def start_campaign(
     campaign_id: UUID,
