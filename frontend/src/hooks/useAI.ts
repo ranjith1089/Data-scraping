@@ -92,6 +92,42 @@ export function useSectorBrief(sectorCode: string) {
   })
 }
 
+// --- Sector Analysis (expansion recommendations from won leads) ---
+
+export interface SectorRecommendation {
+  sector_code: string
+  sector_name: string
+  fit_score: number
+  rationale: string
+  signals: string[]
+  recommended_icp?: string | null
+  sample_designations: string[]
+}
+
+export interface SectorMixRow {
+  sector_code: string
+  sector_name: string
+  won_count: number
+  won_value_inr: number
+}
+
+export interface SectorAnalysis {
+  summary: string
+  current_sector_mix: SectorMixRow[]
+  recommendations: SectorRecommendation[]
+  generated_at: string
+  based_on_won_leads: number
+}
+
+export function useSectorAnalysis() {
+  return useMutation({
+    mutationFn: async () => {
+      const { data } = await api.post<SectorAnalysis>('/ai/sector-analysis')
+      return data
+    },
+  })
+}
+
 // --- Chat with SSE Streaming ---
 
 export function useChat() {
