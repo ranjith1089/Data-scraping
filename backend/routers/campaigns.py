@@ -96,9 +96,28 @@ async def create_campaign(
     bubbling up as the opaque 21-byte "Internal Server Error" fallback.
     """
     try:
+        # Reject duplicates up-front (case-insensitive) so the UI gets a
+        # clean 409 instead of creating yet another "Test" draft. Ignores
+        # cancelled campaigns so the tenant can reuse a name after cleanup.
+        existing = await db.execute(
+            select(Campaign.id).where(
+                Campaign.tenant_id == current_user.tenant_id,
+                func.lower(Campaign.name) == body.name.strip().lower(),
+                Campaign.status != "cancelled",
+            )
+        )
+        if existing.scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    f"A campaign named '{body.name}' already exists. "
+                    "Pick a different name, or rename / delete the existing one first."
+                ),
+            )
+
         campaign = Campaign(
             tenant_id=current_user.tenant_id,
-            name=body.name,
+            name=body.name.strip(),
             sector_codes=body.sector_codes,
             channel=body.channel.value,
             segment_filter=body.segment_filter,
@@ -164,6 +183,25 @@ async def update_campaign(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Campaign not found")
 
     update_data = body.model_dump(exclude_unset=True)
+
+    # If the rename would collide with another campaign, refuse it.
+    if "name" in update_data and update_data["name"]:
+        new_name = str(update_data["name"]).strip()
+        update_data["name"] = new_name
+        collide = await db.execute(
+            select(Campaign.id).where(
+                Campaign.tenant_id == current_user.tenant_id,
+                Campaign.id != campaign.id,
+                func.lower(Campaign.name) == new_name.lower(),
+                Campaign.status != "cancelled",
+            )
+        )
+        if collide.scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Another campaign is already named '{new_name}'.",
+            )
+
     for field, value in update_data.items():
         if hasattr(value, "value"):
             value = value.value
