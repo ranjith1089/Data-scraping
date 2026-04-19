@@ -44,19 +44,18 @@ export default function CampaignStats({ campaignId }: CampaignStatsProps) {
   }
 
   const cards: StatCardData[] = [
-    { label: 'Sent', value: stats.sent_count, icon: Send, color: 'text-blue-600', bgColor: 'bg-blue-50' },
-    { label: 'Delivered', value: stats.sent_count - stats.bounced_count, icon: CheckCircle2, color: 'text-green-600', bgColor: 'bg-green-50' },
-    { label: 'Opened', value: stats.opened_count, icon: Eye, color: 'text-purple-600', bgColor: 'bg-purple-50' },
-    { label: 'Clicked', value: stats.clicked_count, icon: MousePointerClick, color: 'text-orange-600', bgColor: 'bg-orange-50' },
-    { label: 'Replied', value: stats.replied_count, icon: MessageSquare, color: 'text-teal-600', bgColor: 'bg-teal-50' },
-    { label: 'Bounced', value: stats.bounced_count, icon: AlertTriangle, color: 'text-red-600', bgColor: 'bg-red-50' },
+    { label: 'Sent', value: stats.sent, icon: Send, color: 'text-blue-600', bgColor: 'bg-blue-50' },
+    { label: 'Delivered', value: Math.max(stats.sent - stats.failed, 0), icon: CheckCircle2, color: 'text-green-600', bgColor: 'bg-green-50' },
+    { label: 'Opened', value: stats.opened, icon: Eye, color: 'text-purple-600', bgColor: 'bg-purple-50' },
+    { label: 'Clicked', value: stats.clicked, icon: MousePointerClick, color: 'text-orange-600', bgColor: 'bg-orange-50' },
+    { label: 'Replied', value: stats.replied, icon: MessageSquare, color: 'text-teal-600', bgColor: 'bg-teal-50' },
+    { label: 'Failed', value: stats.failed, icon: AlertTriangle, color: 'text-red-600', bgColor: 'bg-red-50' },
   ]
 
   const rates = [
     { label: 'Open Rate', value: stats.open_rate, color: 'bg-purple-500' },
     { label: 'Click Rate', value: stats.click_rate, color: 'bg-orange-500' },
     { label: 'Reply Rate', value: stats.reply_rate, color: 'bg-teal-500' },
-    { label: 'Bounce Rate', value: stats.bounce_rate, color: 'bg-red-500' },
   ]
 
   return (
@@ -134,16 +133,16 @@ export default function CampaignStats({ campaignId }: CampaignStatsProps) {
                   </span>
                 </td>
                 <td className="px-6 py-3 text-right text-sm text-gray-700">
-                  {formatNumber(stats.sent_count)}
+                  {formatNumber(stats.sent)}
                 </td>
                 <td className="px-6 py-3 text-right text-sm text-gray-700">
-                  {formatNumber(stats.opened_count)}
+                  {formatNumber(stats.opened)}
                 </td>
                 <td className="px-6 py-3 text-right text-sm text-gray-700">
-                  {formatNumber(stats.clicked_count)}
+                  {formatNumber(stats.clicked)}
                 </td>
                 <td className="px-6 py-3 text-right text-sm text-gray-700">
-                  {formatNumber(stats.replied_count)}
+                  {formatNumber(stats.replied)}
                 </td>
                 <td className="px-6 py-3 text-right">
                   <div className="flex items-center justify-end gap-2">
