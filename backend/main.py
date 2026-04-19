@@ -186,6 +186,42 @@ app.add_middleware(
 app.add_exception_handler(AIQuotaExceeded, ai_quota_handler)
 app.add_exception_handler(SectorNotFoundError, sector_not_found_handler)
 
+
+# ---------------------------------------------------------------------------
+# Catch-all exception handler — guarantees every 500 ships with CORS headers
+# AND a structured JSON body.
+#
+# Without this, an unhandled exception inside a request handler can slip past
+# FastAPI's default handler in some edge cases (e.g., async generator
+# dependencies raising during cleanup, ResponseValidationError on response_model
+# coercion). When that happens, uvicorn emits its raw 21-byte
+# "Internal Server Error" text/plain response, CORS headers are never attached,
+# and the browser turns it into an opaque "Network Error" on the client.
+#
+# The handler below logs the traceback (visible in Railway logs) AND returns a
+# JSON 500 through FastAPI's response pipeline — so CORSMiddleware wraps it.
+# ---------------------------------------------------------------------------
+from fastapi import Request  # noqa: E402
+from fastapi.responses import JSONResponse  # noqa: E402
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    # Log the full traceback to stdout so it shows up in `railway logs`.
+    print(
+        f"[unhandled] {request.method} {request.url.path} → {type(exc).__name__}: {exc}",
+        flush=True,
+    )
+    traceback.print_exc()
+    sys.stdout.flush()
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": f"{type(exc).__name__}: {exc}",
+            "path": str(request.url.path),
+        },
+    )
+
 # Mount routers
 PREFIX = "/api/v1"
 app.include_router(auth.router, prefix=PREFIX)
