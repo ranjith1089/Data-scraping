@@ -48,3 +48,5 @@ __all__ = [
 # ---------------------------------------------------------------------------
 from . import whatsapp  # noqa: E402,F401  WhatsApp Cloud API (Option B)
 from . import whatsapp_gupshup  # noqa: E402,F401  Gupshup BSP (Option D)
+from . import sendgrid as _sendgrid_plugin  # noqa: E402,F401  SendGrid REST
+from . import smtp as _smtp_plugin  # noqa: E402,F401  Generic SMTP
