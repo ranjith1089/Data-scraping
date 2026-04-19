@@ -48,3 +48,10 @@ __all__ = [
 # ---------------------------------------------------------------------------
 from . import whatsapp  # noqa: E402,F401  WhatsApp Cloud API (Option B)
 from . import whatsapp_gupshup  # noqa: E402,F401  Gupshup BSP (Option D)
+from . import sendgrid as _sendgrid_plugin  # noqa: E402,F401  SendGrid REST
+from . import smtp as _smtp_plugin  # noqa: E402,F401  Generic SMTP
+from . import meta_ads  # noqa: E402,F401  Meta Ads (Facebook/Instagram Lead Ads)
+from . import google_ads  # noqa: E402,F401  Google Ads API
+from . import linkedin_ads  # noqa: E402,F401  LinkedIn Ads
+from . import ga4  # noqa: E402,F401  Google Analytics 4 Measurement Protocol
+from . import fb_pixel  # noqa: E402,F401  Meta Conversions API (FB Pixel)
