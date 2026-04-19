@@ -143,14 +143,19 @@ export default function CampaignBuilder({ onComplete, onCancel }: CampaignBuilde
   }
 
   function buildStepsPayload(): CampaignStepPayload[] {
-    return campaignSteps.map((s, idx) => ({
-      step_number: idx + 1,
-      channel: s.channel,
-      delay_days: s.delay_days,
-      subject: s.channel === 'email' ? s.subject || null : null,
-      body: s.body || null,
-      ai_generated: Boolean(s.subject || s.body),
-    }))
+    // Only persist steps the user has actually filled in. Stub steps
+    // (subject + body both empty) from early wizard stages are skipped
+    // so Save-as-Draft from Step 2 doesn't send an empty sequence.
+    return campaignSteps
+      .filter((s) => (s.subject && s.subject.trim()) || (s.body && s.body.trim()))
+      .map((s, idx) => ({
+        step_number: idx + 1,
+        channel: s.channel,
+        delay_days: s.delay_days,
+        subject: s.channel === 'email' ? s.subject || null : null,
+        body: s.body || null,
+        ai_generated: Boolean(s.subject || s.body),
+      }))
   }
 
   // Keep segment sectors in sync
@@ -236,8 +241,11 @@ export default function CampaignBuilder({ onComplete, onCancel }: CampaignBuilde
       toast.error('Please select at least one target sector (Step 2).')
       return
     }
-    if (campaignSteps.length === 0) {
-      toast.error('A campaign needs at least one step before it can launch.')
+    const stepsPayload = buildStepsPayload()
+    if (stepsPayload.length === 0) {
+      toast.error(
+        'Add at least one step with a subject or body before launching.',
+      )
       return
     }
     try {
@@ -249,7 +257,7 @@ export default function CampaignBuilder({ onComplete, onCancel }: CampaignBuilde
       )
       await saveSteps.mutateAsync({
         campaignId: campaign.id,
-        steps: buildStepsPayload(),
+        steps: stepsPayload,
       })
       await startCampaign.mutateAsync(campaign.id)
       toast.success('Campaign launched!')
