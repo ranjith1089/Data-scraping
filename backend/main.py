@@ -43,6 +43,7 @@ try:
         lead_scorer,
         chat,
         sector_brief,
+        sector_analysis,
         personalise,
         reply_analyser,
     )
@@ -208,6 +209,7 @@ app.include_router(email_gen.router, prefix=PREFIX)
 app.include_router(lead_scorer.router, prefix=PREFIX)
 app.include_router(chat.router, prefix=PREFIX)
 app.include_router(sector_brief.router, prefix=PREFIX)
+app.include_router(sector_analysis.router, prefix=PREFIX)
 app.include_router(personalise.router, prefix=PREFIX)
 app.include_router(reply_analyser.router, prefix=PREFIX)
 

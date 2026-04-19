@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   PieChart,
@@ -7,8 +8,21 @@ import {
   Tooltip as RechartsTooltip,
   Legend,
 } from 'recharts'
-import { Briefcase, ArrowUpRight } from 'lucide-react'
+import {
+  Briefcase,
+  ArrowUpRight,
+  Loader2,
+  Sparkles,
+  TrendingUp,
+  X,
+} from 'lucide-react'
+import toast from 'react-hot-toast'
 import { useDashboard } from '@/hooks/useAnalytics'
+import {
+  useSectorAnalysis,
+  type SectorAnalysis,
+  type SectorRecommendation,
+} from '@/hooks/useAI'
 import {
   Card,
   CardContent,
@@ -23,6 +37,20 @@ import { SECTOR_NAMES, SECTOR_COLORS } from '@/lib/utils'
 export default function SectorsPage() {
   const { data: dashboard, isLoading } = useDashboard()
   const navigate = useNavigate()
+  const analysisMutation = useSectorAnalysis()
+  const [analysis, setAnalysis] = useState<SectorAnalysis | null>(null)
+
+  const runAnalysis = async () => {
+    try {
+      const result = await analysisMutation.mutateAsync()
+      setAnalysis(result)
+    } catch (err: unknown) {
+      const detail =
+        (err as { response?: { data?: { detail?: string } } }).response?.data
+          ?.detail ?? 'Sector analysis failed. Please try again.'
+      toast.error(typeof detail === 'string' ? detail : 'Sector analysis failed')
+    }
+  }
 
   const sectors = Object.entries(dashboard?.leads_by_sector ?? {}).map(
     ([code, count]) => ({
@@ -165,12 +193,230 @@ export default function SectorsPage() {
                 LeadForge AI can automatically discover new high-potential sectors based
                 on your current won leads.
               </p>
-              <Button variant="secondary" className="w-full font-medium">
-                Run Sector Analysis
+              <Button
+                variant="secondary"
+                className="w-full font-medium"
+                onClick={runAnalysis}
+                disabled={analysisMutation.isPending}
+              >
+                {analysisMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Analysing won deals…
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Run Sector Analysis
+                  </>
+                )}
               </Button>
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {analysis && (
+        <SectorAnalysisModal
+          analysis={analysis}
+          onClose={() => setAnalysis(null)}
+          onViewSector={(code) => navigate(`/leads?sector_code=${encodeURIComponent(code)}`)}
+        />
+      )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Sector Analysis results modal
+// ---------------------------------------------------------------------------
+
+function SectorAnalysisModal({
+  analysis,
+  onClose,
+  onViewSector,
+}: {
+  analysis: SectorAnalysis
+  onClose: () => void
+  onViewSector: (code: string) => void
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-xl bg-white shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-6 py-4">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+              <Sparkles className="h-4 w-4" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-gray-900">
+                Sector expansion analysis
+              </h2>
+              <p className="text-xs text-gray-500">
+                Based on {analysis.based_on_won_leads} won deal
+                {analysis.based_on_won_leads === 1 ? '' : 's'} ·{' '}
+                {new Date(analysis.generated_at).toLocaleString()}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="space-y-6 px-6 py-5">
+          {/* Summary */}
+          {analysis.summary && (
+            <section>
+              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Win pattern read
+              </h3>
+              <p className="text-sm leading-relaxed text-gray-800">
+                {analysis.summary}
+              </p>
+            </section>
+          )}
+
+          {/* Current mix */}
+          {analysis.current_sector_mix.length > 0 && (
+            <section>
+              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Current won-deal mix
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {analysis.current_sector_mix.map((row) => (
+                  <span
+                    key={row.sector_code}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs text-gray-700"
+                  >
+                    <Briefcase className="h-3 w-3 text-gray-400" />
+                    <span className="font-medium">{row.sector_name}</span>
+                    <span className="text-gray-500">· {row.won_count}</span>
+                  </span>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Recommendations */}
+          <section>
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
+              Recommended sectors to expand into
+            </h3>
+            <div className="space-y-4">
+              {analysis.recommendations.map((rec) => (
+                <RecommendationCard
+                  key={rec.sector_code}
+                  rec={rec}
+                  onView={() => onViewSector(rec.sector_code)}
+                />
+              ))}
+            </div>
+          </section>
+        </div>
+
+        {/* Footer */}
+        <div className="sticky bottom-0 flex justify-end border-t border-gray-100 bg-white px-6 py-4">
+          <Button variant="outline" onClick={onClose}>
+            Close
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function RecommendationCard({
+  rec,
+  onView,
+}: {
+  rec: SectorRecommendation
+  onView: () => void
+}) {
+  const scoreColor =
+    rec.fit_score >= 75
+      ? 'bg-green-50 text-green-700 border-green-200'
+      : rec.fit_score >= 50
+        ? 'bg-amber-50 text-amber-700 border-amber-200'
+        : 'bg-gray-50 text-gray-600 border-gray-200'
+
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-4">
+      <div className="mb-2 flex items-start justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <TrendingUp className="h-4 w-4 text-indigo-500" />
+          <h4 className="text-sm font-semibold text-gray-900">
+            {rec.sector_name}
+          </h4>
+          <span
+            className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium ${scoreColor}`}
+          >
+            Fit {rec.fit_score}/100
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={onView}
+          className="text-xs font-medium text-indigo-600 hover:text-indigo-700"
+        >
+          View leads →
+        </button>
+      </div>
+
+      <p className="mb-3 text-sm leading-relaxed text-gray-700">{rec.rationale}</p>
+
+      {rec.recommended_icp && (
+        <div className="mb-3 rounded-lg bg-indigo-50/50 px-3 py-2 text-xs text-indigo-900">
+          <span className="font-semibold">Ideal customer:</span> {rec.recommended_icp}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {rec.signals.length > 0 && (
+          <div>
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+              Supporting signals
+            </p>
+            <ul className="space-y-1 text-xs text-gray-600">
+              {rec.signals.map((s, i) => (
+                <li key={i} className="flex items-start gap-1.5">
+                  <span className="mt-1 h-1 w-1 flex-shrink-0 rounded-full bg-gray-400" />
+                  <span>{s}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {rec.sample_designations.length > 0 && (
+          <div>
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+              Target designations
+            </p>
+            <div className="flex flex-wrap gap-1">
+              {rec.sample_designations.map((d, i) => (
+                <span
+                  key={i}
+                  className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-gray-700"
+                >
+                  {d}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

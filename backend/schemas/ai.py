@@ -61,6 +61,39 @@ class SectorBriefResponse(BaseModel):
     generated_at: str
 
 
+class SectorRecommendation(BaseModel):
+    """A single AI-recommended adjacent sector."""
+
+    sector_code: str = Field(
+        ..., description="One of the platform's nine sector codes."
+    )
+    sector_name: str
+    fit_score: int = Field(..., ge=0, le=100)
+    rationale: str = Field(..., max_length=1000)
+    signals: List[str] = Field(
+        default_factory=list,
+        description="Concrete signals from the tenant's won leads that support this recommendation.",
+    )
+    recommended_icp: Optional[str] = Field(
+        None,
+        description="Short description of the ideal customer inside this sector.",
+    )
+    sample_designations: List[str] = Field(default_factory=list)
+
+
+class SectorAnalysisResponse(BaseModel):
+    summary: str = Field(..., description="One-paragraph read of the won-lead pattern.")
+    current_sector_mix: List[dict] = Field(
+        default_factory=list,
+        description="[{sector_code, sector_name, won_count, won_value_inr}]",
+    )
+    recommendations: List[SectorRecommendation]
+    generated_at: str
+    based_on_won_leads: int = Field(
+        ..., description="How many won deals the analysis was grounded in."
+    )
+
+
 class PersonaliseRequest(BaseModel):
     lead_ids: List[UUID] = Field(..., min_length=1, max_length=50)
     campaign_step_id: UUID
