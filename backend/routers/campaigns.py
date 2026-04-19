@@ -210,6 +210,7 @@ async def bulk_upsert_campaign_steps(
     created: list[CampaignStep] = []
     for body in steps:
         step = CampaignStep(
+            tenant_id=current_user.tenant_id,  # RLS + nullable=False
             campaign_id=campaign_id,
             step_number=body.step_number,
             channel=body.channel.value,
