@@ -94,7 +94,7 @@ export default function AIAssistantPage() {
   const hotLeadsCount = Object.entries(
     dashboardData?.leads_by_stage ?? {}
   ).reduce((sum, [stage, count]) => {
-    if (stage === 'demo' || stage === 'proposal' || stage === 'negotiation') {
+    if (stage === 'qualified' || stage === 'proposal' || stage === 'negotiation') {
       return sum + (Number(count) || 0)
     }
     return sum

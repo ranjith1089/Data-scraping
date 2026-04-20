@@ -49,7 +49,8 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'deals', label: 'Deals' },
 ]
 
-const STAGES_ORDER = ['new', 'contacted', 'engaged', 'demo', 'proposal', 'negotiation', 'won', 'lost']
+// Must mirror backend/schemas/lead.py::LeadStage. See STAGE_LABELS.
+const STAGES_ORDER = ['new', 'contacted', 'qualified', 'proposal', 'negotiation', 'won', 'nurture', 'lost']
 
 const ACTIVITY_TYPES = [
   { value: 'call', label: 'Call', icon: PhoneCall },
