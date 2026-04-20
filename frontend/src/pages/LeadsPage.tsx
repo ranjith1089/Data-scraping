@@ -40,8 +40,8 @@ import LeadFilterPanel from '@/components/leads/LeadFilterPanel'
 function getStatusForStage(stage: string): 'hot' | 'warm' | 'cold' | 'won' | 'lost' {
   if (stage === 'won') return 'won'
   if (stage === 'lost') return 'lost'
-  if (['demo', 'proposal', 'negotiation'].includes(stage)) return 'hot'
-  if (['contacted', 'engaged'].includes(stage)) return 'warm'
+  if (['proposal', 'negotiation'].includes(stage)) return 'hot'
+  if (['contacted', 'qualified', 'nurture'].includes(stage)) return 'warm'
   return 'cold'
 }
 
@@ -107,7 +107,7 @@ export default function LeadsPage() {
     ? perPageParam
     : DEFAULT_PAGE_SIZE
 
-  const { data, isLoading, refetch } = useLeads({
+  const { data, isLoading, isError, error, refetch } = useLeads({
     search: searchTerm || undefined,
     sector_code: filterValues.sector_code || undefined,
     stage: filterValues.stage || undefined,
@@ -119,6 +119,31 @@ export default function LeadsPage() {
     page,
     per_page: perPage,
   })
+
+  // Pull a readable message out of whatever axios / FastAPI returned so
+  // we can surface the real cause instead of silently falling back to
+  // "No leads found" when the query actually errored.
+  const errorMessage = isError
+    ? (() => {
+        const e = error as {
+          response?: { status?: number; data?: { detail?: unknown } }
+          message?: string
+        }
+        const d = e?.response?.data?.detail
+        if (typeof d === 'string') return d
+        if (Array.isArray(d)) {
+          return d
+            .map((x: { loc?: unknown[]; msg?: string }) => {
+              const field = Array.isArray(x?.loc) ? x.loc.slice(1).join('.') : ''
+              return field ? `${field}: ${x?.msg ?? ''}` : x?.msg ?? ''
+            })
+            .filter(Boolean)
+            .join('; ') || 'Failed to load leads.'
+        }
+        if (e?.response?.status) return `Failed to load leads (HTTP ${e.response.status}).`
+        return e?.message || 'Failed to load leads.'
+      })()
+    : null
   const deleteLead = useDeleteLead()
 
   const leads = useMemo<Lead[]>(() => data?.items ?? [], [data])
@@ -292,6 +317,27 @@ export default function LeadsPage() {
                       </td>
                     </tr>
                   ))
+              ) : isError ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <Users className="h-12 w-12 mb-4 opacity-20 text-red-400" />
+                      <p className="text-lg font-medium text-red-700">
+                        Couldn&apos;t load leads
+                      </p>
+                      <p className="mt-1 max-w-md text-sm text-muted-foreground">
+                        {errorMessage}
+                      </p>
+                      <Button
+                        className="mt-4"
+                        variant="outline"
+                        onClick={() => refetch()}
+                      >
+                        Retry
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
               ) : leads.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
@@ -299,15 +345,20 @@ export default function LeadsPage() {
                       <Users className="h-12 w-12 mb-4 opacity-20" />
                       <p className="text-lg font-medium text-foreground">No leads found</p>
                       <p className="text-sm">
-                        Try adjusting your search or add a new lead.
+                        {total > 0
+                          ? `You have ${total.toLocaleString()} leads but none match the current filters.`
+                          : 'Try adjusting your search or add a new lead.'}
                       </p>
-                      {searchTerm && (
+                      {(searchTerm || activeFilterCount > 0) && (
                         <Button
                           className="mt-4"
                           variant="outline"
-                          onClick={() => updateSearch('')}
+                          onClick={() => {
+                            updateSearch('')
+                            clearFilters()
+                          }}
                         >
-                          Clear Search
+                          Clear search &amp; filters
                         </Button>
                       )}
                     </div>

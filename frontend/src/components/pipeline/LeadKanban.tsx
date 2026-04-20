@@ -15,26 +15,26 @@ import { Skeleton } from '@/components/ui/skeleton'
  * end so they don't pollute the active pipeline view.
  */
 
-// The funnel displays a slightly different ordering (engaged before
-// negotiation) — the Kanban uses the same canonical stage order as
-// LeadDrawer so the two views agree.
+// Must mirror backend/schemas/lead.py::LeadStage enum. Lost is rendered
+// as a separate final column below, and nurture sits between
+// negotiation and won as a "hold" lane.
 const KANBAN_STAGES = [
   'new',
   'contacted',
-  'engaged',
-  'demo',
+  'qualified',
   'proposal',
   'negotiation',
+  'nurture',
   'won',
 ] as const
 
 const STAGE_ACCENT: Record<string, { border: string; bg: string; dot: string }> = {
   new: { border: 'border-slate-300', bg: 'bg-slate-50', dot: 'bg-slate-400' },
   contacted: { border: 'border-blue-300', bg: 'bg-blue-50', dot: 'bg-blue-500' },
-  engaged: { border: 'border-violet-300', bg: 'bg-violet-50', dot: 'bg-violet-500' },
-  demo: { border: 'border-amber-300', bg: 'bg-amber-50', dot: 'bg-amber-500' },
+  qualified: { border: 'border-violet-300', bg: 'bg-violet-50', dot: 'bg-violet-500' },
   proposal: { border: 'border-orange-300', bg: 'bg-orange-50', dot: 'bg-orange-500' },
   negotiation: { border: 'border-red-300', bg: 'bg-red-50', dot: 'bg-red-500' },
+  nurture: { border: 'border-amber-300', bg: 'bg-amber-50', dot: 'bg-amber-500' },
   won: { border: 'border-emerald-300', bg: 'bg-emerald-50', dot: 'bg-emerald-500' },
   lost: { border: 'border-gray-300', bg: 'bg-gray-100', dot: 'bg-gray-400' },
 }

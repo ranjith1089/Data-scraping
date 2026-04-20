@@ -27,33 +27,27 @@ const STAGE_META: Record<
   },
   contacted: {
     label: 'Interest',
-    desc: 'Engaging with content and offerings',
+    desc: 'First-touch outreach completed',
     main: '#f09640',
     rim: '#f8c080',
   },
-  engaged: {
-    label: 'Consideration',
-    desc: 'Evaluating whether it fits their needs',
+  qualified: {
+    label: 'Qualified',
+    desc: 'Lead meets ICP and buying criteria',
     main: '#e8c840',
     rim: '#f4de85',
-  },
-  negotiation: {
-    label: 'Intent',
-    desc: 'Negotiating price and terms',
-    main: '#52b06a',
-    rim: '#85d4a0',
-  },
-  demo: {
-    label: 'Demo',
-    desc: 'Live product demonstration scheduled',
-    main: '#4ab0d8',
-    rim: '#82ccec',
   },
   proposal: {
     label: 'Proposal',
     desc: 'Formal proposal sent and under review',
     main: '#4462d8',
     rim: '#7b90ec',
+  },
+  negotiation: {
+    label: 'Negotiation',
+    desc: 'Negotiating price and terms',
+    main: '#52b06a',
+    rim: '#85d4a0',
   },
   won: {
     label: 'Won',
@@ -63,13 +57,15 @@ const STAGE_META: Record<
   },
 }
 
+// Must mirror backend/schemas/lead.py::LeadStage exactly. The funnel
+// omits `nurture` and `lost` (those are side-channels, not progression
+// stages in the conversion funnel).
 const STAGE_ORDER = [
   'new',
   'contacted',
-  'engaged',
-  'negotiation',
-  'demo',
+  'qualified',
   'proposal',
+  'negotiation',
   'won',
 ]
 

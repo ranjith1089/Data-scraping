@@ -75,26 +75,31 @@ export const SECTOR_NAMES: Record<string, string> = {
   energy_utilities: 'Energy & Utilities',
 }
 
+// Stage vocabulary MUST match backend/schemas/lead.py::LeadStage enum
+// exactly, otherwise any filter or PATCH using a non-existent stage
+// comes back as 422. Historical drift had `engaged` and `demo` here
+// which were never valid server-side — filtering by either returned an
+// empty list and silently broke the Leads page. Keep these in sync.
 export const STAGE_LABELS: Record<string, string> = {
   new: 'New',
   contacted: 'Contacted',
-  engaged: 'Engaged',
-  demo: 'Demo',
+  qualified: 'Qualified',
   proposal: 'Proposal',
   negotiation: 'Negotiation',
   won: 'Won',
   lost: 'Lost',
+  nurture: 'Nurture',
 }
 
 export const STAGE_COLORS: Record<string, string> = {
   new: '#6B7280',
   contacted: '#3B82F6',
-  engaged: '#8B5CF6',
-  demo: '#F59E0B',
+  qualified: '#8B5CF6',
   proposal: '#F97316',
   negotiation: '#EF4444',
   won: '#22C55E',
   lost: '#DC2626',
+  nurture: '#F59E0B',
 }
 
 export const COMPANY_SIZE_OPTIONS = [

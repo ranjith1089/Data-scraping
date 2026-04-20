@@ -46,7 +46,8 @@ const STAGE_META: Record<string, { label: string; color: string }> = {
   lost: { label: 'Lost', color: '#94a3b8' },
 }
 
-const DASHBOARD_STAGES = ['new', 'contacted', 'engaged', 'demo', 'proposal', 'negotiation', 'won']
+// Must mirror backend/schemas/lead.py::LeadStage. See STAGE_LABELS.
+const DASHBOARD_STAGES = ['new', 'contacted', 'qualified', 'proposal', 'negotiation', 'won']
 
 type ActivityItem = {
   id: string
