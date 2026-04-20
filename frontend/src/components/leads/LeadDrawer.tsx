@@ -21,7 +21,7 @@ import {
   Tag,
   Loader2,
 } from 'lucide-react'
-import { useLead } from '@/hooks/useLeads'
+import { useLead, useUpdateLead } from '@/hooks/useLeads'
 import { useLeadScore, useEmailGen, type EmailGenRequest } from '@/hooks/useAI'
 import {
   cn,
@@ -73,7 +73,24 @@ interface Activity {
 
 export default function LeadDrawer({ leadId, onClose }: LeadDrawerProps) {
   const { data: lead, isLoading, refetch } = useLead(leadId)
+  const updateLead = useUpdateLead()
   const [activeTab, setActiveTab] = useState<TabKey>('overview')
+
+  async function handleStageChange(nextStage: string) {
+    if (!lead || lead.stage === nextStage) return
+    try {
+      await updateLead.mutateAsync({ id: lead.id, stage: nextStage })
+      toast.success(`Stage updated to ${STAGE_LABELS[nextStage] ?? nextStage}`)
+      refetch()
+    } catch (err: unknown) {
+      const detail =
+        (err as { response?: { data?: { detail?: unknown } } }).response?.data
+          ?.detail
+      toast.error(
+        typeof detail === 'string' ? detail : 'Failed to update stage',
+      )
+    }
+  }
 
   // AI Actions state
   const scoreLeadMutation = useLeadScore()
@@ -242,23 +259,66 @@ export default function LeadDrawer({ leadId, onClose }: LeadDrawerProps) {
           {/* OVERVIEW TAB */}
           {activeTab === 'overview' && (
             <div className="space-y-6 p-6">
-              {/* Stage Pipeline */}
+              {/* Stage Pipeline — click any segment to move the lead */}
               <div>
-                <h4 className="mb-3 text-xs font-medium uppercase tracking-wider text-gray-500">Pipeline Stage</h4>
+                <div className="mb-3 flex items-center justify-between">
+                  <h4 className="text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Pipeline Stage
+                  </h4>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={lead.stage}
+                      onChange={(e) => handleStageChange(e.target.value)}
+                      disabled={updateLead.isPending}
+                      className="rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
+                    >
+                      {STAGES_ORDER.map((stage) => (
+                        <option key={stage} value={stage}>
+                          {STAGE_LABELS[stage] ?? stage}
+                        </option>
+                      ))}
+                    </select>
+                    {updateLead.isPending && (
+                      <Loader2 className="h-3 w-3 animate-spin text-gray-400" />
+                    )}
+                  </div>
+                </div>
                 <div className="flex items-center gap-1">
                   {STAGES_ORDER.map((stage, idx) => {
                     const isActive = idx <= currentStageIdx && lead.stage !== 'lost'
                     const isLost = lead.stage === 'lost' && stage === 'lost'
+                    const isCurrent = stage === lead.stage
                     return (
-                      <div key={stage} className="flex flex-1 flex-col items-center">
+                      <button
+                        key={stage}
+                        type="button"
+                        onClick={() => handleStageChange(stage)}
+                        disabled={updateLead.isPending}
+                        title={`Move to ${STAGE_LABELS[stage]}`}
+                        className="flex flex-1 flex-col items-center disabled:opacity-60 group"
+                      >
                         <div
                           className={cn(
-                            'h-2.5 w-full rounded-full',
-                            isLost ? 'bg-red-400' : isActive ? 'bg-indigo-500' : 'bg-gray-200'
+                            'h-2.5 w-full rounded-full transition-colors',
+                            isLost
+                              ? 'bg-red-400'
+                              : isActive
+                                ? 'bg-indigo-500'
+                                : 'bg-gray-200 group-hover:bg-gray-300',
+                            isCurrent && 'ring-2 ring-offset-1 ring-indigo-300',
                           )}
                         />
-                        <span className="mt-1 text-[10px] text-gray-400">{STAGE_LABELS[stage]}</span>
-                      </div>
+                        <span
+                          className={cn(
+                            'mt-1 text-[10px]',
+                            isCurrent
+                              ? 'font-semibold text-indigo-700'
+                              : 'text-gray-400',
+                          )}
+                        >
+                          {STAGE_LABELS[stage]}
+                        </span>
+                      </button>
                     )
                   })}
                 </div>
