@@ -1,3 +1,5 @@
+import { useSearchParams } from 'react-router-dom'
+import { LayoutGrid, Filter as FilterIcon } from 'lucide-react'
 import { usePipeline } from '@/hooks/useAnalytics'
 import {
   Card,
@@ -7,7 +9,8 @@ import {
   CardDescription,
 } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatINR } from '@/lib/utils'
+import { cn, formatINR } from '@/lib/utils'
+import LeadKanban from '@/components/pipeline/LeadKanban'
 
 // Stage metadata matches the reference Pipeline.tsx exactly: the main body
 // color is used for the 3D trapezoid fill and the rim is a lighter shade
@@ -163,7 +166,22 @@ function FunnelSVG3D({ stages }: { stages: Stage[] }) {
   )
 }
 
+type PipelineView = 'funnel' | 'board'
+
 export default function PipelinePage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  // View is URL-driven so `/pipeline?view=board` deep-links straight
+  // into the Kanban. Funnel is the default for backwards compatibility.
+  const viewParam = searchParams.get('view')
+  const view: PipelineView = viewParam === 'board' ? 'board' : 'funnel'
+
+  function setView(next: PipelineView) {
+    const params = new URLSearchParams(searchParams)
+    if (next === 'funnel') params.delete('view')
+    else params.set('view', next)
+    setSearchParams(params, { replace: true })
+  }
+
   const { data, isLoading } = usePipeline()
 
   // Build pipeline data in the canonical stage order, pulling from the
@@ -186,14 +204,84 @@ export default function PipelinePage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">
-          Sales Pipeline
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Visualize your lead progression through every conversion stage.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+            Sales Pipeline
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            {view === 'board'
+              ? 'Drag leads between columns to move them through stages.'
+              : 'Visualize your lead progression through every conversion stage.'}
+          </p>
+        </div>
+
+        {/* View toggle */}
+        <div className="inline-flex rounded-lg border border-border bg-background p-0.5 text-sm">
+          <button
+            type="button"
+            onClick={() => setView('funnel')}
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium transition-colors',
+              view === 'funnel'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            <FilterIcon className="h-4 w-4" />
+            Funnel
+          </button>
+          <button
+            type="button"
+            onClick={() => setView('board')}
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium transition-colors',
+              view === 'board'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            <LayoutGrid className="h-4 w-4" />
+            Board
+          </button>
+        </div>
       </div>
+
+      {/* Board view renders the Kanban and skips everything else on the page. */}
+      {view === 'board' && <LeadKanban />}
+      {view === 'funnel' && (
+        <FunnelView
+          pipelineData={pipelineData}
+          isLoading={isLoading}
+          totalLeads={totalLeads}
+          totalValue={totalValue}
+          wonCount={wonCount}
+          proposalCount={proposalCount}
+        />
+      )}
+    </div>
+  )
+}
+
+// Original funnel + summary cards + breakdown, extracted verbatim so the
+// new view toggle can conditionally render them.
+function FunnelView({
+  pipelineData,
+  isLoading,
+  totalLeads,
+  totalValue,
+  wonCount,
+  proposalCount,
+}: {
+  pipelineData: Stage[]
+  isLoading: boolean
+  totalLeads: number
+  totalValue: number
+  wonCount: number
+  proposalCount: number
+}) {
+  return (
+    <div className="space-y-6">
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
