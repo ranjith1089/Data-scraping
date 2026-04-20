@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import {
@@ -29,9 +29,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { cn, SECTOR_NAMES, STAGE_LABELS } from '@/lib/utils'
+import { cn, SECTOR_NAMES } from '@/lib/utils'
 import LeadDrawer from '@/components/leads/LeadDrawer'
 import ImportCSVModal from '@/components/leads/ImportCSVModal'
+import AddLeadModal from '@/components/leads/AddLeadModal'
+import LeadFilterPanel from '@/components/leads/LeadFilterPanel'
 
 // Reference-style stage-to-"status" mapping — maps backend stage codes to
 // the warm/hot/cold/won/lost status visual language used by the reference.
@@ -77,7 +79,22 @@ export default function LeadsPage() {
   const navigate = useNavigate()
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null)
   const [showImport, setShowImport] = useState(false)
+  const [showAdd, setShowAdd] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
+  const filterButtonRef = useRef<HTMLButtonElement>(null)
   const searchTerm = searchParams.get('search') ?? ''
+
+  // Every filter is URL-driven so deep-links and back/forward work.
+  const filterValues = {
+    sector_code: searchParams.get('sector_code') ?? '',
+    stage: searchParams.get('stage') ?? '',
+    company_size: searchParams.get('company_size') ?? '',
+    min_score: searchParams.get('min_score') ?? '',
+    max_score: searchParams.get('max_score') ?? '',
+    city: searchParams.get('city') ?? '',
+    district: searchParams.get('district') ?? '',
+  }
+  const activeFilterCount = Object.values(filterValues).filter(Boolean).length
 
   // Pagination is URL-driven so deep links and back/forward navigation
   // restore the same view. Falls back to page 1 / DEFAULT_PAGE_SIZE if
@@ -92,6 +109,13 @@ export default function LeadsPage() {
 
   const { data, isLoading, refetch } = useLeads({
     search: searchTerm || undefined,
+    sector_code: filterValues.sector_code || undefined,
+    stage: filterValues.stage || undefined,
+    company_size: filterValues.company_size || undefined,
+    min_score: filterValues.min_score ? Number(filterValues.min_score) : undefined,
+    max_score: filterValues.max_score ? Number(filterValues.max_score) : undefined,
+    city: filterValues.city || undefined,
+    district: filterValues.district || undefined,
     page,
     per_page: perPage,
   })
@@ -133,6 +157,27 @@ export default function LeadsPage() {
     setSearchParams(next, { replace: true })
   }
 
+  function applyFilters(next: typeof filterValues) {
+    const params = new URLSearchParams(searchParams)
+    // Preserve search + per_page; reset page because filter changes
+    // almost always reshape the result set.
+    params.delete('page')
+    for (const [key, value] of Object.entries(next)) {
+      if (value) params.set(key, value)
+      else params.delete(key)
+    }
+    setSearchParams(params, { replace: true })
+  }
+
+  function clearFilters() {
+    const params = new URLSearchParams(searchParams)
+    params.delete('page')
+    for (const key of Object.keys(filterValues)) {
+      params.delete(key)
+    }
+    setSearchParams(params, { replace: true })
+  }
+
   async function handleDelete(id: string) {
     if (!window.confirm('Are you sure you want to delete this lead?')) return
     try {
@@ -162,9 +207,32 @@ export default function LeadsPage() {
               onChange={(e) => updateSearch(e.target.value)}
             />
           </div>
-          <Button variant="outline" size="icon" className="shrink-0" title="Filter">
-            <Filter className="h-4 w-4" />
-          </Button>
+          <div className="relative">
+            <Button
+              ref={filterButtonRef}
+              variant="outline"
+              size="icon"
+              className="shrink-0 relative"
+              title="Filter"
+              onClick={() => setShowFilters((v) => !v)}
+            >
+              <Filter className="h-4 w-4" />
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-indigo-600 px-1 text-[10px] font-semibold text-white">
+                  {activeFilterCount}
+                </span>
+              )}
+            </Button>
+            {showFilters && (
+              <LeadFilterPanel
+                current={filterValues}
+                onApply={applyFilters}
+                onClear={clearFilters}
+                onClose={() => setShowFilters(false)}
+                anchorRef={filterButtonRef}
+              />
+            )}
+          </div>
           <Button
             variant="outline"
             className="shrink-0"
@@ -173,7 +241,7 @@ export default function LeadsPage() {
             <Upload className="h-4 w-4 mr-2" />
             Import
           </Button>
-          <Button className="shrink-0">
+          <Button className="shrink-0" onClick={() => setShowAdd(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Add Lead
           </Button>
@@ -422,8 +490,18 @@ export default function LeadsPage() {
         />
       )}
 
-      {/* Keep STAGE_LABELS reference alive (for future filter use) */}
-      {false && <span>{Object.keys(STAGE_LABELS).length}</span>}
+      {/* Add Lead modal */}
+      {showAdd && (
+        <AddLeadModal
+          onClose={() => setShowAdd(false)}
+          onCreated={(id) => {
+            refetch()
+            // Open the drawer on the freshly-created lead so the user
+            // can immediately enrich it without an extra click.
+            setSelectedLeadId(id)
+          }}
+        />
+      )}
     </div>
   )
 }
