@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from uuid import UUID
 from typing import Optional, List
 from datetime import datetime
@@ -104,7 +104,7 @@ class LeadResponse(BaseModel):
     email: Optional[str] = None
     phone: Optional[str] = None
     linkedin_url: Optional[str] = None
-    tags: List[str] = []
+    tags: List[str] = Field(default_factory=list)
     source: Optional[str] = None
     custom_fields: Optional[dict] = None
 
@@ -120,6 +120,19 @@ class LeadResponse(BaseModel):
     updated_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+    # The `leads.tags` column is nullable in Postgres (ARRAY(String),
+    # nullable=True) so CSV-imported rows that didn't carry tags come
+    # back from the ORM as `tags=None`. Without this coercion Pydantic
+    # v2 rejects None against `List[str]` with a ValidationError, which
+    # FastAPI then wraps as a ResponseValidationError and returns as a
+    # 500 — turning GET /leads/ into a full failure even though every
+    # row is otherwise valid. This is exactly how the TNEA import
+    # broke the Leads page.
+    @field_validator("tags", mode="before")
+    @classmethod
+    def _tags_none_to_empty(cls, v):
+        return [] if v is None else v
 
 
 class LeadListResponse(BaseModel):
