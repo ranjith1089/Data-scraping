@@ -15,31 +15,49 @@ export interface LeadSearchParams {
   per_page?: number
 }
 
+// Mirrors backend/schemas/lead.py::LeadResponse exactly. Historical drift
+// had this interface using contact_email / contact_phone / annual_revenue
+// / lead_source / ai_score / icp_fit — fields the backend doesn't return.
+// Every such read was undefined at runtime, so (for example) the
+// LeadDrawer's Contact Information section hid Email and Phone even
+// when the row had them. Don't add fields unless the backend response
+// actually includes them.
 export interface Lead {
   id: string
   tenant_id: string
-  company_name: string
-  contact_name: string
-  contact_email: string
-  contact_phone: string
   sector_code: string
-  city: string
-  district: string
-  state: string
-  company_size: string
-  annual_revenue: number | null
+  company_name: string
+  industry: string | null
+  sub_industry: string | null
+  state: string | null
+  district: string | null
+  city: string | null
+  address: string | null
+  pincode: string | null
   website: string | null
-  lead_source: string
-  stage: string
-  ai_score: number
-  icp_fit: string
-  assigned_to: string | null
-  notes: string | null
+  company_size: string | null
+  annual_revenue_inr: number | null
+  contact_name: string | null
+  designation: string | null
+  email: string | null
+  phone: string | null
+  linkedin_url: string | null
   tags: string[]
+  source: string | null
+  custom_fields: Record<string, unknown> | null
+  lead_score: number | null
+  score_reason: string | null
+  icp_match: string | null
+  ai_summary: string | null
+  stage: string
+  assigned_to: string | null
   created_at: string
-  updated_at: string
+  updated_at: string | null
 }
 
+// Backend returns {items, total, page, per_page, total_pages}. The
+// `pages` alias below is populated in the hook so callers can stay on
+// the frontend-friendly name.
 export interface LeadListResponse {
   items: Lead[]
   total: number
@@ -48,12 +66,28 @@ export interface LeadListResponse {
   pages: number
 }
 
+interface RawLeadListResponse {
+  items: Lead[]
+  total: number
+  page: number
+  per_page: number
+  total_pages?: number
+  pages?: number
+}
+
 export function useLeads(params: LeadSearchParams = {}) {
-  return useQuery({
+  return useQuery<LeadListResponse>({
     queryKey: ['leads', params],
     queryFn: async () => {
-      const { data } = await api.get<LeadListResponse>('/leads/', { params })
-      return data
+      const { data } = await api.get<RawLeadListResponse>('/leads/', { params })
+      return {
+        items: data.items ?? [],
+        total: data.total ?? 0,
+        page: data.page ?? 1,
+        per_page: data.per_page ?? 20,
+        // Accept either `total_pages` (current backend) or `pages` (future).
+        pages: data.total_pages ?? data.pages ?? 1,
+      }
     },
   })
 }

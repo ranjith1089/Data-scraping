@@ -332,21 +332,21 @@ export default function LeadsPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        {lead.contact_email && (
+                        {lead.email && (
                           <div className="flex items-center gap-1.5 text-foreground">
                             <Mail className="h-3 w-3 text-muted-foreground" />
                             <span
                               className="truncate max-w-[150px]"
-                              title={lead.contact_email}
+                              title={lead.email}
                             >
-                              {lead.contact_email}
+                              {lead.email}
                             </span>
                           </div>
                         )}
-                        {lead.contact_phone && (
+                        {lead.phone && (
                           <div className="flex items-center gap-1.5 text-muted-foreground text-xs mt-1">
                             <Phone className="h-3 w-3" />
-                            <span>{lead.contact_phone}</span>
+                            <span>{lead.phone}</span>
                           </div>
                         )}
                       </td>
@@ -367,11 +367,11 @@ export default function LeadsPage() {
                         <div
                           className={cn(
                             'flex items-center gap-1',
-                            getScoreColor(lead.ai_score ?? 0),
+                            getScoreColor(lead.lead_score ?? 0),
                           )}
                         >
                           <Zap className="h-3 w-3" />
-                          {lead.ai_score ?? 0}
+                          {lead.lead_score ?? 0}
                         </div>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">

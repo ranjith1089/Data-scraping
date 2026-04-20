@@ -93,10 +93,10 @@ export default function LeadTable({
           cmp = a.company_name.localeCompare(b.company_name)
           break
         case 'contact_name':
-          cmp = a.contact_name.localeCompare(b.contact_name)
+          cmp = (a.contact_name ?? '').localeCompare(b.contact_name ?? '')
           break
         case 'ai_score':
-          cmp = a.ai_score - b.ai_score
+          cmp = (a.lead_score ?? 0) - (b.lead_score ?? 0)
           break
         case 'stage':
           cmp = a.stage.localeCompare(b.stage)
@@ -105,7 +105,9 @@ export default function LeadTable({
           cmp = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
           break
         case 'updated_at':
-          cmp = new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime()
+          cmp =
+            new Date(a.updated_at ?? a.created_at).getTime() -
+            new Date(b.updated_at ?? b.created_at).getTime()
           break
       }
       return sortDir === 'asc' ? cmp : -cmp
@@ -273,8 +275,8 @@ export default function LeadTable({
             </thead>
             <tbody className="divide-y divide-gray-100 bg-white">
               {sortedItems.map((lead) => {
-                const scoreBadge = getScoreBadge(lead.ai_score)
-                const icpBadge = lead.icp_fit ? getICPBadge(lead.icp_fit) : null
+                const scoreBadge = getScoreBadge((lead.lead_score ?? 0))
+                const icpBadge = lead.icp_match ? getICPBadge(lead.icp_match) : null
                 const sectorColor = SECTOR_COLORS[lead.sector_code] || '#6B7280'
                 const stageColor = STAGE_COLORS[lead.stage] || '#6B7280'
 
@@ -323,8 +325,8 @@ export default function LeadTable({
                     {/* Contact */}
                     <td className="px-4 py-3">
                       <p className="text-sm text-gray-900">{lead.contact_name}</p>
-                      {lead.contact_email && (
-                        <p className="text-xs text-gray-500">{truncate(lead.contact_email, 28)}</p>
+                      {lead.email && (
+                        <p className="text-xs text-gray-500">{truncate(lead.email, 28)}</p>
                       )}
                     </td>
 
@@ -345,11 +347,11 @@ export default function LeadTable({
                     <td className="px-4 py-3">
                       <div className="flex flex-col gap-1">
                         <span className={cn('inline-flex w-fit items-center rounded-full px-2 py-0.5 text-xs font-semibold', scoreBadge.color)}>
-                          {lead.ai_score} - {scoreBadge.label}
+                          {(lead.lead_score ?? 0)} - {scoreBadge.label}
                         </span>
                         {icpBadge && (
                           <span className={cn('inline-flex w-fit items-center rounded-full border px-2 py-0.5 text-[10px] font-medium', icpBadge.color)}>
-                            ICP: {lead.icp_fit}
+                            ICP: {lead.icp_match}
                           </span>
                         )}
                       </div>
@@ -376,7 +378,7 @@ export default function LeadTable({
 
                     {/* Last Activity */}
                     <td className="px-4 py-3">
-                      <p className="text-sm text-gray-500">{timeAgo(lead.updated_at)}</p>
+                      <p className="text-sm text-gray-500">{timeAgo(lead.updated_at ?? lead.created_at)}</p>
                     </td>
 
                     {/* Actions */}
