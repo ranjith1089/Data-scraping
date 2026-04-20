@@ -170,8 +170,8 @@ export default function LeadDetailPage() {
     )
   }
 
-  const scoreBadge = getScoreBadge(lead.ai_score)
-  const icpBadge = lead.icp_fit ? getICPBadge(lead.icp_fit) : null
+  const scoreBadge = getScoreBadge(lead.lead_score ?? 0)
+  const icpBadge = lead.icp_match ? getICPBadge(lead.icp_match) : null
   const sectorColor = SECTOR_COLORS[lead.sector_code] || '#6B7280'
   const currentStageIdx = STAGES_ORDER.indexOf(lead.stage)
 
@@ -201,11 +201,11 @@ export default function LeadDetailPage() {
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <span className={cn('inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold', scoreBadge.color)}>
-                Score: {lead.ai_score} ({scoreBadge.label})
+                Score: {lead.lead_score ?? 0} ({scoreBadge.label})
               </span>
               {icpBadge && (
                 <span className={cn('inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium', icpBadge.color)}>
-                  ICP: {lead.icp_fit}
+                  ICP: {lead.icp_match}
                 </span>
               )}
               <span
@@ -299,10 +299,10 @@ export default function LeadDetailPage() {
                       <dt className="flex items-center gap-1.5 text-xs text-gray-500"><Users className="h-3.5 w-3.5" /> Size</dt>
                       <dd className="mt-0.5 text-sm text-gray-900">{lead.company_size || 'N/A'}</dd>
                     </div>
-                    {lead.annual_revenue && (
+                    {lead.annual_revenue_inr && (
                       <div>
                         <dt className="flex items-center gap-1.5 text-xs text-gray-500"><IndianRupee className="h-3.5 w-3.5" /> Revenue</dt>
-                        <dd className="mt-0.5 text-sm text-gray-900">{formatINR(lead.annual_revenue)}</dd>
+                        <dd className="mt-0.5 text-sm text-gray-900">{formatINR(lead.annual_revenue_inr)}</dd>
                       </div>
                     )}
                     <div>
@@ -311,7 +311,7 @@ export default function LeadDetailPage() {
                     </div>
                     <div>
                       <dt className="text-xs text-gray-500">Source</dt>
-                      <dd className="mt-0.5 text-sm text-gray-900">{lead.lead_source || 'N/A'}</dd>
+                      <dd className="mt-0.5 text-sm text-gray-900">{lead.source || 'N/A'}</dd>
                     </div>
                   </dl>
                 </div>
@@ -326,24 +326,45 @@ export default function LeadDetailPage() {
                       <dt className="text-xs text-gray-500">Name</dt>
                       <dd className="mt-0.5 text-sm font-medium text-gray-900">{lead.contact_name}</dd>
                     </div>
-                    {lead.contact_email && (
+                    {lead.email && (
                       <div>
                         <dt className="flex items-center gap-1.5 text-xs text-gray-500"><Mail className="h-3.5 w-3.5" /> Email</dt>
                         <dd className="mt-0.5">
-                          <a href={`mailto:${lead.contact_email}`} className="text-sm text-indigo-600 hover:underline">
-                            {lead.contact_email}
+                          <a href={`mailto:${lead.email}`} className="text-sm text-indigo-600 hover:underline">
+                            {lead.email}
                           </a>
                         </dd>
                       </div>
                     )}
-                    {lead.contact_phone && (
+                    {lead.phone && (
                       <div>
                         <dt className="flex items-center gap-1.5 text-xs text-gray-500"><Phone className="h-3.5 w-3.5" /> Phone</dt>
                         <dd className="mt-0.5">
-                          <a href={`tel:${lead.contact_phone}`} className="text-sm text-indigo-600 hover:underline">
-                            {lead.contact_phone}
+                          <a href={`tel:${lead.phone}`} className="text-sm text-indigo-600 hover:underline">
+                            {lead.phone}
                           </a>
                         </dd>
+                      </div>
+                    )}
+                    {lead.linkedin_url && (
+                      <div>
+                        <dt className="text-xs text-gray-500">LinkedIn</dt>
+                        <dd className="mt-0.5">
+                          <a
+                            href={lead.linkedin_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-indigo-600 hover:underline"
+                          >
+                            {lead.linkedin_url}
+                          </a>
+                        </dd>
+                      </div>
+                    )}
+                    {lead.designation && (
+                      <div>
+                        <dt className="text-xs text-gray-500">Designation</dt>
+                        <dd className="mt-0.5 text-sm text-gray-900">{lead.designation}</dd>
                       </div>
                     )}
                   </dl>
@@ -386,7 +407,7 @@ export default function LeadDetailPage() {
                 </div>
                 <div>
                   <dt>Updated</dt>
-                  <dd>{timeAgo(lead.updated_at)}</dd>
+                  <dd>{lead.updated_at ? timeAgo(lead.updated_at) : '—'}</dd>
                 </div>
               </dl>
             </div>

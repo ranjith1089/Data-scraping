@@ -29,7 +29,7 @@ export default function AIScoreModal({ leadIds, onClose }: AIScoreModalProps) {
   const oldScores: Record<string, number> = {}
   if (leadsData?.items) {
     for (const lead of leadsData.items) {
-      oldScores[lead.id] = lead.ai_score
+      oldScores[lead.id] = lead.lead_score ?? 0
     }
   }
 
