@@ -9,10 +9,36 @@ import {
   ChevronDown,
   ChevronUp,
   Loader2,
+  Download,
 } from 'lucide-react'
 import { useImportCSV } from '@/hooks/useLeads'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
+
+// Matches the CSV importer's expected columns
+// (backend/services/csv_importer.py). `company_name` and `sector_code`
+// are required; everything else is optional. One example row per supported
+// sector so the user sees the allowed sector_code values without
+// having to read docs.
+const SAMPLE_CSV_CONTENT = `company_name,sector_code,industry,contact_name,designation,email,phone,website,city,district,state,company_size,annual_revenue_inr
+Acme Technologies,it_ites,Software,Priya Sharma,VP Engineering,priya@acme.com,+91 9876543210,https://acme.com,Bangalore,Bangalore Urban,Karnataka,51-200,250000000
+Green Valley Agro,agriculture,Food Processing,Ravi Kumar,Director,ravi@gvagro.in,+91 9812345678,https://gvagro.in,Coimbatore,Coimbatore,Tamil Nadu,11-50,50000000
+Mumbai Steelworks,manufacturing,Metal Fabrication,Anil Desai,COO,anil@mumbaisteel.com,+91 9867543210,,Mumbai,Mumbai Suburban,Maharashtra,201-500,
+Bright Minds Academy,education,K-12 Schools,Dr. Meera Nair,Principal,meera@brightminds.edu,+91 9844556677,https://brightminds.edu,Chennai,Chennai,Tamil Nadu,51-200,
+`
+
+function downloadSampleCSV() {
+  const blob = new Blob([SAMPLE_CSV_CONTENT], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'leadforge-leads-sample.csv'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  // Release the blob a tick later to make sure the browser finished using it.
+  setTimeout(() => URL.revokeObjectURL(url), 100)
+}
 
 interface ImportCSVModalProps {
   onClose: () => void
@@ -180,6 +206,30 @@ export default function ImportCSVModal({ onClose }: ImportCSVModalProps) {
               </div>
             ) : (
               <>
+                {/* Sample-download hint banner */}
+                <div className="mb-4 flex items-start justify-between gap-3 rounded-lg border border-indigo-100 bg-indigo-50 px-4 py-3">
+                  <div className="flex items-start gap-2">
+                    <FileSpreadsheet className="mt-0.5 h-4 w-4 flex-shrink-0 text-indigo-600" />
+                    <div>
+                      <p className="text-xs font-medium text-indigo-900">
+                        First time importing?
+                      </p>
+                      <p className="mt-0.5 text-[11px] text-indigo-700">
+                        Download the sample CSV to see the expected columns and
+                        valid sector codes.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={downloadSampleCSV}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-white px-2.5 py-1 text-[11px] font-medium text-indigo-700 hover:bg-indigo-50"
+                  >
+                    <Download className="h-3 w-3" />
+                    Sample
+                  </button>
+                </div>
+
                 {/* Upload Dropzone */}
                 <div
                   onDragOver={handleDragOver}
