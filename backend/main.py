@@ -205,6 +205,38 @@ from fastapi import Request  # noqa: E402
 from fastapi.responses import JSONResponse  # noqa: E402
 
 
+# Origins allowed to read error bodies. We mirror the CORSMiddleware
+# config here because Starlette's middleware is skipped on responses
+# produced by user-defined exception handlers in several FastAPI
+# versions — meaning a raw 500 from a route would come back WITHOUT
+# Access-Control-Allow-Origin, and the browser would hide the body as
+# "Network Error" even though the server sent a nice JSON payload.
+# That's exactly what happened on GET /leads/ when the ResponseValidation
+# error fired, and why the Leads page showed "Network Error" instead of
+# the real detail. Rebuilding the CORS reflection here guarantees every
+# error response goes out with the right headers.
+import re as _re  # noqa: E402
+
+_VERCEL_ORIGIN_RE = _re.compile(r"^https://.*\.vercel\.app$")
+
+
+def _cors_headers_for(request: Request) -> dict[str, str]:
+    origin = request.headers.get("origin") or request.headers.get("Origin") or ""
+    allowed = False
+    if origin:
+        if origin in settings.cors_origins_list:
+            allowed = True
+        elif _VERCEL_ORIGIN_RE.match(origin):
+            allowed = True
+    if not allowed:
+        return {}
+    return {
+        "Access-Control-Allow-Origin": origin,
+        "Access-Control-Allow-Credentials": "true",
+        "Vary": "Origin",
+    }
+
+
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
     # Log the full traceback to stdout so it shows up in `railway logs`.
@@ -220,6 +252,44 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
             "detail": f"{type(exc).__name__}: {exc}",
             "path": str(request.url.path),
         },
+        headers=_cors_headers_for(request),
+    )
+
+
+# FastAPI raises ResponseValidationError when `response_model` coercion
+# fails (e.g. a row in a List[LeadResponse] has a field that violates
+# a validator). Starlette treats it as an internal server error and its
+# own default handler is the one that was leaking past CORSMiddleware on
+# /leads/. Handle it explicitly so we both (a) get a structured JSON body
+# with the actual Pydantic error list, and (b) attach CORS headers so
+# the browser lets axios read it.
+from fastapi.exceptions import ResponseValidationError  # noqa: E402
+
+
+@app.exception_handler(ResponseValidationError)
+async def response_validation_exception_handler(
+    request: Request, exc: ResponseValidationError
+):
+    print(
+        f"[response-validation] {request.method} {request.url.path}: {exc.errors()}",
+        flush=True,
+    )
+    sys.stdout.flush()
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": "Response validation failed.",
+            "errors": [
+                {
+                    "loc": list(err.get("loc", [])),
+                    "msg": err.get("msg", ""),
+                    "type": err.get("type", ""),
+                }
+                for err in exc.errors()[:20]  # cap so the body stays readable
+            ],
+            "path": str(request.url.path),
+        },
+        headers=_cors_headers_for(request),
     )
 
 # Mount routers
