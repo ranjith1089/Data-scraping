@@ -181,6 +181,14 @@ export default function CampaignBuilder({ onComplete, onCancel }: CampaignBuilde
         subject: s.channel === 'email' ? s.subject || null : null,
         body: s.body || null,
         ai_generated: Boolean(s.subject || s.body),
+        // A/B: pass through whatever the StepEditor left on the state.
+        // Empty strings → null so backend treats them as "no variant B".
+        variant_b_subject:
+          s.channel === 'email' && s.variant_b_subject?.trim()
+            ? s.variant_b_subject
+            : null,
+        variant_b_body: s.variant_b_body?.trim() ? s.variant_b_body : null,
+        ab_split_pct: s.ab_split_pct ?? 50,
       }))
   }
 

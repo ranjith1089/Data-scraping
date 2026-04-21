@@ -48,6 +48,32 @@ class EmailTemplateResponse(BaseModel):
     whatsapp_version: Optional[str] = None
 
 
+class VernacularGenerateRequest(BaseModel):
+    """Input for POST /ai/generate-vernacular.
+
+    Deliberately lightweight — the three fields the rep has at hand
+    (business_type, audience, tone) plus a language toggle. Used by the
+    campaign builder's language-switch in Step 4.
+    """
+
+    business_type: str = Field(..., min_length=3, max_length=200)
+    audience: str = Field(..., min_length=3, max_length=300)
+    tone: str = Field(default="warm, respectful", max_length=100)
+    language: str = Field(default="en", pattern=r"^(en|ta|hi)$")
+    channel: Optional[str] = Field(
+        default=None, pattern=r"^(email|sms|whatsapp)$",
+        description="If set, return only that channel. If None, return all three.",
+    )
+
+
+class VernacularGenerateResponse(BaseModel):
+    language: str
+    sms: Optional[str] = None
+    whatsapp: Optional[str] = None
+    email_subject: Optional[str] = None
+    email_body: Optional[str] = None
+
+
 class LeadScoreRequest(BaseModel):
     lead_ids: List[UUID] = Field(..., max_length=50)
 

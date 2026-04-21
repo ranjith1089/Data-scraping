@@ -113,13 +113,35 @@ async def create_lead(
     current_user: User = Depends(get_current_user),
 ):
     """Create a single lead."""
-    lead = Lead(
-        tenant_id=current_user.tenant_id,
-        **body.model_dump(),
-    )
+    # Flatten enum fields (company_size, source) to their string values
+    # so SQLAlchemy doesn't get a Pydantic Enum instance in the column.
+    payload = body.model_dump()
+    if payload.get("company_size") and hasattr(payload["company_size"], "value"):
+        payload["company_size"] = payload["company_size"].value
+    if payload.get("source") and hasattr(payload["source"], "value"):
+        payload["source"] = payload["source"].value
+
+    lead = Lead(tenant_id=current_user.tenant_id, **payload)
     db.add(lead)
     await db.flush()
-    return lead
+    response = LeadResponse.model_validate(lead)
+
+    # Fire webhook fan-out (best-effort — never fail the request).
+    try:
+        from services.webhook_dispatcher import publish_event
+
+        await publish_event(
+            db,
+            current_user.tenant_id,
+            "lead.created",
+            response.model_dump(mode="json"),
+        )
+    except Exception as exc:  # noqa: BLE001
+        import logging as _lg
+
+        _lg.getLogger(__name__).warning("lead.created webhook fan-out failed: %s", exc)
+
+    return response
 
 
 @router.get("/{lead_id}", response_model=LeadResponse)

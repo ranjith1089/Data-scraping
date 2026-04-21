@@ -37,6 +37,12 @@ try:
         analytics,
         import_export,
         webhooks,
+        public_api,
+        public_forms,
+        public_form_submit,
+        api_keys,
+        webhook_subscriptions,
+        billing,
     )
     from routers.ai import (
         email_gen,
@@ -46,6 +52,7 @@ try:
         sector_analysis,
         personalise,
         reply_analyser,
+        vernacular,
     )
     from routers.integrations import management as integrations_management
     from services import scheduler as integration_scheduler
@@ -318,6 +325,19 @@ app.include_router(sector_brief.router, prefix=PREFIX)
 app.include_router(sector_analysis.router, prefix=PREFIX)
 app.include_router(personalise.router, prefix=PREFIX)
 app.include_router(reply_analyser.router, prefix=PREFIX)
+app.include_router(vernacular.router, prefix=PREFIX)
+
+# Public API (X-API-Key auth), public forms, and the public form shim/iframe
+app.include_router(public_api.router, prefix=PREFIX)
+app.include_router(public_forms.router, prefix=PREFIX)
+app.include_router(public_form_submit.router, prefix=PREFIX)
+
+# Tenant-management tooling for external integrations (API keys, outbound webhooks)
+app.include_router(api_keys.router, prefix=PREFIX)
+app.include_router(webhook_subscriptions.router, prefix=PREFIX)
+
+# Billing visibility (plan + usage + upgrade request)
+app.include_router(billing.router, prefix=PREFIX)
 
 
 @app.get("/health")

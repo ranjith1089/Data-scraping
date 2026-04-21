@@ -23,6 +23,8 @@ from schemas.campaign import (
     CampaignResponse,
     CampaignStepCreate,
     CampaignStepResponse,
+    CampaignStepABResults,
+    VariantStats,
 )
 from services.campaign_runner import campaign_runner
 
@@ -282,6 +284,9 @@ async def bulk_upsert_campaign_steps(
             subject=body.subject,
             body=body.body,
             ai_generated=body.ai_generated,
+            variant_b_subject=body.variant_b_subject,
+            variant_b_body=body.variant_b_body,
+            ab_split_pct=body.ab_split_pct,
         )
         db.add(step)
         created.append(step)
@@ -290,6 +295,97 @@ async def bulk_upsert_campaign_steps(
     # Order returned list by step_number for stable UI rendering.
     created.sort(key=lambda s: s.step_number)
     return [CampaignStepResponse.model_validate(s) for s in created]
+
+
+@router.get(
+    "/{campaign_id}/steps/{step_id}/ab-results",
+    response_model=CampaignStepABResults,
+)
+async def ab_results(
+    campaign_id: UUID,
+    step_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Per-variant stats for one step. Winner picked by click rate, but
+    only returned when BOTH variants have at least 100 sends — below
+    that we flag it as insufficient sample.
+    """
+    # Scope step to tenant
+    step_row = await db.execute(
+        select(CampaignStep).where(
+            CampaignStep.id == step_id,
+            CampaignStep.tenant_id == current_user.tenant_id,
+            CampaignStep.campaign_id == campaign_id,
+        )
+    )
+    step = step_row.scalar_one_or_none()
+    if not step:
+        raise HTTPException(status_code=404, detail="Campaign step not found")
+
+    has_variant_b = bool(step.variant_b_subject) or bool(step.variant_b_body)
+
+    async def _variant_stats(variant: str | None) -> VariantStats:
+        base = select(OutreachLog).where(OutreachLog.step_id == step_id)
+        # When variant_b is not configured, primary stats aggregate ALL
+        # sends (including NULL variant) under "variant_a" so the user
+        # still sees meaningful numbers on a non-AB step.
+        if has_variant_b and variant is not None:
+            base = base.where(OutreachLog.variant == variant)
+        sent = await db.scalar(
+            select(func.count()).select_from(
+                base.where(OutreachLog.status == "sent").subquery()
+            )
+        ) or 0
+        opened = await db.scalar(
+            select(func.count()).select_from(
+                base.where(OutreachLog.opened_at.isnot(None)).subquery()
+            )
+        ) or 0
+        clicked = await db.scalar(
+            select(func.count()).select_from(
+                base.where(OutreachLog.clicked_at.isnot(None)).subquery()
+            )
+        ) or 0
+        replied = await db.scalar(
+            select(func.count()).select_from(
+                base.where(OutreachLog.replied_at.isnot(None)).subquery()
+            )
+        ) or 0
+        return VariantStats(
+            sent=sent,
+            opened=opened,
+            clicked=clicked,
+            replied=replied,
+            open_rate=round(opened / sent * 100, 1) if sent else 0.0,
+            click_rate=round(clicked / sent * 100, 1) if sent else 0.0,
+        )
+
+    variant_a = await _variant_stats("a")
+    variant_b = await _variant_stats("b") if has_variant_b else VariantStats()
+
+    SAMPLE_THRESHOLD = 100
+    winner: str | None = None
+    lift_pct: float | None = None
+    if has_variant_b and variant_a.sent >= SAMPLE_THRESHOLD and variant_b.sent >= SAMPLE_THRESHOLD:
+        if variant_a.click_rate > variant_b.click_rate:
+            winner = "a"
+            base_rate = variant_b.click_rate or 0.01
+            lift_pct = round((variant_a.click_rate - variant_b.click_rate) / base_rate * 100, 1)
+        elif variant_b.click_rate > variant_a.click_rate:
+            winner = "b"
+            base_rate = variant_a.click_rate or 0.01
+            lift_pct = round((variant_b.click_rate - variant_a.click_rate) / base_rate * 100, 1)
+
+    return CampaignStepABResults(
+        step_id=step_id,
+        has_variant_b=has_variant_b,
+        variant_a=variant_a,
+        variant_b=variant_b,
+        winner=winner,
+        lift_pct=lift_pct,
+        sample_threshold=SAMPLE_THRESHOLD,
+    )
 
 
 @router.post("/{campaign_id}/start", response_model=CampaignResponse)

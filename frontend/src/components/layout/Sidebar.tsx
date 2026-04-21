@@ -10,6 +10,9 @@ import {
   Plug,
   ShieldCheck,
   LogOut,
+  FileText,
+  Code2,
+  CreditCard,
 } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
 import { useUIStore } from '@/store/uiStore'
@@ -34,11 +37,14 @@ const mainNav: NavItem[] = [
   { title: 'Sectors', href: '/sectors', icon: Briefcase },
   { title: 'Campaigns', href: '/campaigns', icon: Megaphone },
   { title: 'Pipeline', href: '/pipeline', icon: Target },
+  { title: 'Forms', href: '/forms', icon: FileText },
   { title: 'Integrations', href: '/integrations', icon: Plug },
+  { title: 'Developer', href: '/developer', icon: Code2 },
 ]
 
 const footerNav: NavItem[] = [
   { title: 'AI Assistant', href: '/ai', icon: Bot },
+  { title: 'Billing', href: '/billing', icon: CreditCard },
   { title: 'Settings', href: '/settings', icon: Settings },
 ]
 

@@ -1,5 +1,7 @@
+import hashlib
 import logging
 from datetime import datetime, timezone
+from typing import Optional
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +15,33 @@ from services.email_service import email_service
 from services.whatsapp_service import whatsapp_service
 
 logger = logging.getLogger(__name__)
+
+
+def _pick_variant(
+    step: CampaignStep, lead_id: UUID
+) -> tuple[Optional[str], str, str]:
+    """Return ``(variant_tag, subject, body)`` for this lead+step pair.
+
+    - If the step has no variant_b configured, returns ``(None, primary_subject,
+      primary_body)`` — not an A/B send.
+    - Otherwise deterministically hashes ``(step.id, lead_id)`` and uses
+      ``step.ab_split_pct`` to pick bucket 'a' or 'b'. Deterministic means
+      retries keep the lead in whichever bucket they were first assigned to.
+    """
+    has_variant_b = bool(step.variant_b_subject) or bool(step.variant_b_body)
+    if not has_variant_b:
+        return None, step.subject or "", step.body or ""
+
+    split = max(1, min(99, int(step.ab_split_pct or 50)))
+    h = hashlib.sha256(f"{step.id}:{lead_id}".encode("utf-8")).digest()
+    bucket = h[0]  # 0..255
+    if (bucket * 100 / 256) < split:
+        return "a", step.subject or "", step.body or ""
+    return (
+        "b",
+        step.variant_b_subject or step.subject or "",
+        step.variant_b_body or step.body or "",
+    )
 
 
 class CampaignRunner:
@@ -70,16 +99,25 @@ class CampaignRunner:
                 status="pending",
             )
 
+            variant_tag, variant_subject, variant_body = _pick_variant(step, lead.id)
+            log_entry.variant = variant_tag
+
             if channel == "email" and lead.email:
-                subject = (step.subject or "").replace(
+                subject = variant_subject.replace(
                     "{{company_name}}", lead.company_name or ""
                 )
                 body = (
-                    (step.body or "")
+                    variant_body
                     .replace("{{company_name}}", lead.company_name or "")
                     .replace("{{contact_name}}", lead.contact_name or "there")
                 )
-                result = await email_service.send_email(lead.email, subject, body)
+                result = await email_service.send_email_for_tenant(
+                    db=db,
+                    tenant_id=tenant_id,
+                    to_email=lead.email,
+                    subject=subject,
+                    body_html=body,
+                )
                 log_entry.status = result["status"]
                 log_entry.message_id = result.get("message_id")
                 log_entry.error_msg = result.get("error")
@@ -91,11 +129,16 @@ class CampaignRunner:
 
             elif channel == "whatsapp" and lead.phone:
                 body = (
-                    (step.body or "")
+                    variant_body
                     .replace("{{company_name}}", lead.company_name or "")
                     .replace("{{contact_name}}", lead.contact_name or "there")
                 )
-                result = await whatsapp_service.send_message(lead.phone, body)
+                result = await whatsapp_service.send_message_for_tenant(
+                    db=db,
+                    tenant_id=tenant_id,
+                    to_phone=lead.phone,
+                    message=body,
+                )
                 log_entry.status = result["status"]
                 log_entry.message_id = result.get("message_id")
                 log_entry.error_msg = result.get("error")

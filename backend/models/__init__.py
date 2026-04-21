@@ -14,8 +14,10 @@ from .api_key import APIKey
 from .integration import Integration
 from .integration_event import IntegrationEvent
 from .webhook_endpoint import WebhookEndpoint
+from .webhook_subscription import WebhookSubscription
 from .automation_rule import AutomationRule
 from .lead_assignment_rule import LeadAssignmentRule
+from .public_form import PublicForm
 
 __all__ = [
     "Tenant",
@@ -34,6 +36,8 @@ __all__ = [
     "Integration",
     "IntegrationEvent",
     "WebhookEndpoint",
+    "WebhookSubscription",
     "AutomationRule",
     "LeadAssignmentRule",
+    "PublicForm",
 ]

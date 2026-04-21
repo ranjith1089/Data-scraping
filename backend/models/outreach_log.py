@@ -50,6 +50,8 @@ class OutreachLog(Base):
     )
     error_msg: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     message_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    # 'a' / 'b' when the send was an A/B variant, NULL otherwise (GAP 2).
+    variant: Mapped[Optional[str]] = mapped_column(String(1), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("now()")
     )
