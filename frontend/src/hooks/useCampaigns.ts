@@ -154,6 +154,45 @@ export interface CampaignStepPayload {
   subject?: string | null
   body?: string | null
   ai_generated?: boolean
+  // A/B testing (GAP 2)
+  variant_b_subject?: string | null
+  variant_b_body?: string | null
+  ab_split_pct?: number
+}
+
+export interface VariantStats {
+  sent: number
+  opened: number
+  clicked: number
+  replied: number
+  open_rate: number
+  click_rate: number
+}
+
+export interface CampaignStepABResults {
+  step_id: string
+  has_variant_b: boolean
+  variant_a: VariantStats
+  variant_b: VariantStats
+  winner: 'a' | 'b' | null
+  lift_pct: number | null
+  sample_threshold: number
+}
+
+export function useCampaignStepABResults(
+  campaignId: string,
+  stepId: string | null,
+) {
+  return useQuery({
+    queryKey: ['campaign-step-ab-results', campaignId, stepId],
+    queryFn: async () => {
+      const { data } = await api.get<CampaignStepABResults>(
+        `/campaigns/${campaignId}/steps/${stepId}/ab-results`,
+      )
+      return data
+    },
+    enabled: !!campaignId && !!stepId,
+  })
 }
 
 export function useBulkUpsertCampaignSteps() {

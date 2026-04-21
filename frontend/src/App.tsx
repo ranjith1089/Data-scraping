@@ -17,6 +17,9 @@ import AdminTenantsPage from './pages/AdminTenantsPage'
 import AdminTenantDetailPage from './pages/AdminTenantDetailPage'
 import RequireSuperuser from './components/admin/RequireSuperuser'
 import SettingsPage from './pages/SettingsPage'
+import FormsPage from './pages/FormsPage'
+import DeveloperPage from './pages/DeveloperPage'
+import BillingPage from './pages/BillingPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -73,6 +76,9 @@ export default function App() {
             }
           />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="forms" element={<FormsPage />} />
+          <Route path="developer" element={<DeveloperPage />} />
+          <Route path="billing" element={<BillingPage />} />
           {/*
             Catch-all fallback: any unknown nested URL redirects to the
             dashboard instead of rendering an empty <Outlet /> (which used to
