@@ -79,7 +79,13 @@ class CampaignRunner:
                     .replace("{{company_name}}", lead.company_name or "")
                     .replace("{{contact_name}}", lead.contact_name or "there")
                 )
-                result = await email_service.send_email(lead.email, subject, body)
+                result = await email_service.send_email_for_tenant(
+                    db=db,
+                    tenant_id=tenant_id,
+                    to_email=lead.email,
+                    subject=subject,
+                    body_html=body,
+                )
                 log_entry.status = result["status"]
                 log_entry.message_id = result.get("message_id")
                 log_entry.error_msg = result.get("error")
@@ -95,7 +101,12 @@ class CampaignRunner:
                     .replace("{{company_name}}", lead.company_name or "")
                     .replace("{{contact_name}}", lead.contact_name or "there")
                 )
-                result = await whatsapp_service.send_message(lead.phone, body)
+                result = await whatsapp_service.send_message_for_tenant(
+                    db=db,
+                    tenant_id=tenant_id,
+                    to_phone=lead.phone,
+                    message=body,
+                )
                 log_entry.status = result["status"]
                 log_entry.message_id = result.get("message_id")
                 log_entry.error_msg = result.get("error")
