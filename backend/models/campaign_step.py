@@ -26,6 +26,15 @@ class CampaignStep(Base):
     subject: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     body: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     ai_generated: Mapped[bool] = mapped_column(Boolean, default=False)
+    # A/B testing (GAP 2). All three nullable/defaulted so the migration
+    # is additive and existing rows keep sending the primary variant only.
+    variant_b_subject: Mapped[Optional[str]] = mapped_column(
+        String, nullable=True
+    )
+    variant_b_body: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    ab_split_pct: Mapped[int] = mapped_column(
+        Integer, default=50, server_default="50", nullable=False
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("now()")
     )
