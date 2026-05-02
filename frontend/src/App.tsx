@@ -20,6 +20,12 @@ import SettingsPage from './pages/SettingsPage'
 import FormsPage from './pages/FormsPage'
 import DeveloperPage from './pages/DeveloperPage'
 import BillingPage from './pages/BillingPage'
+import SocialConnectPage from './pages/social/ConnectPage'
+import SocialAutomationsPage from './pages/social/AutomationsPage'
+import SocialConversationsPage from './pages/social/ConversationsPage'
+import SocialCampaignsPage from './pages/social/CampaignsPage'
+import SocialAnalyticsPage from './pages/social/AnalyticsPage'
+import SocialTemplatesPage from './pages/social/TemplatesPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -79,6 +85,14 @@ export default function App() {
           <Route path="forms" element={<FormsPage />} />
           <Route path="developer" element={<DeveloperPage />} />
           <Route path="billing" element={<BillingPage />} />
+          {/* Social module (Phase 1 — Instagram DM automation) */}
+          <Route path="social" element={<Navigate to="/social/connect" replace />} />
+          <Route path="social/connect" element={<SocialConnectPage />} />
+          <Route path="social/automations" element={<SocialAutomationsPage />} />
+          <Route path="social/conversations" element={<SocialConversationsPage />} />
+          <Route path="social/campaigns" element={<SocialCampaignsPage />} />
+          <Route path="social/templates" element={<SocialTemplatesPage />} />
+          <Route path="social/analytics" element={<SocialAnalyticsPage />} />
           {/*
             Catch-all fallback: any unknown nested URL redirects to the
             dashboard instead of rendering an empty <Outlet /> (which used to
