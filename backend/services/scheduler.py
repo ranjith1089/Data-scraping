@@ -103,6 +103,36 @@ def start() -> None:
             id="integration_scheduler_heartbeat",
             replace_existing=True,
         )
+
+        # Social module (Phase 1) — registered by dotted-string reference
+        # so APScheduler can serialise into the persistent jobstore.
+        scheduler.add_job(
+            "services.social.jobs:dispatch_pending_dms",
+            trigger=IntervalTrigger(seconds=30),
+            id="social_dispatch_pending_dms",
+            replace_existing=True,
+            max_instances=1,
+        )
+        scheduler.add_job(
+            "services.social.jobs:fulfill_follow_gates",
+            trigger=IntervalTrigger(minutes=5),
+            id="social_fulfill_follow_gates",
+            replace_existing=True,
+            max_instances=1,
+        )
+        scheduler.add_job(
+            "services.social.jobs:refresh_meta_tokens",
+            trigger=CronTrigger(hour=3, minute=0),
+            id="social_refresh_meta_tokens",
+            replace_existing=True,
+        )
+        scheduler.add_job(
+            "services.social.jobs:cleanup_old_messages",
+            trigger=CronTrigger(hour=4, minute=0),
+            id="social_cleanup_old_messages",
+            replace_existing=True,
+        )
+
         logger.info("[scheduler] APScheduler started")
     except Exception as exc:  # noqa: BLE001 — never block app startup
         logger.exception("[scheduler] failed to start: %s", exc)

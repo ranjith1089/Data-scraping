@@ -57,6 +57,13 @@ try:
     from routers.integrations import management as integrations_management
     from routers.social import oauth as social_oauth
     from routers.social import webhook_inbound as social_webhook_inbound
+    from routers.social import automations as social_automations
+    from routers.social import conversations as social_conversations
+    from routers.social import templates as social_templates
+    from routers.social import campaigns as social_campaigns
+    from routers.social import analytics as social_analytics
+    from routers.social import posts as social_posts
+    from routers.social import consents as social_consents
     from services import scheduler as integration_scheduler
     print("[startup] all routers imported OK", flush=True)
 except Exception:
@@ -344,6 +351,13 @@ app.include_router(billing.router, prefix=PREFIX)
 # Social module (Phase 1 — Instagram DM automation)
 app.include_router(social_oauth.router, prefix=PREFIX)
 app.include_router(social_webhook_inbound.router, prefix=PREFIX)
+app.include_router(social_automations.router, prefix=PREFIX)
+app.include_router(social_conversations.router, prefix=PREFIX)
+app.include_router(social_templates.router, prefix=PREFIX)
+app.include_router(social_campaigns.router, prefix=PREFIX)
+app.include_router(social_analytics.router, prefix=PREFIX)
+app.include_router(social_posts.router, prefix=PREFIX)
+app.include_router(social_consents.router, prefix=PREFIX)
 
 
 @app.get("/health")
