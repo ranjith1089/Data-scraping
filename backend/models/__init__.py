@@ -19,6 +19,16 @@ from .automation_rule import AutomationRule
 from .lead_assignment_rule import LeadAssignmentRule
 from .public_form import PublicForm
 
+# Social module (Phase 1 — Instagram DM automation; migration 006).
+from .social.social_account import SocialAccount
+from .social.social_conversation import SocialConversation
+from .social.social_message import SocialMessage
+from .social.social_post import SocialPost
+from .social.social_campaign import SocialCampaign, SocialCampaignPost
+from .social.social_message_template import SocialMessageTemplate
+from .social.social_follow_gate import SocialFollowGate
+from .social.social_consent import SocialConsent
+
 __all__ = [
     "Tenant",
     "Plan",
@@ -40,4 +50,14 @@ __all__ = [
     "AutomationRule",
     "LeadAssignmentRule",
     "PublicForm",
+    # Social module
+    "SocialAccount",
+    "SocialConversation",
+    "SocialMessage",
+    "SocialPost",
+    "SocialCampaign",
+    "SocialCampaignPost",
+    "SocialMessageTemplate",
+    "SocialFollowGate",
+    "SocialConsent",
 ]
