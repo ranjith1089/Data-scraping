@@ -6,6 +6,7 @@ import {
   Loader2,
   AlertTriangle,
   ExternalLink,
+  Wrench,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { AxiosError } from 'axios'
@@ -14,6 +15,7 @@ import {
   useInstagramStatus,
   useStartInstagramOAuth,
 } from '@/hooks/social/useInstagramConnect'
+import { API_URL } from '@/lib/api'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
@@ -30,10 +32,11 @@ function extractApiError(err: unknown, fallback: string): string {
 export default function ConnectPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { data, isLoading, refetch } = useInstagramStatus()
+  const { data, isLoading, error: statusError, refetch } = useInstagramStatus()
   const startOAuth = useStartInstagramOAuth()
   const disconnect = useDisconnectInstagram()
   const [redirecting, setRedirecting] = useState(false)
+  const [showDiagnostics, setShowDiagnostics] = useState(false)
 
   // Surface OAuth callback outcomes from the URL.
   useEffect(() => {
@@ -162,7 +165,42 @@ export default function ConnectPage() {
       </Card>
 
       <Card>
-        <CardContent className="p-5 text-sm space-y-2">
+        <CardContent className="p-5 text-sm space-y-3">
+          <button
+            type="button"
+            onClick={() => setShowDiagnostics((s) => !s)}
+            className="inline-flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground"
+          >
+            <Wrench className="h-3.5 w-3.5" />
+            {showDiagnostics ? 'Hide diagnostics' : 'Show diagnostics'}
+          </button>
+          {showDiagnostics && (
+            <div className="rounded-md bg-muted/40 p-3 font-mono text-[11px] leading-relaxed text-muted-foreground space-y-1">
+              <div>
+                <span className="text-foreground/70">API URL:</span> {API_URL}
+              </div>
+              <div>
+                <span className="text-foreground/70">Status query:</span>{' '}
+                {statusError
+                  ? `ERROR — ${extractApiError(statusError, 'request failed')}`
+                  : data
+                    ? `OK (connected=${String(data.connected)})`
+                    : 'pending'}
+              </div>
+              <div>
+                <span className="text-foreground/70">OAuth start last error:</span>{' '}
+                {startOAuth.error
+                  ? extractApiError(startOAuth.error, 'request failed')
+                  : 'none'}
+              </div>
+              <div className="pt-1 text-[10px] text-foreground/50">
+                If API URL points at localhost or status query shows ERROR, the
+                frontend can't reach the backend — check VITE_API_URL on the
+                hosting provider. If status is OK but OAuth start fails with
+                503, set META_APP_ID + META_APP_SECRET on the backend.
+              </div>
+            </div>
+          )}
           <h3 className="font-semibold">What happens after you connect</h3>
           <ul className="space-y-1.5 text-muted-foreground">
             <li className="flex gap-2">
