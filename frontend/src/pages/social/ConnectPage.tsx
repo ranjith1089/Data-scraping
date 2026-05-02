@@ -8,6 +8,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { AxiosError } from 'axios'
 import {
   useDisconnectInstagram,
   useInstagramStatus,
@@ -15,6 +16,16 @@ import {
 } from '@/hooks/social/useInstagramConnect'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+
+function extractApiError(err: unknown, fallback: string): string {
+  if (err instanceof AxiosError) {
+    const detail = err.response?.data?.detail
+    if (typeof detail === 'string' && detail) return detail
+    if (err.response?.status) return `${fallback} (HTTP ${err.response.status})`
+    if (err.message) return `${fallback}: ${err.message}`
+  }
+  return fallback
+}
 
 export default function ConnectPage() {
   const navigate = useNavigate()
@@ -39,9 +50,9 @@ export default function ConnectPage() {
       setRedirecting(true)
       const r = await startOAuth.mutateAsync()
       window.location.href = r.auth_url
-    } catch {
+    } catch (err) {
       setRedirecting(false)
-      toast.error('Could not start the Instagram connect flow.')
+      toast.error(extractApiError(err, 'Could not start the Instagram connect flow.'))
     }
   }
 
@@ -52,8 +63,8 @@ export default function ConnectPage() {
       await disconnect.mutateAsync()
       toast.success('Disconnected.')
       refetch()
-    } catch {
-      toast.error('Failed to disconnect.')
+    } catch (err) {
+      toast.error(extractApiError(err, 'Failed to disconnect.'))
     }
   }
 
