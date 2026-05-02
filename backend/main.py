@@ -55,6 +55,8 @@ try:
         vernacular,
     )
     from routers.integrations import management as integrations_management
+    from routers.social import oauth as social_oauth
+    from routers.social import webhook_inbound as social_webhook_inbound
     from services import scheduler as integration_scheduler
     print("[startup] all routers imported OK", flush=True)
 except Exception:
@@ -338,6 +340,10 @@ app.include_router(webhook_subscriptions.router, prefix=PREFIX)
 
 # Billing visibility (plan + usage + upgrade request)
 app.include_router(billing.router, prefix=PREFIX)
+
+# Social module (Phase 1 — Instagram DM automation)
+app.include_router(social_oauth.router, prefix=PREFIX)
+app.include_router(social_webhook_inbound.router, prefix=PREFIX)
 
 
 @app.get("/health")

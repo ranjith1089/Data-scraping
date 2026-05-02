@@ -56,6 +56,26 @@ class AutomationRule(Base):
     enabled: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="true"
     )
+    # Social module (migration 006). NULL platform means a non-social rule
+    # (the original lead/timer triggers). When platform is set, the rule
+    # is scoped to a specific channel ('instagram', 'facebook', 'whatsapp')
+    # and may belong to a SocialCampaign.
+    platform: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    campaign_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("social_campaigns.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    # Lower priority wins when multiple rules match the same event.
+    priority: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="100"
+    )
+    # Per-(rule, social_account) cooldown to prevent spam-loops. The
+    # rule engine checks this against the most recent firing recorded
+    # in `social_messages.rule_id` before re-firing.
+    cooldown_minutes: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="0"
+    )
     run_count: Mapped[int] = mapped_column(
         Integer, nullable=False, server_default="0"
     )
