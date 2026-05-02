@@ -55,3 +55,4 @@ from . import google_ads  # noqa: E402,F401  Google Ads API
 from . import linkedin_ads  # noqa: E402,F401  LinkedIn Ads
 from . import ga4  # noqa: E402,F401  Google Analytics 4 Measurement Protocol
 from . import fb_pixel  # noqa: E402,F401  Meta Conversions API (FB Pixel)
+from . import instagram_dm  # noqa: E402,F401  Instagram DM automation (social module)
