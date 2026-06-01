@@ -1,8 +1,28 @@
 """LeadForge AI - FastAPI application entry point."""
 
 import asyncio
+import logging
 import sys
+import time as _time
 import traceback
+
+# ---------------------------------------------------------------------------
+# Log timezone: shift all Python-level log timestamps to IST (UTC+5:30).
+# Railway's system clock runs UTC; without this every [INFO] line in the
+# Railway log stream carries a UTC timestamp that needs mental conversion.
+# Patching logging.Formatter.converter here — before any handler is created
+# — means uvicorn's own access-log and error-log handlers inherit IST
+# automatically.  The converter receives a POSIX timestamp and must return a
+# time.struct_time; we add the +05:30 offset before calling gmtime().
+# ---------------------------------------------------------------------------
+_IST_OFFSET_SEC = 5 * 3600 + 30 * 60  # 19 800 s
+
+
+def _ist_converter(*args):  # noqa: ARG001
+    return _time.gmtime(_time.time() + _IST_OFFSET_SEC)
+
+
+logging.Formatter.converter = _ist_converter
 
 # Heartbeat — proves the Python process actually started. If this is the
 # only line in Railway logs, something below crashed at import time.
