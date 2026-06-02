@@ -111,20 +111,27 @@ class CampaignRunner:
                     .replace("{{company_name}}", lead.company_name or "")
                     .replace("{{contact_name}}", lead.contact_name or "there")
                 )
-                result = await email_service.send_email_for_tenant(
+                send_result = await email_service.send_email_for_tenant(
                     db=db,
                     tenant_id=tenant_id,
                     to_email=lead.email,
                     subject=subject,
                     body_html=body,
                 )
-                log_entry.status = result["status"]
-                log_entry.message_id = result.get("message_id")
-                log_entry.error_msg = result.get("error")
-                if result["status"] == "sent":
+                log_entry.status = send_result["status"]
+                log_entry.message_id = send_result.get("message_id")
+                log_entry.error_msg = send_result.get("error")
+                if send_result["status"] == "sent":
                     log_entry.sent_at = datetime.now(timezone.utc)
                     sent_count += 1
                 else:
+                    if send_result["status"] == "skipped":
+                        logger.warning(
+                            "[campaign_runner] step=%s lead=%s SKIPPED — %s. "
+                            "Set SENDGRID_API_KEY in Railway or connect a SendGrid "
+                            "integration on the Integrations page.",
+                            step_id, lead.id, send_result.get("error", "no email provider"),
+                        )
                     failed_count += 1
 
             elif channel == "whatsapp" and lead.phone:
@@ -133,16 +140,16 @@ class CampaignRunner:
                     .replace("{{company_name}}", lead.company_name or "")
                     .replace("{{contact_name}}", lead.contact_name or "there")
                 )
-                result = await whatsapp_service.send_message_for_tenant(
+                send_result = await whatsapp_service.send_message_for_tenant(
                     db=db,
                     tenant_id=tenant_id,
                     to_phone=lead.phone,
                     message=body,
                 )
-                log_entry.status = result["status"]
-                log_entry.message_id = result.get("message_id")
-                log_entry.error_msg = result.get("error")
-                if result["status"] == "sent":
+                log_entry.status = send_result["status"]
+                log_entry.message_id = send_result.get("message_id")
+                log_entry.error_msg = send_result.get("error")
+                if send_result["status"] == "sent":
                     log_entry.sent_at = datetime.now(timezone.utc)
                     sent_count += 1
                 else:
@@ -159,3 +166,65 @@ class CampaignRunner:
 
 
 campaign_runner = CampaignRunner()
+
+
+# ---------------------------------------------------------------------------
+# APScheduler entry point — must be a module-level async function (not a
+# method or closure) so APScheduler can serialise the dotted reference into
+# the Postgres jobstore and call it across restarts.
+# ---------------------------------------------------------------------------
+
+async def dispatch_active_campaigns() -> None:
+    """Walk every active campaign, execute all its steps against un-contacted leads.
+
+    Called by APScheduler every hour. Each step is gated by the
+    ``already_sent_subq`` inside ``execute_step`` — leads that already
+    received this step (status != 'failed') are skipped, so re-running the
+    job is idempotent and capped by ``campaign.daily_limit``.
+
+    Error handling: per-step exceptions are logged and swallowed so a single
+    broken campaign does not block the rest of the batch. The session is
+    committed once at the end so OutreachLog rows land atomically.
+    """
+    from core.database import AsyncSessionLocal  # local import avoids circular deps
+
+    logger.info("[campaign_dispatch] starting hourly dispatch run")
+    async with AsyncSessionLocal() as db:
+        try:
+            active = (
+                await db.execute(select(Campaign).where(Campaign.status == "active"))
+            ).scalars().all()
+            logger.info("[campaign_dispatch] %d active campaign(s) found", len(active))
+
+            for campaign in active:
+                steps = (
+                    await db.execute(
+                        select(CampaignStep)
+                        .where(CampaignStep.campaign_id == campaign.id)
+                        .order_by(CampaignStep.step_number)
+                    )
+                ).scalars().all()
+
+                for step in steps:
+                    try:
+                        res = await campaign_runner.execute_step(
+                            db=db,
+                            campaign_id=campaign.id,
+                            step_id=step.id,
+                            tenant_id=campaign.tenant_id,
+                        )
+                        logger.info(
+                            "[campaign_dispatch] campaign=%s step=%s → %s",
+                            campaign.id, step.step_number, res,
+                        )
+                    except Exception as exc:  # noqa: BLE001
+                        logger.exception(
+                            "[campaign_dispatch] campaign=%s step=%s FAILED: %s",
+                            campaign.id, step.step_number, exc,
+                        )
+
+            await db.commit()
+            logger.info("[campaign_dispatch] dispatch run complete — session committed")
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("[campaign_dispatch] unexpected error in dispatch run: %s", exc)
+            await db.rollback()

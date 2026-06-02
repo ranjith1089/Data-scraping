@@ -16,6 +16,7 @@ import {
 import { cn, SECTOR_COLORS, SECTOR_NAMES } from '@/lib/utils'
 import {
   useCreateCampaign,
+  useUpdateCampaign,
   useStartCampaign,
   useBulkUpsertCampaignSteps,
   type CampaignStepPayload,
@@ -27,6 +28,15 @@ import toast from 'react-hot-toast'
 interface CampaignBuilderProps {
   onComplete?: (campaignId: string) => void
   onCancel?: () => void
+  /** Pass campaignId + initial* props to enter edit mode */
+  mode?: 'create' | 'edit'
+  campaignId?: string
+  initialName?: string
+  initialDescription?: string
+  initialChannel?: Channel
+  initialTone?: Tone
+  initialSectors?: string[]
+  initialSteps?: CampaignStep[]
 }
 
 type Channel = 'email' | 'whatsapp' | 'multi_channel'
@@ -65,21 +75,32 @@ function createStep(order: number): CampaignStep {
   }
 }
 
-export default function CampaignBuilder({ onComplete, onCancel }: CampaignBuilderProps) {
+export default function CampaignBuilder({
+  onComplete,
+  onCancel,
+  mode = 'create',
+  campaignId,
+  initialName = '',
+  initialDescription = '',
+  initialChannel = 'email',
+  initialTone = 'professional',
+  initialSectors = [],
+  initialSteps,
+}: CampaignBuilderProps) {
   const [currentStep, setCurrentStep] = useState(1)
 
   // Step 1: Basics
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
-  const [channel, setChannel] = useState<Channel>('email')
-  const [tone, setTone] = useState<Tone>('professional')
+  const [name, setName] = useState(initialName)
+  const [description, setDescription] = useState(initialDescription)
+  const [channel, setChannel] = useState<Channel>(initialChannel)
+  const [tone, setTone] = useState<Tone>(initialTone)
 
   // Step 2: Sectors
-  const [selectedSectors, setSelectedSectors] = useState<string[]>([])
+  const [selectedSectors, setSelectedSectors] = useState<string[]>(initialSectors)
 
   // Step 3: Segment
   const [segment, setSegment] = useState<SegmentFilters>({
-    sectors: [],
+    sectors: initialSectors,
     company_sizes: [],
     districts: [],
     min_score: 0,
@@ -87,11 +108,12 @@ export default function CampaignBuilder({ onComplete, onCancel }: CampaignBuilde
   })
 
   // Step 4: Campaign Steps
-  const [campaignSteps, setCampaignSteps] = useState<CampaignStep[]>([
-    createStep(1),
-  ])
+  const [campaignSteps, setCampaignSteps] = useState<CampaignStep[]>(
+    initialSteps ?? [createStep(1)]
+  )
 
   const createCampaign = useCreateCampaign()
+  const updateCampaign = useUpdateCampaign()
   const startCampaign = useStartCampaign()
   const saveSteps = useBulkUpsertCampaignSteps()
 
@@ -334,8 +356,50 @@ export default function CampaignBuilder({ onComplete, onCancel }: CampaignBuilde
     onComplete?.(campaign.id)
   }
 
+  async function handleSaveEdit() {
+    if (!name.trim()) {
+      toast.error('Please give this campaign a name (Step 1).')
+      return
+    }
+    if (selectedSectors.length === 0) {
+      toast.error('Please select at least one target sector (Step 2).')
+      return
+    }
+    try {
+      await updateCampaign.mutateAsync({
+        id: campaignId!,
+        name: name.trim(),
+        sector_codes: selectedSectors,
+        channel: (channel === 'multi_channel' ? 'multi' : channel) as 'email' | 'whatsapp' | 'sms' | 'linkedin' | 'multi',
+        segment_filter: {
+          description,
+          sectors: segment.sectors,
+          company_sizes: segment.company_sizes,
+          districts: segment.districts,
+          min_score: segment.min_score,
+          max_score: segment.max_score,
+        },
+        ai_tone: tone,
+      })
+    } catch (err) {
+      toast.error(readErrorDetail(err, 'Could not update campaign'))
+      return
+    }
+    const stepsPayload = buildStepsPayload()
+    if (stepsPayload.length > 0) {
+      try {
+        await saveSteps.mutateAsync({ campaignId: campaignId!, steps: stepsPayload })
+      } catch (err) {
+        toast.error(readErrorDetail(err, 'Campaign updated, but step save failed'))
+        return
+      }
+    }
+    toast.success('Campaign updated!')
+    onComplete?.(campaignId!)
+  }
+
   const isSaving =
-    createCampaign.isPending || startCampaign.isPending || saveSteps.isPending
+    createCampaign.isPending || updateCampaign.isPending || startCampaign.isPending || saveSteps.isPending
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -753,6 +817,19 @@ export default function CampaignBuilder({ onComplete, onCancel }: CampaignBuilde
               className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
             >
               Next <ChevronRight className="h-4 w-4" />
+            </button>
+          ) : mode === 'edit' ? (
+            <button
+              onClick={handleSaveEdit}
+              disabled={isSaving}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+            >
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              Save Changes
             </button>
           ) : (
             <button

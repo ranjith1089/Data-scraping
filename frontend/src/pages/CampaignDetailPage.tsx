@@ -16,7 +16,6 @@ import {
   useCampaignSteps,
   useStartCampaign,
   usePauseCampaign,
-  useUpdateCampaign,
 } from '@/hooks/useCampaigns'
 import CampaignStats from '@/components/campaigns/CampaignStats'
 import { cn, SECTOR_NAMES, SECTOR_COLORS, formatDate } from '@/lib/utils'
@@ -52,27 +51,11 @@ export default function CampaignDetailPage() {
   const { data: steps = [] } = useCampaignSteps(id || '')
   const startCampaign = useStartCampaign()
   const pauseCampaign = usePauseCampaign()
-  const updateCampaign = useUpdateCampaign()
   const [activeTab, setActiveTab] = useState<TabKey>('overview')
 
-  function handleRename() {
+  function handleEdit() {
     if (!campaign) return
-    const next = window.prompt('Rename campaign', campaign.name)
-    if (!next || next.trim() === '' || next.trim() === campaign.name) return
-    updateCampaign.mutate(
-      { id: campaign.id, name: next.trim() },
-      {
-        onSuccess: () => toast.success('Campaign renamed'),
-        onError: (err: unknown) => {
-          const detail =
-            (err as { response?: { data?: { detail?: unknown } } }).response
-              ?.data?.detail
-          toast.error(
-            typeof detail === 'string' ? detail : 'Failed to rename campaign',
-          )
-        },
-      },
-    )
+    navigate(`/campaigns/${campaign.id}/edit`)
   }
 
   function handleStartPause() {
@@ -162,9 +145,8 @@ export default function CampaignDetailPage() {
           )}
           <button
             type="button"
-            onClick={handleRename}
-            disabled={updateCampaign.isPending}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+            onClick={handleEdit}
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
           >
             <Pencil className="h-4 w-4" />
             Edit
