@@ -72,8 +72,8 @@ class GA4Integration(BaseIntegration):
             "client_id": str(uuid.uuid4()),
             "events": [
                 {
-                    "name": str(self.config.get("default_event_name") or "leadforge_test"),
-                    "params": {"source": "leadforge_test_connection"},
+                    "name": str(self.config.get("default_event_name") or "aveonapex_test"),
+                    "params": {"source": "aveonapex_test_connection"},
                 }
             ],
         }

@@ -1,6 +1,6 @@
 """Social module — Instagram DM automation, lead capture, conversations.
 
-Adds the schema for the LeadForge Social module (Phase 1 — Instagram-first).
+Adds the schema for the AveonApex Social module (Phase 1 — Instagram-first).
 Fully additive: 9 new tables, 4 new columns on automation_rules. Existing
 rows are untouched.
 

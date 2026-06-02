@@ -240,8 +240,8 @@ function WebhooksPanel() {
         <CardContent className="p-4">
           <h3 className="text-sm font-semibold mb-1">Create a new webhook</h3>
           <p className="text-xs text-muted-foreground mb-3">
-            LeadForge POSTs JSON to this URL on the selected events. Signed with
-            HMAC-SHA256 via <code>X-LeadForge-Signature</code>. Private /
+            AveonApex POSTs JSON to this URL on the selected events. Signed with
+            HMAC-SHA256 via <code>X-AveonApex-Signature</code>. Private /
             loopback hosts are rejected.
           </p>
           <div className="space-y-3">

@@ -1,6 +1,6 @@
 """Integration — one row per (tenant, provider).
 
-Represents a third-party service LeadForge has been configured to talk to:
+Represents a third-party service AveonApex has been configured to talk to:
 Meta Ads, Google Ads, LinkedIn Ads, WhatsApp Business, SendGrid, SMTP,
 GA4, Facebook Pixel, etc.
 

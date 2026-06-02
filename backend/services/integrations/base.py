@@ -14,7 +14,7 @@ Surface
                              after signature verification; transforms
                              a provider payload into a ``Lead`` (and
                              optionally subsequent automation triggers).
-``push_event()``          — called when LeadForge wants to *send*
+``push_event()``          — called when AveonApex wants to *send*
                              something outbound to the provider, e.g.
                              a conversion upload.
 ``refresh_credentials()`` — called automatically when a stored access
@@ -101,7 +101,7 @@ class BaseIntegration(ABC):
         payload: dict[str, Any],
         headers: dict[str, str],
     ) -> WebhookResult:
-        """Transform an inbound webhook into LeadForge domain events."""
+        """Transform an inbound webhook into AveonApex domain events."""
         return WebhookResult(
             ok=False,
             message=f"{self.provider}: handle_webhook not implemented",

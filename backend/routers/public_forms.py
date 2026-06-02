@@ -156,15 +156,15 @@ async def get_embed_snippets(
     script_snippet = (
         f'<script async\n'
         f'  src="{base}/api/v1/public/forms.js"\n'
-        f'  data-leadforge-token="{form.public_token}"></script>\n'
-        f'<div id="leadforge-form-{form.public_token[:8]}"></div>'
+        f'  data-aveonapex-token="{form.public_token}"></script>\n'
+        f'<div id="aveonapex-form-{form.public_token[:8]}"></div>'
     )
     iframe_snippet = (
         f'<iframe\n'
         f'  src="{base}/api/v1/public/forms/{form.public_token}/embed"\n'
         f'  width="100%" height="600"\n'
         f'  style="border: 1px solid #e5e7eb; border-radius: 8px;"\n'
-        f'  title="LeadForge contact form"></iframe>'
+        f'  title="AveonApex contact form"></iframe>'
     )
     return PublicFormEmbed(
         public_token=form.public_token,

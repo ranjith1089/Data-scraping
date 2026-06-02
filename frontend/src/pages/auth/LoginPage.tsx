@@ -55,7 +55,7 @@ export default function LoginPage() {
             <Zap className="h-7 w-7 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-white">
-            LeadForge <span className="text-indigo-400">AI</span>
+            AveonApex <span className="text-indigo-400">AI</span>
           </h1>
           <p className="mt-1 text-sm text-slate-400">
             AI-powered CRM for Indian SMBs

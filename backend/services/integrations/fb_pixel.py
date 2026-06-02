@@ -19,7 +19,7 @@ Decrypted credentials dict::
 
 Optional ``config`` keys::
 
-    test_event_code — label shown in Events Manager Test Events (default "LEADFORGE_TEST")
+    test_event_code — label shown in Events Manager Test Events (default "AVEONAPEX_TEST")
     api_version     — default "v19.0"
 """
 
@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 _GRAPH_BASE = "https://graph.facebook.com"
 _DEFAULT_API_VERSION = "v19.0"
-_DEFAULT_TEST_CODE = "LEADFORGE_TEST"
+_DEFAULT_TEST_CODE = "AVEONAPEX_TEST"
 _TIMEOUT = httpx.Timeout(15.0, connect=5.0)
 
 
@@ -75,7 +75,7 @@ class FBPixelIntegration(BaseIntegration):
                     "event_name": "PageView",
                     "event_time": int(time.time()),
                     "action_source": "system_generated",
-                    "event_source_url": "https://leadforge.ai/test",
+                    "event_source_url": "https://aveonapex.ai/test",
                     "user_data": {"client_ip_address": "127.0.0.1"},
                 }
             ],

@@ -110,7 +110,7 @@ export default function AIAssistantPage() {
             <Brain className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-white">LeadForge AI Assistant</h1>
+            <h1 className="text-lg font-semibold text-white">AveonApex Assistant</h1>
             <p className="text-xs text-purple-200">
               {isStreaming ? 'Thinking...' : 'Ask me anything about your leads, campaigns, and pipeline'}
             </p>
@@ -213,7 +213,7 @@ export default function AIAssistantPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask LeadForge AI anything..."
+              placeholder="Ask AveonApex anything..."
               disabled={isStreaming}
               className={cn(
                 'flex-1 rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm',

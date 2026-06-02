@@ -133,7 +133,7 @@ export default function IntegrationsPage() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Integrations</h1>
             <p className="mt-0.5 text-sm text-gray-500">
-              Connect LeadForge to your ad platforms, messaging and analytics
+              Connect AveonApex to your ad platforms, messaging and analytics
               tools.
             </p>
           </div>
@@ -376,8 +376,8 @@ const PROVIDER_CREDENTIAL_FIELDS: Record<string, CredentialFieldDef[]> = {
     {
       key: 'app_name',
       label: 'Gupshup App Name (optional)',
-      placeholder: 'LeadForgeAI',
-      help: 'The app name you created in the Gupshup dashboard. Defaults to LeadForgeAI.',
+      placeholder: 'AveonApex',
+      help: 'The app name you created in the Gupshup dashboard. Defaults to AveonApex.',
       type: 'text',
       group: 'config',
     },
@@ -608,7 +608,7 @@ const PROVIDER_CREDENTIAL_FIELDS: Record<string, CredentialFieldDef[]> = {
     {
       key: 'test_event_code',
       label: 'Test Event Code (optional)',
-      placeholder: 'LEADFORGE_TEST',
+      placeholder: 'AVEONAPEX_TEST',
       help:
         'Label shown in Events Manager → Test Events. Leave blank to use the default.',
       type: 'text',

@@ -50,6 +50,6 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: false,
         }),
     }),
-    { name: 'leadforge-auth' }
+    { name: 'aveonapex-auth' }
   )
 )

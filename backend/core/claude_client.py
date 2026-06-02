@@ -47,8 +47,8 @@ def _build_openrouter_client() -> Any:
     # OpenRouter recommends sending HTTP-Referer + X-Title for
     # attribution in their dashboard. Both are optional.
     default_headers = {
-        "HTTP-Referer": settings.PUBLIC_BASE_URL or "https://leadforge.ai",
-        "X-Title": settings.OPENROUTER_APP_NAME or "LeadForge AI",
+        "HTTP-Referer": settings.PUBLIC_BASE_URL or "https://aveonapex.ai",
+        "X-Title": settings.OPENROUTER_APP_NAME or "AveonApex",
     }
 
     return AsyncOpenAI(

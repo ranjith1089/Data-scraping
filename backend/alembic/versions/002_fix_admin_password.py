@@ -37,7 +37,7 @@ ADMIN123_HASH = "$2b$12$KYaFo0a/I3KHRJX1jQw56.4/xitfQIs4cHmvgTnAUdeCFeHEMg/UO"
 # Same constants as the original seed row, repeated here so the UPDATE
 # targets exactly the demo admin and nothing else.
 ADMIN_ID = "b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22"
-ADMIN_EMAIL = "admin@leadforge.ai"
+ADMIN_EMAIL = "admin@aveonapex.ai"
 
 
 def upgrade() -> None:

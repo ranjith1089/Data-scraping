@@ -76,7 +76,7 @@ export default function Sidebar() {
             </div>
             {!collapsed && (
               <span className="truncate">
-                LeadForge<span className="text-sidebar-foreground">AI</span>
+                AveonApex<span className="text-sidebar-foreground">AI</span>
               </span>
             )}
           </div>

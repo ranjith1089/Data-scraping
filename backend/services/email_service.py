@@ -53,7 +53,7 @@ class EmailService:
         to_email: str,
         subject: str,
         body: str,
-        from_name: str = "LeadForge AI",
+        from_name: str = "AveonApex",
     ) -> dict[str, Any]:
         """Send via the platform-wide SENDGRID_API_KEY. Prefer
         :meth:`send_email_for_tenant` in new code."""
@@ -109,7 +109,7 @@ class EmailService:
         subject: str,
         body_html: str,
         body_text: Optional[str] = None,
-        from_name: str = "LeadForge AI",
+        from_name: str = "AveonApex",
         from_email_override: Optional[str] = None,
     ) -> dict[str, Any]:
         """Send an email on behalf of a specific tenant.

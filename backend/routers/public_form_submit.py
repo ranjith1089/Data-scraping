@@ -9,7 +9,7 @@ the prefix the rest of the public API uses:
 * ``GET /api/v1/public/forms/{public_token}/embed`` — returns a
   self-contained HTML page suitable for embedding via ``<iframe>``.
 * ``GET /api/v1/public/forms.js`` — returns the vanilla-JS shim that
-  finds ``<script data-leadforge-token="...">`` tags, renders the
+  finds ``<script data-aveonapex-token="...">`` tags, renders the
   form in the page DOM, and handles submission.
 
 Rate-limit: ~10 submissions / minute / IP, enforced in-process via a
@@ -278,20 +278,20 @@ async def form_iframe(public_token: str):
 # forms.js — the single-file shim for <script> embedding
 # ---------------------------------------------------------------------
 
-_FORMS_JS = """/*! LeadForge public forms shim. */
+_FORMS_JS = """/*! AveonApex public forms shim. */
 (function () {
   var script = document.currentScript;
   if (!script) return;
-  var token = script.getAttribute('data-leadforge-token');
+  var token = script.getAttribute('data-aveonapex-token');
   if (!token) {
-    console.warn('LeadForge: <script> missing data-leadforge-token');
+    console.warn('AveonApex: <script> missing data-aveonapex-token');
     return;
   }
   var base = (function () {
     try { return new URL(script.src).origin; } catch (e) { return ''; }
   })();
 
-  var containerId = 'leadforge-form-' + token.slice(0, 8);
+  var containerId = 'aveonapex-form-' + token.slice(0, 8);
   var container =
     document.getElementById(containerId) ||
     (function () {

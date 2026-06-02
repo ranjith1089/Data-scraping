@@ -71,7 +71,7 @@ export default function RegisterPage() {
       })
 
       login(meResp.data, accessToken, refreshToken)
-      toast.success('Account created! Welcome to LeadForge AI.')
+      toast.success('Account created! Welcome to AveonApex.')
       navigate('/')
     } catch (err: any) {
       // FastAPI 422 returns ``detail`` as an array of
@@ -112,7 +112,7 @@ export default function RegisterPage() {
             <Zap className="h-7 w-7 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-white">
-            LeadForge <span className="text-indigo-400">AI</span>
+            AveonApex <span className="text-indigo-400">AI</span>
           </h1>
           <p className="mt-1 text-sm text-slate-400">
             Create your workspace in seconds
@@ -158,7 +158,7 @@ export default function RegisterPage() {
               </label>
               <div className="flex items-center gap-0">
                 <span className="rounded-l-lg border border-r-0 border-white/10 bg-white/10 px-3 py-2.5 text-sm text-slate-400">
-                  leadforge.ai/
+                  aveonapex.ai/
                 </span>
                 <input
                   type="text"

@@ -190,7 +190,7 @@ export default function SectorsPage() {
             <CardContent className="p-6">
               <h3 className="font-semibold text-lg mb-2">Want to expand?</h3>
               <p className="text-primary-foreground/80 text-sm mb-4">
-                LeadForge AI can automatically discover new high-potential sectors based
+                AveonApex can automatically discover new high-potential sectors based
                 on your current won leads.
               </p>
               <Button

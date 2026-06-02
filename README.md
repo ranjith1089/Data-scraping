@@ -1,4 +1,4 @@
-# LeadForge AI
+# AveonApex
 
 AI-powered, multi-tenant B2B lead generation SaaS for sales teams targeting companies across 9 key Indian industry sectors. Provider-agnostic AI layer (OpenRouter by default, supports Anthropic Claude, OpenAI GPT, Google Gemini and more with a single env var swap), third-party ad-platform integrations (Meta / Google Ads / LinkedIn), and a super-admin console for platform operators to manage every tenant on the instance.
 
@@ -174,7 +174,7 @@ CRM/
 
 ### Multi-Tenancy
 
-LeadForge uses PostgreSQL Row-Level Security for tenant data isolation:
+AveonApex uses PostgreSQL Row-Level Security for tenant data isolation:
 
 1. Every tenant-scoped table includes a `tenant_id UUID NOT NULL REFERENCES tenants(id)` column.
 2. RLS policies enforce `tenant_id = current_setting('app.current_tenant')::uuid` on all SELECT, INSERT, UPDATE, and DELETE operations.
@@ -233,8 +233,8 @@ The `integrations/` subsystem is a pluggable connector layer for third-party ad 
 ### 1. Clone and Configure
 
 ```bash
-git clone https://github.com/your-org/leadforge-ai.git
-cd leadforge-ai
+git clone https://github.com/your-org/aveonapex.git
+cd aveonapex
 ```
 
 Create the backend environment file:
@@ -246,7 +246,7 @@ cp backend/.env.example backend/.env
 Edit `backend/.env` and set your API keys:
 
 ```dotenv
-DATABASE_URL=postgresql+asyncpg://leadforge:leadforge_pass@db:5432/leadforge
+DATABASE_URL=postgresql+asyncpg://aveonapex:aveonapex_pass@db:5432/aveonapex
 SECRET_KEY=your-secure-secret-key-change-this
 
 # AI provider — default is OpenRouter (one key, many models)
@@ -318,7 +318,7 @@ docker-compose exec backend alembic upgrade head
 
 | Field | Value |
 |-------|-------|
-| Email | `admin@leadforge.ai` |
+| Email | `admin@aveonapex.ai` |
 | Password | `admin123` |
 
 > **Note**: The demo account is only available if seed data has been loaded. Run `docker-compose exec backend python seed.py` if a seed script is provided.
@@ -445,7 +445,7 @@ The backend ships with `railway.json`, `nixpacks.toml`, `Procfile`, and `runtime
    | `PUBLIC_BASE_URL` | `https://<your-backend>.up.railway.app` |
    | `CORS_ORIGINS` | `https://<your-vercel-project>.vercel.app` |
    | `SENDGRID_API_KEY` | Optional |
-   | `SENDGRID_FROM_EMAIL` | `noreply@leadforge.ai` |
+   | `SENDGRID_FROM_EMAIL` | `noreply@aveonapex.ai` |
    | `INTEGRATIONS_ENCRYPTION_KEY` | Required if the integration module is enabled (Fernet key) |
    | `META_APP_ID` / `META_APP_SECRET` / `META_WEBHOOK_VERIFY_TOKEN` | Optional, Meta Lead Ads connector |
    | `GOOGLE_ADS_CLIENT_ID` / `GOOGLE_ADS_CLIENT_SECRET` / `GOOGLE_ADS_DEVELOPER_TOKEN` | Optional, Google Ads connector |
@@ -459,7 +459,7 @@ The backend ships with `railway.json`, `nixpacks.toml`, `Procfile`, and `runtime
 
 7. In the backend service → **Settings** → **Networking** → **Generate Domain**
 8. Railway runs `alembic upgrade head` as part of the FastAPI lifespan (output is captured into a `_migration_result` dict so you can inspect it via `/health/db`), then starts `uvicorn main:app --host 0.0.0.0 --port $PORT`.
-9. Verify: `https://<your-backend>.up.railway.app/health` should return `{"status":"ok","service":"leadforge-api"}`.
+9. Verify: `https://<your-backend>.up.railway.app/health` should return `{"status":"ok","service":"aveonapex-api"}`.
 10. Verify migrations applied: `https://<your-backend>.up.railway.app/health/db` should include `"alembic_version":"004"` and `"migration_result":{"status":"ok",...}`.
 
 > **`DATABASE_URL` auto-normalization:** Railway provides the URL as `postgresql://...`, but SQLAlchemy async needs `postgresql+asyncpg://...`. The `core/config.py` validator converts this automatically, so you don't need to transform the URL manually.
@@ -471,9 +471,9 @@ A `render.yaml` blueprint is included at the repo root. To deploy to Render inst
 1. Push this repo to GitHub
 2. In Render dashboard → **New** → **Blueprint**
 3. Select the repo — Render reads `render.yaml` and provisions:
-   - `leadforge-api` web service (FastAPI)
-   - `leadforge-db` PostgreSQL
-   - `leadforge-redis` Redis
+   - `aveonapex-api` web service (FastAPI)
+   - `aveonapex-db` PostgreSQL
+   - `aveonapex-redis` Redis
 4. After provisioning, set these **secret** env vars in the dashboard (they have `sync: false`):
    - `ANTHROPIC_API_KEY`
    - `SENDGRID_API_KEY` (optional)
@@ -888,18 +888,18 @@ All backend configuration is managed via environment variables (loaded from `bac
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `DATABASE_URL` | Yes | `postgresql+asyncpg://leadforge:leadforge_pass@localhost:5432/leadforge` | Async PostgreSQL connection string. Railway gives you `postgresql://...`; `core/config.py` auto-normalises to `postgresql+asyncpg://...`. |
+| `DATABASE_URL` | Yes | `postgresql+asyncpg://aveonapex:aveonapex_pass@localhost:5432/aveonapex` | Async PostgreSQL connection string. Railway gives you `postgresql://...`; `core/config.py` auto-normalises to `postgresql+asyncpg://...`. |
 | `SECRET_KEY` | Yes | `change-me-in-production` | JWT signing secret (use a strong random string in production) |
 | `AI_PROVIDER` | No | `openrouter` | Active AI provider. `openrouter` (default) or `anthropic`. |
 | `OPENROUTER_API_KEY` | Conditional | _(empty)_ | Required when `AI_PROVIDER=openrouter`. Get one at https://openrouter.ai/keys |
 | `OPENROUTER_MODEL` | No | `anthropic/claude-sonnet-4` | Model slug on OpenRouter. Swap to `openai/gpt-4o`, `google/gemini-2.5-pro`, `mistralai/mistral-large`, etc. without touching code. |
 | `OPENROUTER_BASE_URL` | No | `https://openrouter.ai/api/v1` | OpenRouter API base (OpenAI-compatible). |
-| `OPENROUTER_APP_NAME` | No | `LeadForge AI` | Sent as `X-Title` header for OpenRouter's provider routing dashboard. |
+| `OPENROUTER_APP_NAME` | No | `AveonApex` | Sent as `X-Title` header for OpenRouter's provider routing dashboard. |
 | `ANTHROPIC_API_KEY` | Conditional | _(empty)_ | Required when `AI_PROVIDER=anthropic`. |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | No | `15` | JWT access token lifetime in minutes |
 | `REFRESH_TOKEN_EXPIRE_DAYS` | No | `7` | JWT refresh token lifetime in days |
 | `SENDGRID_API_KEY` | No | _(empty)_ | SendGrid API key for transactional email |
-| `SENDGRID_FROM_EMAIL` | No | `noreply@leadforge.ai` | Sender email address for outbound emails |
+| `SENDGRID_FROM_EMAIL` | No | `noreply@aveonapex.ai` | Sender email address for outbound emails |
 | `SMTP_HOST` | No | _(empty)_ | Optional SMTP fallback host for outbound mail |
 | `SMTP_PORT` | No | `587` | SMTP port |
 | `SMTP_USERNAME` | No | _(empty)_ | SMTP username |
@@ -1039,6 +1039,6 @@ docker-compose exec redis redis-cli ping
 
 ## License
 
-**Proprietary** -- LeadForge AI. All rights reserved.
+**Proprietary** -- AveonApex. All rights reserved.
 
-Unauthorized copying, modification, distribution, or use of this software is strictly prohibited without explicit written permission from LeadForge AI.
+Unauthorized copying, modification, distribution, or use of this software is strictly prohibited without explicit written permission from AveonApex.

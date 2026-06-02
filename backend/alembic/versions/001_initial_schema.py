@@ -415,7 +415,7 @@ def upgrade() -> None:
     op.execute(
         """
         INSERT INTO tenants (id, name, slug, plan, is_active, settings) VALUES
-        ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'LeadForge Demo', 'demo', 'growth', true,
+        ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'AveonApex Demo', 'demo', 'growth', true,
          '{"theme": "default", "timezone": "Asia/Kolkata"}')
         """
     )
@@ -442,7 +442,7 @@ def upgrade() -> None:
         """
         INSERT INTO users (id, tenant_id, email, password_hash, full_name, role, is_active) VALUES
         ('b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-         'admin@leadforge.ai', '$2b$12$LJ3m4ys3Lk0TSwHBGOGKneFGxGiAUMFpMQEarlNXqTKATa/GhJnGy',
+         'admin@aveonapex.ai', '$2b$12$LJ3m4ys3Lk0TSwHBGOGKneFGxGiAUMFpMQEarlNXqTKATa/GhJnGy',
          'Admin User', 'admin', true)
         """
     )

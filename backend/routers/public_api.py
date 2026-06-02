@@ -1,7 +1,7 @@
 """Public REST API — tenant-authenticated via X-API-Key header.
 
 Exposes the two endpoints Zapier / Make / custom integrations need to
-wire LeadForge into the outside world without going through JWT:
+wire AveonApex into the outside world without going through JWT:
 
 * ``POST /api/v1/public/leads`` — create a lead. Same body shape as
   ``LeadCreate`` on the internal router. Fires the ``lead.created``
