@@ -1,6 +1,6 @@
 """Per-tenant outbound DM rate limiter (Redis sliding-window).
 
-Meta enforces its own rate caps; this is the LeadForge-side throttle
+Meta enforces its own rate caps; this is the AveonApex-side throttle
 that protects against a viral post sending 10k DMs in a minute and
 either tripping a tenant's Meta-side ban or saturating the worker.
 

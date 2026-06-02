@@ -23,7 +23,7 @@ The decrypted credentials dict is expected to contain::
 
 Optional ``config`` keys::
 
-    app_name      — Your Gupshup app name (defaults to "LeadForgeAI")
+    app_name      — Your Gupshup app name (defaults to "AveonApex")
     src_name      — Optional display name override
     channel       — "whatsapp" (default) or "sms"
 """
@@ -72,7 +72,7 @@ class WhatsAppGupshupIntegration(BaseIntegration):
         }
 
     def _app_name(self) -> str:
-        return str(self.config.get("app_name") or "LeadForgeAI")
+        return str(self.config.get("app_name") or "AveonApex")
 
     def _channel(self) -> str:
         return str(self.config.get("channel") or "whatsapp")

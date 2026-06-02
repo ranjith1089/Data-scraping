@@ -2,7 +2,7 @@
 
 Why APScheduler in-process (Phase 1 decision)
 ---------------------------------------------
-LeadForge deploys as a single FastAPI container on Railway. We need
+AveonApex deploys as a single FastAPI container on Railway. We need
 support for delayed follow-ups, retries with exponential backoff, and
 periodic polling (LinkedIn Lead Gen Forms, token refresh) — all
 trigger types native to APScheduler. Using APScheduler inside the

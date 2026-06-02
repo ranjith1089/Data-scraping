@@ -30,7 +30,7 @@ export default function FormsPage() {
             Public Forms
           </h1>
           <p className="text-muted-foreground mt-1">
-            Embed a form on your website to capture leads straight into LeadForge.
+            Embed a form on your website to capture leads straight into AveonApex.
           </p>
         </div>
         <Button onClick={() => setShowCreate(true)}>

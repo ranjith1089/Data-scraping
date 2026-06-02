@@ -10,7 +10,7 @@ Meta sends two kinds of requests to this endpoint:
    batch. Signed via ``X-Hub-Signature-256`` HMAC of the raw body
    using our Meta App Secret.
 
-Because LeadForge owns ONE Meta App, all tenants' webhooks land here.
+Because AveonApex owns ONE Meta App, all tenants' webhooks land here.
 We resolve the tenant by walking the ``entry[].id`` (the Instagram
 Business Account id) back to an Integration row.
 

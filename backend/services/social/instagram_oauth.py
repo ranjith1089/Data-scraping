@@ -1,6 +1,6 @@
 """Instagram Connect OAuth flow.
 
-LeadForge owns one Meta App. Each tenant clicks **Connect Instagram**
+AveonApex owns one Meta App. Each tenant clicks **Connect Instagram**
 which:
 
 1. ``begin_oauth(tenant_id)`` returns Meta's authorize URL + a CSRF
@@ -70,7 +70,7 @@ def _redirect_uri() -> str:
 
 
 def build_authorize_url(state: str) -> str:
-    """Construct the Meta authorize URL with the LeadForge App Id +
+    """Construct the Meta authorize URL with the AveonApex App Id +
     redirect URI + scopes + CSRF state.
 
     Caller is responsible for storing ``state`` against the current

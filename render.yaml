@@ -1,11 +1,11 @@
-# Render.com Blueprint — backup deployment config for LeadForge AI
+# Render.com Blueprint — backup deployment config for AveonApex
 # Usage: In Render dashboard, click "New → Blueprint" and point at this repo.
 # Render will provision all services below. Set secret env vars in the dashboard.
 
 services:
   # ---------- Backend API (FastAPI) ----------
   - type: web
-    name: leadforge-api
+    name: aveonapex-api
     runtime: python
     plan: free
     rootDir: backend
@@ -18,12 +18,12 @@ services:
         value: "3.11.9"
       - key: DATABASE_URL
         fromDatabase:
-          name: leadforge-db
+          name: aveonapex-db
           property: connectionString
       - key: REDIS_URL
         fromService:
           type: redis
-          name: leadforge-redis
+          name: aveonapex-redis
           property: connectionString
       - key: SECRET_KEY
         generateValue: true
@@ -32,7 +32,7 @@ services:
       - key: SENDGRID_API_KEY
         sync: false
       - key: SENDGRID_FROM_EMAIL
-        value: noreply@leadforge.ai
+        value: noreply@aveonapex.ai
       - key: CORS_ORIGINS
         sync: false          # set to your Vercel URL after deploy
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
@@ -50,14 +50,14 @@ services:
 
   # ---------- Redis (free tier) ----------
   - type: redis
-    name: leadforge-redis
+    name: aveonapex-redis
     plan: free
     ipAllowList: []          # only allow internal Render connections
     maxmemoryPolicy: allkeys-lru
 
 # ---------- Postgres (free tier) ----------
 databases:
-  - name: leadforge-db
+  - name: aveonapex-db
     plan: free
-    databaseName: leadforge
-    user: leadforge
+    databaseName: aveonapex
+    user: aveonapex

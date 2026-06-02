@@ -40,7 +40,7 @@ export default function AdminTenantsPage() {
                 Tenant management
               </h1>
               <p className="text-xs text-gray-500">
-                Platform-level controls for every organisation on LeadForge
+                Platform-level controls for every organisation on AveonApex
               </p>
             </div>
           </div>

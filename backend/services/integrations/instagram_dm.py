@@ -8,7 +8,7 @@ methods are the runtime adapters.
 
 Auth model
 ----------
-LeadForge owns ONE Meta App. Each tenant clicks "Connect Instagram"
+AveonApex owns ONE Meta App. Each tenant clicks "Connect Instagram"
 which kicks off the OAuth flow in ``services/social/instagram_oauth.py``
 and stores the resulting Page Access Token + Instagram Business id in
 this plugin's credentials dict. The token is long-lived (60 days) and

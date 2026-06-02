@@ -232,7 +232,7 @@ class WhatsAppCloudIntegration(BaseIntegration):
         payload: dict[str, Any],
         headers: dict[str, str],
     ):
-        """Minimal transform — LeadForge currently uses WhatsApp outbound only.
+        """Minimal transform — AveonApex currently uses WhatsApp outbound only.
 
         When inbound message capture lands, this method should walk
         ``payload["entry"][*]["changes"][*]["value"]["messages"]`` and

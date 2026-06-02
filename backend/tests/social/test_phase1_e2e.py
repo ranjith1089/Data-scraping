@@ -28,7 +28,7 @@ Drives the following sequence:
 Run with:
 
     pytest backend/tests/social/test_phase1_e2e.py -v
-        --base-url=https://staging.leadforge.example
+        --base-url=https://staging.aveonapex.example
         --jwt=<token-for-test-tenant>
 
 Local Python 3.9 doesn't ship pytest; CI uses 3.11 with the full
@@ -49,8 +49,8 @@ import httpx
 import pytest
 
 
-BASE_URL = os.getenv("LEADFORGE_BASE_URL", "http://localhost:8000")
-JWT = os.getenv("LEADFORGE_JWT", "")
+BASE_URL = os.getenv("AVEONAPEX_BASE_URL", "http://localhost:8000")
+JWT = os.getenv("AVEONAPEX_JWT", "")
 META_APP_SECRET = os.getenv("META_APP_SECRET", "")
 
 
@@ -107,7 +107,7 @@ def _comment_webhook_body(
 def test_oauth_status_endpoint_responds() -> None:
     """Phase 1 gate #1 — JWT-auth status check works."""
     if not JWT:
-        pytest.skip("needs LEADFORGE_JWT")
+        pytest.skip("needs AVEONAPEX_JWT")
     resp = httpx.get(
         f"{BASE_URL}/api/v1/social/oauth/instagram/status",
         headers=_auth_headers(),
@@ -150,9 +150,9 @@ def test_comment_to_dm_end_to_end() -> None:
       3. The Integration row's instagram_business_id matches the
          entry.id below.
     """
-    ig_business_id = os.getenv("LEADFORGE_TEST_IG_BIZ_ID", "")
+    ig_business_id = os.getenv("AVEONAPEX_TEST_IG_BIZ_ID", "")
     if not ig_business_id:
-        pytest.skip("needs LEADFORGE_TEST_IG_BIZ_ID")
+        pytest.skip("needs AVEONAPEX_TEST_IG_BIZ_ID")
 
     body = _comment_webhook_body(
         ig_business_id=ig_business_id,
@@ -181,9 +181,9 @@ def test_comment_to_dm_end_to_end() -> None:
 def test_webhook_dedup() -> None:
     """Phase 1 gate #3b — second delivery of same external_message_id
     is silently dropped (no duplicate SocialMessage row)."""
-    ig_business_id = os.getenv("LEADFORGE_TEST_IG_BIZ_ID", "")
+    ig_business_id = os.getenv("AVEONAPEX_TEST_IG_BIZ_ID", "")
     if not ig_business_id:
-        pytest.skip("needs LEADFORGE_TEST_IG_BIZ_ID")
+        pytest.skip("needs AVEONAPEX_TEST_IG_BIZ_ID")
     body = _comment_webhook_body(
         ig_business_id=ig_business_id,
         sender="test_sender_dedup",

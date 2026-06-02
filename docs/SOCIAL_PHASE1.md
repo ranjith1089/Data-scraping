@@ -1,4 +1,4 @@
-# LeadForge Social — Phase 1 (Instagram DM Automation)
+# AveonApex Social — Phase 1 (Instagram DM Automation)
 
 > **Status:** All 6 commits shipped on `fix/ai-usage-and-create-campaign`.
 > **Critical path remaining:** Meta App Review (4–6 weeks, parallel admin task).
@@ -29,7 +29,7 @@ Follower comments "course" on a tenant's IG post
 
 | Capability | Status |
 |---|---|
-| Per-tenant Instagram OAuth (single LeadForge Meta App) | ✅ |
+| Per-tenant Instagram OAuth (single AveonApex Meta App) | ✅ |
 | Inbound webhook ingestion + signature verification | ✅ |
 | Persistence: SocialAccount → SocialConversation → SocialMessage | ✅ |
 | Rule engine (trigger → conditions → actions) | ✅ |
@@ -77,8 +77,8 @@ f4fc6e2  CRUD routers + APScheduler      1,516 LOC  automations / conversations 
 Existing env vars (already present in `core/config.py`):
 
 ```
-META_APP_ID                 LeadForge's Meta App id
-META_APP_SECRET             LeadForge's Meta App secret (used for
+META_APP_ID                 AveonApex's Meta App id
+META_APP_SECRET             AveonApex's Meta App secret (used for
                             both OAuth code exchange AND webhook
                             signature verification)
 META_WEBHOOK_VERIFY_TOKEN   Random string set on the Meta App's

@@ -1,6 +1,6 @@
 """
 One-shot importer that reads the TN College Directory HTML file and POSTs
-every college as a Lead under the `education` sector in LeadForge AI.
+every college as a Lead under the `education` sector in AveonApex.
 
 Why a standalone script (not a backend migration)?
 - The source file is a local browser artifact the user downloaded; it is
@@ -14,7 +14,7 @@ Usage (from the repo root):
 
     py scripts/import_tn_colleges.py \
         --file "C:/Users/Ranjith/Downloads/TN_Directory_2022_Final_2.html" \
-        --email admin@leadforge.ai \
+        --email admin@aveonapex.ai \
         --password admin123 \
         --api https://data-scraping-production.up.railway.app/api/v1
 
@@ -46,7 +46,7 @@ this shape (see the column header table in the HTML):
       12 naac_source,
       13 (unused),
       14 (unused),
-      15 source                 (where LeadForge originally scraped this row)
+      15 source                 (where AveonApex originally scraped this row)
       16 link,
       17 naac_grade             ("A+" | "A" | "B++" | ...)
     ]
@@ -273,7 +273,7 @@ def normalize_row(row: List[Any], sector_code: str) -> Optional[Dict[str, Any]]:
 # ---------------------------------------------------------------------------
 
 
-class LeadForgeClient:
+class AveonApexClient:
     def __init__(self, base_url: str, email: str, password: str):
         self.base_url = base_url.rstrip("/")
         self.session = requests.Session()
@@ -361,7 +361,7 @@ def main() -> int:
     parser.add_argument(
         "--api",
         default="https://data-scraping-production.up.railway.app/api/v1",
-        help="Base URL of the LeadForge API (default: production Railway)",
+        help="Base URL of the AveonApex API (default: production Railway)",
     )
     parser.add_argument("--sector", default="education", help="sector_code (default: education)")
     parser.add_argument("--workers", type=int, default=16, help="parallel HTTP workers")
@@ -406,7 +406,7 @@ def main() -> int:
 
     print(f"[3/4] Authenticating as {args.email} against {args.api} ...")
     try:
-        client = LeadForgeClient(args.api, args.email, args.password)
+        client = AveonApexClient(args.api, args.email, args.password)
     except requests.HTTPError as exc:
         print(f"[!] Login failed: {exc.response.status_code} {exc.response.text[:200]}")
         return 3

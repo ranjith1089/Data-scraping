@@ -4,7 +4,7 @@ from typing import List
 
 
 class Settings(BaseSettings):
-    DATABASE_URL: str = "postgresql+asyncpg://leadforge:leadforge_pass@localhost:5432/leadforge"
+    DATABASE_URL: str = "postgresql+asyncpg://aveonapex:aveonapex_pass@localhost:5432/aveonapex"
     SECRET_KEY: str = "change-me-in-production"
 
     # ------------------------------------------------------------------
@@ -36,12 +36,12 @@ class Settings(BaseSettings):
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
     # Sent as HTTP-Referer + X-Title to OpenRouter for app attribution.
     # Optional but recommended; OpenRouter shows this in their dashboard.
-    OPENROUTER_APP_NAME: str = "LeadForge AI"
+    OPENROUTER_APP_NAME: str = "AveonApex"
 
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     SENDGRID_API_KEY: str = ""
-    SENDGRID_FROM_EMAIL: str = "noreply@leadforge.ai"
+    SENDGRID_FROM_EMAIL: str = "noreply@aveonapex.ai"
     WA_API_KEY: str = ""
     WA_PHONE_ID: str = ""
     REDIS_URL: str = "redis://localhost:6379"
@@ -62,7 +62,7 @@ class Settings(BaseSettings):
     INTEGRATIONS_ENCRYPTION_KEY: str = ""
 
     # The public base URL at which this backend is reachable. Used when
-    # rendering webhook URLs for providers to call back into LeadForge.
+    # rendering webhook URLs for providers to call back into AveonApex.
     PUBLIC_BASE_URL: str = "http://localhost:8000"
 
     # Meta Ads (Facebook/Instagram Lead Ads) — OAuth 2.0

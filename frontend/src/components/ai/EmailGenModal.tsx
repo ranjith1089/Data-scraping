@@ -121,7 +121,7 @@ export default function EmailGenModal({
                 AI Email Generator
               </h2>
               <p className="text-xs text-gray-500">
-                Powered by LeadForge AI
+                Powered by AveonApex
               </p>
             </div>
           </div>

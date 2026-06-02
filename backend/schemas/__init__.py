@@ -1,4 +1,4 @@
-# LeadForge AI - Pydantic v2 Schemas
+# AveonApex - Pydantic v2 Schemas
 
 # Auth
 from .auth import (

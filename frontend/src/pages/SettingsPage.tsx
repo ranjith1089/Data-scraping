@@ -154,7 +154,7 @@ function GeneralSettings() {
             Workspace URL
           </label>
           <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-700">
-            leadforge.ai/{tenant?.slug || 'N/A'}
+            aveonapex.ai/{tenant?.slug || 'N/A'}
           </div>
         </div>
 

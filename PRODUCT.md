@@ -1,6 +1,6 @@
-# LeadForge AI — Product Spec
+# AveonApex — Product Spec
 
-> Single source of truth for _what_ LeadForge is, _who_ it's for, and _why_ it exists.
+> Single source of truth for _what_ AveonApex is, _who_ it's for, and _why_ it exists.
 > For installation, API shapes, and env vars see [README.md](./README.md).
 
 ---
@@ -9,7 +9,7 @@
 
 Give small and mid-sized Indian B2B sales teams the same AI-powered lead generation, outreach, and pipeline tooling that enterprises spend tens of thousands of dollars a year on — for the price of a single SDR seat, and in a stack where every feature understands the Indian market out of the box.
 
-LeadForge is not another generic CRM. It is a **sector-aware, AI-native, multi-tenant SaaS** opinionated toward the nine industry verticals that matter most to Indian B2B sellers: Technology, Agriculture, Manufacturing, Education, Marketing, Finance, Construction, Retail, and Energy.
+AveonApex is not another generic CRM. It is a **sector-aware, AI-native, multi-tenant SaaS** opinionated toward the nine industry verticals that matter most to Indian B2B sellers: Technology, Agriculture, Manufacturing, Education, Marketing, Finance, Construction, Retail, and Energy.
 
 ---
 
@@ -47,7 +47,7 @@ Replace the manual grind of prospecting, writing cold emails, scoring leads, and
 ### Non-ICP (explicitly out of scope)
 
 - US / European enterprises. Every AI prompt, sector persona, and pricing tier is calibrated for the Indian market.
-- B2C or D2C brands — LeadForge is B2B only.
+- B2C or D2C brands — AveonApex is B2B only.
 - Teams that need highly custom object models (we have opinions on what a "lead" and a "deal" look like).
 
 ---
@@ -58,7 +58,7 @@ Replace the manual grind of prospecting, writing cold emails, scoring leads, and
 
 Three value pillars:
 
-1. **Sector intelligence baked in.** Every AI call is grounded in a curated persona and pain-point library for the lead's sector. A construction company lead is not pitched the same way as a SaaS lead — LeadForge knows this without any prompt engineering from the user.
+1. **Sector intelligence baked in.** Every AI call is grounded in a curated persona and pain-point library for the lead's sector. A construction company lead is not pitched the same way as a SaaS lead — AveonApex knows this without any prompt engineering from the user.
 
 2. **Provider-agnostic AI that never goes dark.** We learned the hard way that a single direct Anthropic key is a single point of failure — one credit exhaustion and every chat in production returns a raw error. The platform now defaults to OpenRouter, which routes to dozens of models behind one key and one balance. Swap between Claude, GPT, Gemini, or Mistral with a single env var.
 
@@ -194,7 +194,7 @@ These are the rules the codebase has earned the hard way. They are not aspiratio
 
 ### Not on the roadmap (and why)
 
-- **Generic drag-and-drop form builder** — LeadForge is opinionated about what a lead looks like. Custom fields, yes. Arbitrary forms, no.
+- **Generic drag-and-drop form builder** — AveonApex is opinionated about what a lead looks like. Custom fields, yes. Arbitrary forms, no.
 - **Gamification / leaderboards** — proven to fatigue sales teams faster than it motivates them.
 - **A BI layer** — we ship the handful of dashboards sales teams actually use. For deeper analysis, export to CSV and point your BI tool at it.
 
@@ -202,7 +202,7 @@ These are the rules the codebase has earned the hard way. They are not aspiratio
 
 ## 9. Success Metrics
 
-How we know LeadForge is working.
+How we know AveonApex is working.
 
 ### Product metrics (per tenant)
 
@@ -210,7 +210,7 @@ How we know LeadForge is working.
 |---|---|---|
 | **AI call adoption rate** | > 60% of active users make at least one AI call per week | If reps aren't using the AI, we're just an expensive spreadsheet. |
 | **Lead scoring coverage** | > 80% of leads scored within 24h of creation | An unscored lead is a lead a rep will waste time on. |
-| **Reply-to-meeting conversion uplift** | +30% vs the tenant's pre-LeadForge baseline | The whole point of the reply analyser. |
+| **Reply-to-meeting conversion uplift** | +30% vs the tenant's pre-AveonApex baseline | The whole point of the reply analyser. |
 | **Integration sync success rate** | > 99% over rolling 7 days | Broken integrations silently erode trust. |
 | **AI Usage dashboard accuracy** | Logged calls == provider-billed calls, ±1% | Historical bug: dashboard stuck at 0 while providers were being billed. Never again. |
 
@@ -252,6 +252,6 @@ How we know LeadForge is working.
 
 ## 11. License
 
-**Proprietary** — LeadForge AI. All rights reserved.
+**Proprietary** — AveonApex. All rights reserved.
 
-Unauthorised copying, modification, distribution, or use of this software is strictly prohibited without explicit written permission from LeadForge AI.
+Unauthorised copying, modification, distribution, or use of this software is strictly prohibited without explicit written permission from AveonApex.

@@ -1,4 +1,4 @@
-"""LeadForge AI - FastAPI application entry point."""
+"""AveonApex - FastAPI application entry point."""
 
 import asyncio
 import logging
@@ -202,7 +202,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="LeadForge AI",
+    title="AveonApex",
     description="AI-powered B2B Lead Generation SaaS",
     version="1.0.0",
     lifespan=lifespan,
@@ -382,7 +382,7 @@ app.include_router(social_consents.router, prefix=PREFIX)
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "service": "leadforge-api"}
+    return {"status": "ok", "service": "aveonapex-api"}
 
 
 @app.get("/health/db")

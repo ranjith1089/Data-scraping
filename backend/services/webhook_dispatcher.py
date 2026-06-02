@@ -13,8 +13,8 @@ Delivery rules
 * Timeout per attempt: 10 seconds.
 * Private IP ranges (127.*, 10.*, 192.168.*, 172.16-31.*) are rejected
   at dispatch time to mitigate SSRF via a misconfigured webhook URL.
-* Each delivery writes ``X-LeadForge-Event`` / ``X-LeadForge-Signature``
-  / ``X-LeadForge-Delivery-Id`` headers.
+* Each delivery writes ``X-AveonApex-Event`` / ``X-AveonApex-Signature``
+  / ``X-AveonApex-Delivery-Id`` headers.
 
 Non-goals
 ---------
@@ -130,12 +130,12 @@ async def _deliver_subscription(
 
     headers = {
         "Content-Type": "application/json",
-        "User-Agent": "LeadForge-Webhook/1.0",
-        "X-LeadForge-Event": event_type,
-        "X-LeadForge-Delivery-Id": delivery_id,
+        "User-Agent": "AveonApex-Webhook/1.0",
+        "X-AveonApex-Event": event_type,
+        "X-AveonApex-Delivery-Id": delivery_id,
     }
     if secret:
-        headers["X-LeadForge-Signature"] = _sign_payload(secret, body_bytes)
+        headers["X-AveonApex-Signature"] = _sign_payload(secret, body_bytes)
 
     last_error: Optional[str] = None
     last_status: Optional[int] = None
@@ -259,11 +259,11 @@ async def test_deliver(sub: WebhookSubscription, tenant_id: UUID) -> dict[str, A
     ).encode("utf-8")
     headers = {
         "Content-Type": "application/json",
-        "User-Agent": "LeadForge-Webhook/1.0",
-        "X-LeadForge-Event": "ping",
-        "X-LeadForge-Delivery-Id": str(uuid.uuid4()),
+        "User-Agent": "AveonApex-Webhook/1.0",
+        "X-AveonApex-Event": "ping",
+        "X-AveonApex-Delivery-Id": str(uuid.uuid4()),
     }
     if secret:
-        headers["X-LeadForge-Signature"] = _sign_payload(secret, body_bytes)
+        headers["X-AveonApex-Signature"] = _sign_payload(secret, body_bytes)
     ok, status, err = await _deliver_once(sub.url, headers, body_bytes)
     return {"ok": ok, "status_code": status, "error": err}

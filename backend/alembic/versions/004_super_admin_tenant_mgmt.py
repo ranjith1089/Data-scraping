@@ -11,7 +11,7 @@ Backfills:
 
 * Mirrors ``is_active`` into ``status`` (active ↔ suspended)
 * Seeds ``updated_at = created_at`` so the column is never NULL going forward
-* Promotes the pre-seeded ``admin@leadforge.ai`` user to super-admin so the
+* Promotes the pre-seeded ``admin@aveonapex.ai`` user to super-admin so the
   new admin UI works immediately after the migration lands
 * Populates ``owner_id`` with the earliest-created ``role='owner'`` user per
   tenant (best-effort; stays NULL if the tenant has no owner yet)
@@ -109,7 +109,7 @@ def upgrade() -> None:
     # across fresh installs (id is regenerated in some environments).
     op.execute(
         "UPDATE users SET is_superuser = true "
-        "WHERE email = 'admin@leadforge.ai'"
+        "WHERE email = 'admin@aveonapex.ai'"
     )
 
     # Backfill owner_id with each tenant's earliest-created owner user.

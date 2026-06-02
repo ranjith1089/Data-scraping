@@ -111,7 +111,7 @@ async def ai_chat(
         logger.debug("Full-text search failed for chat query, skipping", exc_info=True)
 
     system = (
-        "You are LeadForge AI, a sales intelligence assistant for a B2B sales team "
+        "You are AveonApex, a sales intelligence assistant for a B2B sales team "
         "in India. You have access to their lead database and campaign metrics. "
         "You help sales reps:\n"
         "- Find the right leads to contact today\n"

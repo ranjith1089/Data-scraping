@@ -1,4 +1,4 @@
-"""LeadForge Social — runtime engine for the social automation module.
+"""AveonApex Social — runtime engine for the social automation module.
 
 Public entry points used by webhook receivers and APScheduler jobs:
 

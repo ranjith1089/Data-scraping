@@ -122,7 +122,7 @@ export default function AIChatPanel() {
               <Sparkles className="h-4 w-4 text-white" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-white">LeadForge AI</h2>
+              <h2 className="text-sm font-semibold text-white">AveonApex</h2>
               <p className="text-xs text-purple-200">
                 {isStreaming ? 'Thinking...' : 'Ready to help'}
               </p>
@@ -246,7 +246,7 @@ export default function AIChatPanel() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask LeadForge AI..."
+              placeholder="Ask AveonApex..."
               disabled={isStreaming}
               className={cn(
                 'flex-1 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm',
