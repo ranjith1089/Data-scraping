@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 from core.dependencies import get_db, get_current_user
 from models.campaign import Campaign
 from models.campaign_step import CampaignStep
+from models.lead import Lead
 from models.outreach_log import OutreachLog
 from models.user import User
 from schemas.campaign import (
@@ -31,7 +32,7 @@ from services.campaign_runner import campaign_runner
 router = APIRouter(prefix="/campaigns", tags=["campaigns"])
 
 
-async def _enrich_campaign(db: AsyncSession, campaign: Campaign) -> dict:
+async def _enrich_campaign(db: AsyncSession, campaign: Campaign) -> CampaignResponse:
     """Add computed stats to a campaign response."""
     sent = await db.scalar(
         select(func.count(OutreachLog.id)).where(
@@ -52,6 +53,17 @@ async def _enrich_campaign(db: AsyncSession, campaign: Campaign) -> dict:
         )
     ) or 0
 
+    # Count leads that match the campaign's sector_codes so the detail
+    # page can show a real "Total Leads" number instead of always 0.
+    total_leads = 0
+    if campaign.sector_codes:
+        total_leads = await db.scalar(
+            select(func.count(Lead.id)).where(
+                Lead.tenant_id == campaign.tenant_id,
+                Lead.sector_code.in_(campaign.sector_codes),
+            )
+        ) or 0
+
     return CampaignResponse(
         id=campaign.id,
         tenant_id=campaign.tenant_id,
@@ -62,9 +74,11 @@ async def _enrich_campaign(db: AsyncSession, campaign: Campaign) -> dict:
         segment_filter=campaign.segment_filter,
         daily_limit=campaign.daily_limit,
         ai_tone=campaign.ai_tone,
+        total_leads=total_leads,
         sent_count=sent,
         open_count=opened,
         reply_count=replied,
+        started_at=campaign.started_at,
         created_at=campaign.created_at,
     )
 
@@ -295,6 +309,72 @@ async def bulk_upsert_campaign_steps(
     # Order returned list by step_number for stable UI rendering.
     created.sort(key=lambda s: s.step_number)
     return [CampaignStepResponse.model_validate(s) for s in created]
+
+
+@router.get("/{campaign_id}/steps", response_model=List[CampaignStepResponse])
+async def list_campaign_steps(
+    campaign_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """List all steps for a campaign, including per-step send/open/reply stats."""
+    # Verify ownership
+    owner = await db.execute(
+        select(Campaign.id).where(
+            Campaign.id == campaign_id,
+            Campaign.tenant_id == current_user.tenant_id,
+        )
+    )
+    if not owner.scalar_one_or_none():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Campaign not found")
+
+    steps_result = await db.execute(
+        select(CampaignStep)
+        .where(CampaignStep.campaign_id == campaign_id)
+        .order_by(CampaignStep.step_number)
+    )
+    steps = steps_result.scalars().all()
+
+    responses: list[CampaignStepResponse] = []
+    for step in steps:
+        sent = await db.scalar(
+            select(func.count(OutreachLog.id)).where(
+                OutreachLog.step_id == step.id,
+                OutreachLog.status == "sent",
+            )
+        ) or 0
+        opened = await db.scalar(
+            select(func.count(OutreachLog.id)).where(
+                OutreachLog.step_id == step.id,
+                OutreachLog.opened_at.isnot(None),
+            )
+        ) or 0
+        replied = await db.scalar(
+            select(func.count(OutreachLog.id)).where(
+                OutreachLog.step_id == step.id,
+                OutreachLog.replied_at.isnot(None),
+            )
+        ) or 0
+        responses.append(
+            CampaignStepResponse(
+                id=step.id,
+                campaign_id=step.campaign_id,
+                step_number=step.step_number,
+                channel=step.channel,
+                delay_days=step.delay_days,
+                subject=step.subject,
+                body=step.body,
+                ai_generated=step.ai_generated,
+                sent_count=sent,
+                open_count=opened,
+                reply_count=replied,
+                variant_b_subject=step.variant_b_subject,
+                variant_b_body=step.variant_b_body,
+                ab_split_pct=step.ab_split_pct or 50,
+                created_at=step.created_at,
+            )
+        )
+    return responses
 
 
 @router.get(
