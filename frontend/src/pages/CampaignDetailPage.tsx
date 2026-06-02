@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import {
   useCampaign,
+  useCampaignSteps,
   useStartCampaign,
   usePauseCampaign,
   useUpdateCampaign,
@@ -40,13 +41,15 @@ const CHANNEL_LABELS: Record<string, string> = {
   email: 'Email',
   whatsapp: 'WhatsApp',
   sms: 'SMS',
-  multi_channel: 'Multi-Channel',
+  linkedin: 'LinkedIn',
+  multi: 'Multi-Channel',
 }
 
 export default function CampaignDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { data: campaign, isLoading } = useCampaign(id || '')
+  const { data: steps = [] } = useCampaignSteps(id || '')
   const startCampaign = useStartCampaign()
   const pauseCampaign = usePauseCampaign()
   const updateCampaign = useUpdateCampaign()
@@ -257,15 +260,68 @@ export default function CampaignDetailPage() {
 
       {activeTab === 'steps' && (
         <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <h3 className="mb-4 text-sm font-semibold text-gray-900">Campaign Steps</h3>
-          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50 py-10 text-center">
-            <p className="text-sm text-gray-500">
-              Steps are configured at campaign creation time.
-            </p>
-            <p className="mt-1 text-xs text-gray-400">
-              In-place step editing will land in a follow-up phase.
-            </p>
-          </div>
+          <h3 className="mb-4 text-sm font-semibold text-gray-900">
+            Campaign Steps
+            <span className="ml-2 text-xs font-normal text-gray-400">
+              ({steps.length} step{steps.length !== 1 ? 's' : ''})
+            </span>
+          </h3>
+          {steps.length === 0 ? (
+            <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50 py-10 text-center">
+              <p className="text-sm text-gray-500">No steps configured yet.</p>
+              <p className="mt-1 text-xs text-gray-400">
+                Add steps when creating or editing a campaign.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {steps.map((step) => (
+                <div
+                  key={step.id}
+                  className="rounded-lg border border-gray-100 bg-gray-50 p-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
+                        {step.step_number}
+                      </span>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {CHANNEL_LABELS[step.channel] || step.channel}
+                          {step.delay_days > 0 && (
+                            <span className="ml-2 text-xs font-normal text-gray-400">
+                              · Day {step.delay_days}
+                            </span>
+                          )}
+                        </p>
+                        {step.subject && (
+                          <p className="mt-0.5 text-xs text-gray-500 truncate max-w-xs">
+                            {step.subject}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <span>
+                        <span className="font-medium text-gray-700">{step.sent_count}</span> sent
+                      </span>
+                      <span>
+                        <span className="font-medium text-gray-700">{step.open_count}</span> opened
+                      </span>
+                      <span>
+                        <span className="font-medium text-gray-700">{step.reply_count}</span> replied
+                      </span>
+                      {step.variant_b_subject || step.variant_b_body ? (
+                        <span className="rounded-full bg-purple-100 px-2 py-0.5 text-purple-700 font-medium">
+                          A/B
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

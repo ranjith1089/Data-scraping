@@ -147,6 +147,35 @@ export function useUpdateCampaign() {
   })
 }
 
+export interface CampaignStep {
+  id: string
+  campaign_id: string
+  step_number: number
+  channel: string
+  delay_days: number
+  subject?: string | null
+  body?: string | null
+  ai_generated: boolean
+  sent_count: number
+  open_count: number
+  reply_count: number
+  variant_b_subject?: string | null
+  variant_b_body?: string | null
+  ab_split_pct: number
+  created_at: string
+}
+
+export function useCampaignSteps(campaignId: string) {
+  return useQuery<CampaignStep[]>({
+    queryKey: ['campaign-steps', campaignId],
+    queryFn: async () => {
+      const { data } = await api.get<CampaignStep[]>(`/campaigns/${campaignId}/steps`)
+      return data
+    },
+    enabled: !!campaignId,
+  })
+}
+
 export interface CampaignStepPayload {
   step_number: number
   channel: 'email' | 'whatsapp'
