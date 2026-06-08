@@ -9,7 +9,6 @@ import {
   Check,
   Trash2,
   ExternalLink,
-  BarChart2,
   RefreshCw,
   MessageSquare,
   UserCheck,

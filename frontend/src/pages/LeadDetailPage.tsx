@@ -30,7 +30,6 @@ import {
   Copy,
   Check,
   UserCheck,
-  MessageCircle,
   Trash2,
 } from 'lucide-react'
 import { useLead } from '@/hooks/useLeads'
