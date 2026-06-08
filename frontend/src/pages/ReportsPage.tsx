@@ -20,6 +20,8 @@ import {
   PhoneCall,
   Calendar,
   FileText,
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react'
 import {
   useLeadReport,
@@ -107,9 +109,10 @@ const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
 
 function LeadsTab() {
   const [days, setDays] = useState<30 | 60 | 90>(90)
-  const { data, isLoading } = useLeadReport(days)
+  const { data, isLoading, isError, refetch } = useLeadReport(days)
 
-  if (isLoading || !data) return <TabSkeleton />
+  if (isLoading) return <TabSkeleton />
+  if (isError || !data) return <ErrorState onRetry={refetch} />
 
   const sectorData = data.by_sector.map((s) => ({
     name: SECTOR_NAMES[s.sector] ?? s.sector,
@@ -281,9 +284,10 @@ function LeadsTab() {
 
 function RevenueTab() {
   const [months, setMonths] = useState<6 | 12>(12)
-  const { data, isLoading } = useRevenueReport(months)
+  const { data, isLoading, isError, refetch } = useRevenueReport(months)
 
-  if (isLoading || !data) return <TabSkeleton />
+  if (isLoading) return <TabSkeleton />
+  if (isError || !data) return <ErrorState onRetry={refetch} />
 
   const monthlyData = data.monthly_won.map((m) => ({
     ...m,
@@ -454,9 +458,10 @@ function ChannelCard({
 }
 
 function OutreachTab() {
-  const { data, isLoading } = useOutreachReport()
+  const { data, isLoading, isError, refetch } = useOutreachReport()
 
-  if (isLoading || !data) return <TabSkeleton />
+  if (isLoading) return <TabSkeleton />
+  if (isError || !data) return <ErrorState onRetry={refetch} />
 
   return (
     <div className="space-y-6">
@@ -582,9 +587,10 @@ const ACTIVITY_ICONS: Record<string, React.ReactNode> = {
 
 function ActivitiesTab() {
   const [weeks, setWeeks] = useState<4 | 8 | 12>(8)
-  const { data, isLoading } = useActivitiesReport(weeks)
+  const { data, isLoading, isError, refetch } = useActivitiesReport(weeks)
 
-  if (isLoading || !data) return <TabSkeleton />
+  if (isLoading) return <TabSkeleton />
+  if (isError || !data) return <ErrorState onRetry={refetch} />
 
   const weeklyData = data.weekly.map((w) => ({ ...w, label: fmtWeek(w.week) }))
   const totalActivities = data.by_type.reduce((a, t) => a + t.count, 0)
@@ -680,6 +686,32 @@ function TabSkeleton() {
         <Skeleton className="h-52 rounded-xl" />
         <Skeleton className="h-52 rounded-xl" />
       </div>
+    </div>
+  )
+}
+
+// ─── Error state ──────────────────────────────────────────────────────────────
+
+function ErrorState({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
+      <div className="w-14 h-14 rounded-full bg-red-50 border border-red-100 flex items-center justify-center">
+        <AlertCircle className="w-7 h-7 text-red-400" />
+      </div>
+      <div>
+        <p className="text-base font-semibold text-gray-900">Failed to load report</p>
+        <p className="text-sm text-gray-500 mt-1 max-w-sm">
+          The backend could not be reached or returned an error.
+          Check that the Railway service is running and the API URL is configured.
+        </p>
+      </div>
+      <button
+        onClick={onRetry}
+        className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
+      >
+        <RefreshCw className="w-4 h-4" />
+        Retry
+      </button>
     </div>
   )
 }
