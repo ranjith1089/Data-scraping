@@ -111,12 +111,12 @@ function StepCard({
       </div>
 
       {/* Card */}
-      <div className="flex-1 rounded-xl border border-gray-200 bg-white shadow-sm mb-4">
+      <div className="flex-1 rounded-2xl border border-border/60 bg-white shadow-sm mb-4">
         {editing ? (
           <div className="p-4 space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Step order</label>
+                <label className="block text-xs font-medium text-foreground/70 mb-1">Step order</label>
                 <input
                   type="number"
                   min={1}
@@ -126,7 +126,7 @@ function StepCard({
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-foreground/70 mb-1">
                   Delay (days after prev)
                 </label>
                 <input
@@ -139,7 +139,7 @@ function StepCard({
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Subject</label>
+              <label className="block text-xs font-medium text-foreground/70 mb-1">Subject</label>
               <input
                 type="text"
                 value={form.subject}
@@ -149,7 +149,7 @@ function StepCard({
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Body</label>
+              <label className="block text-xs font-medium text-foreground/70 mb-1">Body</label>
               <textarea
                 rows={5}
                 value={form.body}
@@ -160,7 +160,7 @@ function StepCard({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
+                <label className="block text-xs font-medium text-foreground/70 mb-1">Type</label>
                 <select
                   value={form.email_type}
                   onChange={(e) => setForm((f) => ({ ...f, email_type: e.target.value }))}
@@ -172,7 +172,7 @@ function StepCard({
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Tone</label>
+                <label className="block text-xs font-medium text-foreground/70 mb-1">Tone</label>
                 <select
                   value={form.ai_tone}
                   onChange={(e) => setForm((f) => ({ ...f, ai_tone: e.target.value }))}
@@ -195,7 +195,7 @@ function StepCard({
               </button>
               <button
                 onClick={() => setEditing(false)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 px-3 py-1.5 text-xs font-medium text-foreground/70 hover:bg-muted/40"
               >
                 <X className="w-3.5 h-3.5" /> Cancel
               </button>
@@ -206,15 +206,15 @@ function StepCard({
             {/* Header */}
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">{step.subject}</p>
+                <p className="text-sm font-semibold text-foreground truncate">{step.subject}</p>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  <span className="flex items-center gap-1 text-xs text-gray-500">
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Clock className="w-3 h-3" />
                     {step.delay_days === 0
                       ? 'Immediately'
                       : `After ${step.delay_days} day${step.delay_days !== 1 ? 's' : ''}`}
                   </span>
-                  <span className="text-xs bg-gray-100 text-gray-600 rounded px-1.5 py-0.5 capitalize">
+                  <span className="text-xs bg-muted text-foreground/70 rounded px-1.5 py-0.5 capitalize">
                     {EMAIL_TYPES.find((t) => t.value === step.email_type)?.label ?? step.email_type}
                   </span>
                   <span className="text-xs bg-indigo-50 text-indigo-600 rounded px-1.5 py-0.5 capitalize">
@@ -225,27 +225,27 @@ function StepCard({
               <div className="flex items-center gap-1 shrink-0">
                 <button
                   onClick={() => setEditing(true)}
-                  className="rounded p-1.5 text-gray-400 hover:bg-indigo-50 hover:text-indigo-600"
+                  className="rounded p-1.5 text-muted-foreground/70 hover:bg-indigo-50 hover:text-indigo-600"
                 >
                   <Edit3 className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="rounded p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-500"
+                  className="rounded p-1.5 text-muted-foreground/70 hover:bg-red-50 hover:text-red-500"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={() => setExpanded((o) => !o)}
-                  className="rounded p-1.5 text-gray-400 hover:bg-gray-100"
+                  className="rounded p-1.5 text-muted-foreground/70 hover:bg-muted"
                 >
                   {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                 </button>
               </div>
             </div>
             {expanded && (
-              <div className="mt-3 rounded-lg bg-gray-50 px-3 py-2.5">
-                <p className="text-xs text-gray-700 whitespace-pre-wrap leading-relaxed">{step.body}</p>
+              <div className="mt-3 rounded-lg bg-muted/40 px-3 py-2.5">
+                <p className="text-xs text-foreground/80 whitespace-pre-wrap leading-relaxed">{step.body}</p>
               </div>
             )}
           </div>
@@ -282,7 +282,7 @@ function AddStepPanel({ seqId, nextOrder }: { seqId: string; nextOrder: number }
     return (
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 w-full rounded-xl border-2 border-dashed border-gray-200 p-4 text-sm font-medium text-gray-400 hover:border-indigo-300 hover:text-indigo-500 transition-colors"
+        className="flex items-center gap-2 w-full rounded-xl border-2 border-dashed border-border/60 p-4 text-sm font-medium text-muted-foreground/70 hover:border-indigo-300 hover:text-indigo-500 transition-colors"
       >
         <Plus className="w-4 h-4" /> Add Step {nextOrder}
       </button>
@@ -291,11 +291,11 @@ function AddStepPanel({ seqId, nextOrder }: { seqId: string; nextOrder: number }
 
   return (
     <div className="rounded-xl border-2 border-indigo-200 bg-indigo-50/30 p-4">
-      <h4 className="text-sm font-semibold text-gray-900 mb-3">New Step {nextOrder}</h4>
+      <h4 className="text-sm font-semibold text-foreground mb-3">New Step {nextOrder}</h4>
       <form onSubmit={handleSubmit} className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Step order</label>
+            <label className="block text-xs font-medium text-foreground/70 mb-1">Step order</label>
             <input
               type="number" min={1}
               value={form.step_order}
@@ -304,7 +304,7 @@ function AddStepPanel({ seqId, nextOrder }: { seqId: string; nextOrder: number }
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Delay (days)</label>
+            <label className="block text-xs font-medium text-foreground/70 mb-1">Delay (days)</label>
             <input
               type="number" min={0}
               value={form.delay_days}
@@ -314,7 +314,7 @@ function AddStepPanel({ seqId, nextOrder }: { seqId: string; nextOrder: number }
           </div>
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Subject</label>
+          <label className="block text-xs font-medium text-foreground/70 mb-1">Subject</label>
           <input
             type="text"
             value={form.subject}
@@ -324,7 +324,7 @@ function AddStepPanel({ seqId, nextOrder }: { seqId: string; nextOrder: number }
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Body</label>
+          <label className="block text-xs font-medium text-foreground/70 mb-1">Body</label>
           <textarea
             rows={5}
             value={form.body}
@@ -332,13 +332,13 @@ function AddStepPanel({ seqId, nextOrder }: { seqId: string; nextOrder: number }
             placeholder={`Hi {{contact}},\n\nI wanted to follow up...\n\nBest,\n[Your name]`}
             className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm font-mono"
           />
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-muted-foreground/70 mt-1">
             Available variables: <code>{'{{contact}}'}</code> <code>{'{{company}}'}</code> <code>{'{{designation}}'}</code>
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
+            <label className="block text-xs font-medium text-foreground/70 mb-1">Type</label>
             <select
               value={form.email_type}
               onChange={(e) => setForm((f) => ({ ...f, email_type: e.target.value }))}
@@ -348,7 +348,7 @@ function AddStepPanel({ seqId, nextOrder }: { seqId: string; nextOrder: number }
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Tone</label>
+            <label className="block text-xs font-medium text-foreground/70 mb-1">Tone</label>
             <select
               value={form.ai_tone}
               onChange={(e) => setForm((f) => ({ ...f, ai_tone: e.target.value }))}
@@ -370,7 +370,7 @@ function AddStepPanel({ seqId, nextOrder }: { seqId: string; nextOrder: number }
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 px-3 py-1.5 text-xs font-medium text-foreground/70 hover:bg-muted/40"
           >
             <X className="w-3.5 h-3.5" /> Cancel
           </button>
@@ -425,24 +425,24 @@ export default function EmailSequenceDetailPage() {
       {/* Back */}
       <button
         onClick={() => navigate('/email-sequences')}
-        className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground/80"
       >
         <ArrowLeft className="w-4 h-4" /> Back to Sequences
       </button>
 
       {/* Header */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="rounded-2xl border border-border/60 bg-white p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-xl font-bold text-gray-900">{seq.name}</h1>
-            {seq.description && <p className="text-sm text-gray-500 mt-0.5">{seq.description}</p>}
+            <h1 className="text-xl font-bold text-foreground">{seq.name}</h1>
+            {seq.description && <p className="text-sm text-muted-foreground mt-0.5">{seq.description}</p>}
           </div>
           <div className="flex items-center gap-3">
             <span className={cn(
               'rounded-full px-2.5 py-0.5 text-xs font-medium',
               seq.status === 'active' ? 'bg-green-50 text-green-700'
               : seq.status === 'paused' ? 'bg-amber-50 text-amber-700'
-              : seq.status === 'draft' ? 'bg-gray-100 text-gray-600'
+              : seq.status === 'draft' ? 'bg-muted text-foreground/70'
               : 'bg-red-50 text-red-400'
             )}>
               {seq.status}
@@ -469,7 +469,7 @@ export default function EmailSequenceDetailPage() {
         </div>
 
         {/* Stats strip */}
-        <div className="mt-4 grid grid-cols-4 gap-4 border-t border-gray-100 pt-4">
+        <div className="mt-4 grid grid-cols-4 gap-4 border-t border-border/40 pt-4">
           {[
             { icon: <Mail className="w-4 h-4 text-indigo-400" />, label: 'Steps', value: seq.step_count },
             { icon: <Users className="w-4 h-4 text-blue-400" />, label: 'Enrolled', value: seq.enrolled_count },
@@ -477,17 +477,17 @@ export default function EmailSequenceDetailPage() {
             { icon: <MessageSquare className="w-4 h-4 text-violet-400" />, label: 'Replies', value: seq.reply_count },
           ].map(({ icon, label, value }) => (
             <div key={label} className="text-center">
-              <div className="flex items-center justify-center gap-1.5 text-xs text-gray-400 mb-1">
+              <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground/70 mb-1">
                 {icon} {label}
               </div>
-              <p className="text-xl font-bold text-gray-900">{value}</p>
+              <p className="text-xl font-bold text-foreground">{value}</p>
             </div>
           ))}
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-border/60">
         <nav className="flex">
           {tabs.map((t) => (
             <button
@@ -497,7 +497,7 @@ export default function EmailSequenceDetailPage() {
                 'border-b-2 px-5 py-3 text-sm font-medium transition-colors',
                 activeTab === t.key
                   ? 'border-indigo-600 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  : 'border-transparent text-muted-foreground hover:border-gray-300 hover:text-foreground/80'
               )}
             >
               {t.label}
@@ -510,7 +510,7 @@ export default function EmailSequenceDetailPage() {
       {activeTab === 'steps' && (
         <div className="space-y-0">
           {seq.steps.length === 0 && (
-            <div className="text-center py-10 text-gray-400">
+            <div className="text-center py-10 text-muted-foreground/70">
               <Mail className="w-10 h-10 mx-auto mb-2 text-gray-200" />
               <p className="text-sm">No steps yet. Add your first email below.</p>
             </div>
@@ -529,25 +529,25 @@ export default function EmailSequenceDetailPage() {
 
       {/* Enrollments tab */}
       {activeTab === 'enrollments' && (
-        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm">
+        <div className="bg-white rounded-xl border border-border/40 overflow-hidden shadow-sm">
           {enrollments.length === 0 ? (
             <div className="text-center py-12">
               <Users className="w-10 h-10 text-gray-200 mx-auto mb-2" />
-              <p className="text-sm text-gray-500">No leads enrolled yet</p>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-sm text-muted-foreground">No leads enrolled yet</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">
                 Open a lead and use the Sequences tab to enroll them.
               </p>
             </div>
           ) : (
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-100">
+              <thead className="bg-muted/40 border-b border-border/40">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Lead</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Step</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Next send</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Enrolled</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Lead</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Email</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Step</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Next send</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Enrolled</th>
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
@@ -555,24 +555,24 @@ export default function EmailSequenceDetailPage() {
                 {enrollments.map((e) => {
                   const statusMeta = ENROLLMENT_STATUSES.find((s) => s.value === e.status)
                   return (
-                    <tr key={e.id} className="hover:bg-gray-50">
+                    <tr key={e.id} className="hover:bg-muted/40">
                       <td className="px-4 py-3">
-                        <p className="text-sm font-medium text-gray-900">{e.lead_company ?? '—'}</p>
-                        {e.lead_contact && <p className="text-xs text-gray-500">{e.lead_contact}</p>}
+                        <p className="text-sm font-medium text-foreground">{e.lead_company ?? '—'}</p>
+                        {e.lead_contact && <p className="text-xs text-muted-foreground">{e.lead_contact}</p>}
                       </td>
-                      <td className="px-4 py-3 text-xs text-gray-500">{e.lead_email ?? '—'}</td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground">{e.lead_email ?? '—'}</td>
                       <td className="px-4 py-3">
-                        <span className={cn('rounded-full px-2 py-0.5 text-xs font-medium', statusMeta?.color ?? 'bg-gray-100 text-gray-500')}>
+                        <span className={cn('rounded-full px-2 py-0.5 text-xs font-medium', statusMeta?.color ?? 'bg-muted text-muted-foreground')}>
                           {statusMeta?.label ?? e.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-700">{e.current_step} / {seq.step_count}</td>
-                      <td className="px-4 py-3 text-xs text-gray-500">
+                      <td className="px-4 py-3 text-sm text-foreground/80">{e.current_step} / {seq.step_count}</td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground">
                         {e.next_step_at
                           ? formatDistanceToNow(new Date(e.next_step_at), { addSuffix: true })
                           : '—'}
                       </td>
-                      <td className="px-4 py-3 text-xs text-gray-400">{formatDate(e.enrolled_at)}</td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground/70">{formatDate(e.enrolled_at)}</td>
                       <td className="px-4 py-3">
                         {e.status === 'active' && (
                           <button
@@ -613,13 +613,13 @@ export default function EmailSequenceDetailPage() {
           {stats && (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
-                { label: 'Total sent', value: stats.total_sent, color: 'text-gray-900' },
+                { label: 'Total sent', value: stats.total_sent, color: 'text-foreground' },
                 { label: 'Opened', value: `${stats.total_opened} (${stats.overall_open_rate}%)`, color: 'text-blue-700' },
                 { label: 'Replied', value: `${stats.total_replied} (${stats.overall_reply_rate}%)`, color: 'text-green-700' },
                 { label: 'Unsubscribed', value: stats.unsubscribed, color: 'text-red-400' },
               ].map(({ label, value, color }) => (
-                <div key={label} className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm text-center">
-                  <p className="text-xs text-gray-500 mb-1">{label}</p>
+                <div key={label} className="bg-white rounded-xl border border-border/40 p-4 shadow-sm text-center">
+                  <p className="text-xs text-muted-foreground mb-1">{label}</p>
                   <p className={`text-xl font-bold ${color}`}>{value}</p>
                 </div>
               ))}
@@ -628,31 +628,31 @@ export default function EmailSequenceDetailPage() {
 
           {/* Per-step breakdown */}
           {stats && stats.per_step.length > 0 ? (
-            <div className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm">
-              <div className="px-5 py-4 border-b border-gray-100">
-                <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+            <div className="bg-white rounded-xl border border-border/40 overflow-hidden shadow-sm">
+              <div className="px-5 py-4 border-b border-border/40">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                   <BarChart2 className="w-4 h-4 text-indigo-500" />
                   Per-Step Performance
                 </h3>
               </div>
               <table className="w-full">
-                <thead className="bg-gray-50">
+                <thead className="bg-muted/40">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Step</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Subject</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Sent</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Opened</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Open %</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Replied</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Reply %</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Step</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Subject</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Sent</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Opened</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Open %</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Replied</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Reply %</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {stats.per_step.map((s) => (
-                    <tr key={s.step_order} className="hover:bg-gray-50">
+                    <tr key={s.step_order} className="hover:bg-muted/40">
                       <td className="px-4 py-3 text-sm font-bold text-indigo-600">#{s.step_order}</td>
-                      <td className="px-4 py-3 text-sm text-gray-700 max-w-xs truncate">{s.subject}</td>
-                      <td className="px-4 py-3 text-sm text-right text-gray-700">{s.sent}</td>
+                      <td className="px-4 py-3 text-sm text-foreground/80 max-w-xs truncate">{s.subject}</td>
+                      <td className="px-4 py-3 text-sm text-right text-foreground/80">{s.sent}</td>
                       <td className="px-4 py-3 text-sm text-right text-blue-700">{s.opened}</td>
                       <td className="px-4 py-3 text-sm text-right font-medium text-blue-600">{s.open_rate}%</td>
                       <td className="px-4 py-3 text-sm text-right text-green-700">{s.replied}</td>
@@ -663,9 +663,9 @@ export default function EmailSequenceDetailPage() {
               </table>
             </div>
           ) : (
-            <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
+            <div className="text-center py-12 bg-white rounded-xl border border-border/40">
               <BarChart2 className="w-10 h-10 text-gray-200 mx-auto mb-2" />
-              <p className="text-sm text-gray-500">No stats yet — data appears once emails are sent.</p>
+              <p className="text-sm text-muted-foreground">No stats yet — data appears once emails are sent.</p>
             </div>
           )}
         </div>

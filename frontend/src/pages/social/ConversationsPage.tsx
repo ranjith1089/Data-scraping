@@ -26,7 +26,7 @@ export default function ConversationsPage() {
   return (
     <div className="max-w-7xl mx-auto h-[calc(100vh-7rem)] flex flex-col">
       <div className="mb-4">
-        <h1 className="text-3xl font-bold tracking-tight">Conversations</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight text-foreground">Conversations</h1>
         <p className="text-muted-foreground mt-1">
           Every Instagram DM thread, in one inbox.
         </p>
@@ -101,7 +101,7 @@ function ConvRow({
     <button
       onClick={onClick}
       className={cn(
-        'w-full text-left px-3 py-3 border-b border-gray-100 hover:bg-muted/40',
+        'w-full text-left px-3 py-3 border-b border-border/40 hover:bg-muted/40',
         active && 'bg-indigo-50',
       )}
     >
@@ -118,7 +118,7 @@ function ConvRow({
       <p className="text-xs text-muted-foreground truncate mt-0.5">
         {c.last_message_preview || '—'}
       </p>
-      <p className="text-[11px] text-gray-400 mt-0.5">
+      <p className="text-[11px] text-muted-foreground/70 mt-0.5">
         {c.last_message_at
           ? new Date(c.last_message_at).toLocaleString()
           : 'No messages'}
@@ -213,14 +213,14 @@ function ThreadPane({ id }: { id: string | null }) {
                 'max-w-[80%] rounded-lg px-3 py-2 text-sm',
                 m.direction === 'outbound'
                   ? 'ml-auto bg-indigo-600 text-white'
-                  : 'mr-auto bg-white border border-gray-200',
+                  : 'mr-auto bg-white border border-border/60',
               )}
             >
               <p className="whitespace-pre-wrap break-words">{m.content || '(no content)'}</p>
               <p
                 className={cn(
                   'text-[10px] mt-1',
-                  m.direction === 'outbound' ? 'text-indigo-200' : 'text-gray-400',
+                  m.direction === 'outbound' ? 'text-indigo-200' : 'text-muted-foreground/70',
                 )}
               >
                 {m.source} ·{' '}

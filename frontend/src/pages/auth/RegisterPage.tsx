@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Zap, Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Sparkles, Eye, EyeOff, Loader2 } from 'lucide-react'
 import api from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
 import { cn } from '@/lib/utils'
@@ -98,21 +98,22 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 px-4 py-8">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-indigo-950 via-violet-950 to-slate-900 px-4 py-8">
       {/* Background decoration */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-40 -top-40 h-80 w-80 rounded-full bg-indigo-500/10 blur-3xl" />
-        <div className="absolute -bottom-40 -right-40 h-80 w-80 rounded-full bg-purple-500/10 blur-3xl" />
+        <div className="absolute -left-40 -top-40 h-[500px] w-[500px] rounded-full bg-indigo-600/15 blur-3xl" />
+        <div className="absolute -bottom-40 -right-40 h-[500px] w-[500px] rounded-full bg-violet-600/15 blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-96 w-96 rounded-full bg-purple-700/10 blur-3xl" />
       </div>
 
       <div className="relative w-full max-w-md">
         {/* Logo */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/30">
-            <Zap className="h-7 w-7 text-white" />
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-xl shadow-indigo-500/40 ring-1 ring-white/10">
+            <Sparkles className="h-7 w-7 text-white" strokeWidth={1.8} />
           </div>
-          <h1 className="text-2xl font-bold text-white">
-            AveonApex <span className="text-indigo-400">AI</span>
+          <h1 className="text-2xl font-extrabold text-white tracking-tight">
+            Aveon<span className="text-indigo-400">Apex</span>
           </h1>
           <p className="mt-1 text-sm text-slate-400">
             Create your workspace in seconds
@@ -120,9 +121,9 @@ export default function RegisterPage() {
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-sm">
-          <h2 className="mb-1 text-xl font-semibold text-white">
-            Create your account
+        <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-8 shadow-2xl backdrop-blur-xl">
+          <h2 className="mb-1 text-xl font-extrabold text-white tracking-tight">
+            Create your account 🚀
           </h2>
           <p className="mb-6 text-sm text-slate-400">
             Set up your team workspace and start closing deals

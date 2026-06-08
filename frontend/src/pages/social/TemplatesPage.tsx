@@ -40,7 +40,7 @@ export default function TemplatesPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">DM templates</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground">DM templates</h1>
           <p className="text-muted-foreground mt-1">
             Reusable DM bodies. Reference them by name from any automation's
             send_dm action.

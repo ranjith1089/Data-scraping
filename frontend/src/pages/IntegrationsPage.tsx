@@ -128,15 +128,16 @@ export default function IntegrationsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between">
-        <div className="flex items-center gap-2.5">
-          <Plug className="h-6 w-6 text-gray-400" />
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Integrations</h1>
-            <p className="mt-0.5 text-sm text-gray-500">
-              Connect AveonApex to your ad platforms, messaging and analytics
-              tools.
-            </p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm">
+              <Plug className="h-4 w-4 text-white" />
+            </div>
+            Integrations
+          </h1>
+          <p className="mt-0.5 text-sm text-muted-foreground ml-10">
+            Connect AveonApex to your ad platforms, messaging and analytics tools.
+          </p>
         </div>
 
         {/* Stat pills */}
@@ -153,18 +154,18 @@ export default function IntegrationsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-1">
+      <div className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-1.5">
           {CATEGORIES.map((cat) => (
             <button
               key={cat.key}
               type="button"
               onClick={() => setCategory(cat.key)}
               className={cn(
-                'rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
+                'rounded-full px-3.5 py-1.5 text-xs font-semibold border transition-all',
                 category === cat.key
-                  ? 'bg-indigo-50 text-indigo-700'
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700',
+                  ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white border-transparent shadow-sm'
+                  : 'bg-white border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted',
               )}
             >
               {cat.label}
@@ -173,29 +174,28 @@ export default function IntegrationsPage() {
         </div>
 
         <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search integrations..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-8 pr-3 text-sm outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+            className="w-full rounded-xl border border-border bg-white py-2 pl-8 pr-3 text-sm outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
           />
         </div>
       </div>
 
       {/* Info banner for Phase 1 */}
-      <div className="flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 px-5 py-4">
+      <div className="flex items-start gap-3 rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4 ring-1 ring-inset ring-blue-200">
         <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600" />
         <div>
-          <p className="text-sm font-medium text-blue-900">
+          <p className="text-sm font-bold text-blue-900">
             Phase 1 — foundation ready
           </p>
           <p className="mt-0.5 text-xs text-blue-700">
-            You can now register integrations and they&apos;ll be stored
+            You can now register integrations and they'll be stored
             securely (Fernet-encrypted). Provider-specific OAuth flows,
-            webhook endpoints and field mapping will light up in the next
-            phases.
+            webhook endpoints and field mapping will light up in the next phases.
           </p>
         </div>
       </div>
@@ -206,11 +206,12 @@ export default function IntegrationsPage() {
           <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
         </div>
       ) : filteredProviders.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-gray-200 bg-white py-20">
-          <Plug className="h-10 w-10 text-gray-200" />
-          <p className="mt-3 text-sm font-medium text-gray-400">
-            No providers match your filters
-          </p>
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 bg-muted/30 py-20">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-md mb-4">
+            <Plug className="h-6 w-6 text-white" />
+          </div>
+          <p className="text-sm font-bold text-foreground">No providers match your filters</p>
+          <p className="mt-1 text-xs text-muted-foreground">Try a different category or clear your search</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -293,20 +294,20 @@ function StatPill({
   tone: 'green' | 'red'
 }) {
   const tones: Record<'green' | 'red', string> = {
-    green: 'border-green-200 bg-green-50 text-green-700',
-    red: 'border-red-200 bg-red-50 text-red-700',
+    green: 'border-emerald-200 bg-emerald-50 text-emerald-700 ring-emerald-200',
+    red: 'border-rose-200 bg-rose-50 text-rose-700 ring-rose-200',
   }
   const Icon = tone === 'green' ? CheckCircle2 : AlertCircle
   return (
     <div
       className={cn(
-        'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium',
+        'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold ring-1 ring-inset',
         tones[tone],
       )}
     >
       <Icon className="h-3.5 w-3.5" />
       <span>
-        {label}: <span className="font-semibold">{value}</span>
+        {label}: <span className="font-bold">{value}</span>
       </span>
     </div>
   )
@@ -674,31 +675,26 @@ function ManageIntegrationModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-xl bg-white shadow-xl"
+        className="w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+        <div className="flex items-center justify-between border-b border-border/60 bg-muted/30 px-5 py-4">
           <div className="flex items-center gap-3">
             {meta && (
-              <div
-                className={cn(
-                  'flex h-9 w-9 items-center justify-center rounded-lg',
-                  meta.color,
-                )}
-              >
-                <Plug className="h-4 w-4" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-sm">
+                <Plug className="h-4 w-4 text-white" />
               </div>
             )}
             <div>
-              <h2 className="text-base font-semibold text-gray-900">
+              <h2 className="text-base font-bold text-foreground">
                 {integration.display_name}
               </h2>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-muted-foreground">
                 {meta?.name ?? integration.provider}
               </p>
             </div>
@@ -706,7 +702,7 @@ function ManageIntegrationModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            className="rounded-xl p-1.5 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
           >
             <X className="h-4 w-4" />
           </button>
@@ -736,19 +732,17 @@ function ManageIntegrationModal({
           )}
 
           {fieldDefs.length > 0 ? (
-            <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <div className="space-y-3 rounded-2xl border border-border/60 bg-muted/30 p-4">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-                  {integration.has_credentials
-                    ? 'Update credentials'
-                    : 'Enter credentials'}
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  {integration.has_credentials ? 'Update credentials' : 'Enter credentials'}
                 </p>
                 {integration.has_credentials && (
                   <button
                     type="button"
                     onClick={onTest}
                     disabled={testing}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 bg-white px-2.5 py-1 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all disabled:opacity-50"
                   >
                     {testing && <Loader2 className="h-3 w-3 animate-spin" />}
                     Test connection
@@ -758,10 +752,10 @@ function ManageIntegrationModal({
 
               {fieldDefs.map((field) => (
                 <div key={field.key} className="space-y-1">
-                  <label className="block text-[11px] font-medium text-gray-600">
+                  <label className="block text-[11px] font-semibold text-foreground/70">
                     {field.label}
                     {field.required && (
-                      <span className="ml-0.5 text-red-500">*</span>
+                      <span className="ml-0.5 text-rose-500">*</span>
                     )}
                   </label>
                   <input
@@ -770,28 +764,27 @@ function ManageIntegrationModal({
                     onChange={(e) => handleFieldChange(field.key, e.target.value)}
                     placeholder={field.placeholder}
                     autoComplete="off"
-                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                    className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
                   />
                   {field.help && (
-                    <p className="text-[11px] text-gray-400">{field.help}</p>
+                    <p className="text-[11px] text-muted-foreground">{field.help}</p>
                   )}
                 </div>
               ))}
 
               {formError && (
-                <p className="text-xs text-red-600">{formError}</p>
+                <p className="text-xs text-rose-600 font-medium">{formError}</p>
               )}
 
               <div className="flex items-center justify-between gap-2 pt-1">
-                <p className="text-[11px] text-gray-400">
-                  Credentials are encrypted at rest with Fernet before hitting
-                  the database.
+                <p className="text-[11px] text-muted-foreground">
+                  Credentials are encrypted with Fernet before storage.
                 </p>
                 <button
                   type="button"
                   onClick={handleSave}
                   disabled={savingCredentials}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:opacity-90 transition-all disabled:opacity-50"
                 >
                   {savingCredentials && (
                     <Loader2 className="h-3 w-3 animate-spin" />
@@ -801,7 +794,7 @@ function ManageIntegrationModal({
               </div>
             </div>
           ) : (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700">
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-200">
               Provider-specific configuration (OAuth, webhook URLs, field
               mapping, templates) will be available in the next phase.
             </div>
@@ -809,15 +802,15 @@ function ManageIntegrationModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-2 border-t border-gray-100 px-5 py-4">
+        <div className="flex items-center justify-end gap-2 border-t border-border/60 px-5 py-4">
           {confirmDisconnect ? (
             <>
-              <span className="text-xs text-gray-500">Remove integration?</span>
+              <span className="text-xs font-medium text-muted-foreground">Remove integration?</span>
               <button
                 type="button"
                 onClick={onDisconnect}
                 disabled={disconnecting}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 px-3 py-2 text-xs font-bold text-white shadow-sm hover:opacity-90 transition-all disabled:opacity-50"
               >
                 {disconnecting && <Loader2 className="h-3 w-3 animate-spin" />}
                 Yes, disconnect
@@ -825,7 +818,7 @@ function ManageIntegrationModal({
               <button
                 type="button"
                 onClick={() => setConfirmDisconnect(false)}
-                className="rounded-lg px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100"
+                className="rounded-xl border border-border/60 px-3 py-2 text-xs font-semibold text-muted-foreground hover:bg-muted transition-all"
               >
                 Cancel
               </button>
@@ -835,14 +828,14 @@ function ManageIntegrationModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                className="rounded-xl border border-border/60 bg-white px-4 py-2 text-xs font-semibold text-muted-foreground hover:bg-muted transition-all"
               >
                 Close
               </button>
               <button
                 type="button"
                 onClick={() => setConfirmDisconnect(true)}
-                className="rounded-lg bg-red-50 px-4 py-2 text-xs font-medium text-red-600 transition-colors hover:bg-red-100"
+                className="rounded-xl bg-rose-50 px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-100 transition-all ring-1 ring-inset ring-rose-200"
               >
                 Disconnect
               </button>
@@ -865,13 +858,13 @@ function Field({
 }) {
   return (
     <div>
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-0.5">
         {label}
       </p>
       <p
         className={cn(
-          'mt-1 break-words text-sm',
-          error ? 'text-red-600' : 'text-gray-900',
+          'break-words text-sm font-medium',
+          error ? 'text-rose-600' : 'text-foreground',
         )}
       >
         {value}

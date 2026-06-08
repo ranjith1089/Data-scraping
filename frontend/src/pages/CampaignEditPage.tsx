@@ -21,7 +21,7 @@ export default function CampaignEditPage() {
   if (!campaign) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <p className="text-sm text-gray-500">Campaign not found.</p>
+        <p className="text-sm text-muted-foreground">Campaign not found.</p>
         <button
           onClick={() => navigate('/campaigns')}
           className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700"
@@ -71,15 +71,15 @@ export default function CampaignEditPage() {
     <div className="space-y-6">
       <button
         onClick={() => navigate(`/campaigns/${id}`)}
-        className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 transition-colors hover:text-gray-700"
+        className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground/80"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Campaign
       </button>
 
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Edit Campaign</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-foreground">Edit Campaign</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Update settings and steps for <span className="font-medium">{campaign.name}</span>
         </p>
       </div>

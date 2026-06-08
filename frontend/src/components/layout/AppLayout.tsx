@@ -18,8 +18,10 @@ export default function AppLayout() {
         )}
       >
         <TopBar />
-        <main className="flex-1 overflow-auto p-6">
-          <Outlet />
+        <main className="flex-1 overflow-auto bg-dot-pattern min-h-0">
+          <div className="p-5 md:p-6 page-enter">
+            <Outlet />
+          </div>
         </main>
       </div>
       <AIChatPanel />

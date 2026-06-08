@@ -61,7 +61,7 @@ export default function AutomationsPage() {
     <div className="max-w-5xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Automations</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground">Automations</h1>
           <p className="text-muted-foreground mt-1">
             Trigger → Condition → Action rules that run when something happens
             on your Instagram.
@@ -328,7 +328,7 @@ function RuleEditor({
       <div className="fixed inset-0 z-40 bg-black/40" onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-white shadow-2xl">
-          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white">
+          <div className="px-6 py-4 border-b border-border/40 flex items-center justify-between sticky top-0 bg-white">
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-indigo-600" />
               <h2 className="text-lg font-semibold">
@@ -343,7 +343,7 @@ function RuleEditor({
           <div className="p-6 space-y-6">
             {/* Name */}
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-foreground/80 mb-1">
                 Name <span className="text-red-500">*</span>
               </label>
               <Input
@@ -355,7 +355,7 @@ function RuleEditor({
 
             {/* Trigger */}
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-foreground/80 mb-1">
                 When this happens (Trigger)
               </label>
               <select
@@ -373,7 +373,7 @@ function RuleEditor({
 
             {/* Conditions */}
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-foreground/80 mb-1">
                 Match keywords (comma-separated, case-insensitive)
               </label>
               <Input
@@ -381,7 +381,7 @@ function RuleEditor({
                 onChange={(e) => setKeywords(e.target.value)}
                 placeholder="course, courses, join"
               />
-              <p className="text-[11px] text-gray-400 mt-1">
+              <p className="text-[11px] text-muted-foreground/70 mt-1">
                 Leave empty to match every event of this type.
               </p>
             </div>
@@ -389,7 +389,7 @@ function RuleEditor({
             {/* Actions */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-xs font-medium text-gray-700">
+                <label className="block text-xs font-medium text-foreground/80">
                   Then do this (Actions)
                 </label>
                 <Button
@@ -543,12 +543,12 @@ function RuleEditor({
             {/* Advanced */}
             <Card>
               <CardContent className="p-3 space-y-2">
-                <p className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
+                <p className="text-xs font-medium text-foreground/80 flex items-center gap-1.5">
                   <Filter className="h-3 w-3" /> Advanced
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[11px] text-gray-500">
+                    <label className="text-[11px] text-muted-foreground">
                       Cooldown (minutes per recipient)
                     </label>
                     <Input
@@ -560,7 +560,7 @@ function RuleEditor({
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] text-gray-500">
+                    <label className="text-[11px] text-muted-foreground">
                       Priority (lower wins)
                     </label>
                     <Input
@@ -576,7 +576,7 @@ function RuleEditor({
             </Card>
           </div>
 
-          <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-2 sticky bottom-0 bg-white">
+          <div className="px-6 py-4 border-t border-border/40 flex items-center justify-end gap-2 sticky bottom-0 bg-white">
             <Button variant="outline" onClick={handleTest} disabled={!existing}>
               Test
             </Button>

@@ -28,7 +28,7 @@ import toast from 'react-hot-toast'
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const STATUS_OPTIONS = [
-  { value: 'draft',    label: 'Draft',    color: 'bg-gray-100 text-gray-700' },
+  { value: 'draft',    label: 'Draft',    color: 'bg-muted text-foreground/80' },
   { value: 'sent',     label: 'Sent',     color: 'bg-blue-50 text-blue-700' },
   { value: 'accepted', label: 'Accepted', color: 'bg-green-50 text-green-700' },
   { value: 'rejected', label: 'Rejected', color: 'bg-red-50 text-red-600' },
@@ -73,7 +73,7 @@ export default function ProposalDetailPage() {
   if (!proposal) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <p className="text-sm text-gray-500">Proposal not found.</p>
+        <p className="text-sm text-muted-foreground">Proposal not found.</p>
         <button
           onClick={() => navigate('/proposals')}
           className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-indigo-600"
@@ -129,14 +129,14 @@ export default function ProposalDetailPage() {
       {/* Back */}
       <button
         onClick={() => navigate('/proposals')}
-        className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-700"
+        className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground/80"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Proposals
       </button>
 
       {/* Header card */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="rounded-2xl border border-border/60 bg-white p-6">
         <div className="flex items-start justify-between gap-4">
           {/* Left: icon + title */}
           <div className="flex items-start gap-4">
@@ -154,21 +154,21 @@ export default function ProposalDetailPage() {
                       if (e.key === 'Enter') saveTitle()
                       if (e.key === 'Escape') setEditingTitle(false)
                     }}
-                    className="rounded-lg border border-indigo-300 px-3 py-1.5 text-lg font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    className="rounded-lg border border-indigo-300 px-3 py-1.5 text-lg font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-400"
                   />
                   <button onClick={saveTitle} className="rounded-lg bg-indigo-600 p-1.5 text-white hover:bg-indigo-700">
                     <Save className="h-4 w-4" />
                   </button>
-                  <button onClick={() => setEditingTitle(false)} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100">
+                  <button onClick={() => setEditingTitle(false)} className="rounded-lg p-1.5 text-muted-foreground/70 hover:bg-muted">
                     <X className="h-4 w-4" />
                   </button>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-bold text-gray-900">{proposal.title}</h1>
+                  <h1 className="text-xl font-bold text-foreground">{proposal.title}</h1>
                   <button
                     onClick={() => { setTitleDraft(proposal.title); setEditingTitle(true) }}
-                    className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                    className="rounded p-1 text-muted-foreground/70 hover:bg-muted hover:text-foreground/70"
                   >
                     <Pencil className="h-3.5 w-3.5" />
                   </button>
@@ -176,7 +176,7 @@ export default function ProposalDetailPage() {
               )}
 
               {/* Meta row */}
-              <div className="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-gray-500">
+              <div className="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                 {proposal.lead_company && (
                   <span className="flex items-center gap-1">
                     <Building2 className="h-3.5 w-3.5" />
@@ -208,14 +208,14 @@ export default function ProposalDetailPage() {
                 <ChevronDown className="h-3 w-3" />
               </button>
               {showStatusMenu && (
-                <div className="absolute right-0 top-8 z-10 w-36 rounded-xl border border-gray-200 bg-white py-1 shadow-lg">
+                <div className="absolute right-0 top-8 z-10 w-36 rounded-2xl border border-border/60 bg-white py-1 shadow-lg">
                   {STATUS_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
                       onClick={() => changeStatus(opt.value)}
                       className={cn(
-                        'flex w-full items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-gray-50',
-                        opt.value === proposal.status ? 'text-indigo-700' : 'text-gray-700'
+                        'flex w-full items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-muted/40',
+                        opt.value === proposal.status ? 'text-indigo-700' : 'text-foreground/80'
                       )}
                     >
                       {opt.value === proposal.status && <Check className="h-3 w-3" />}
@@ -232,7 +232,7 @@ export default function ProposalDetailPage() {
             <button
               onClick={() => openProposalHtmlExport(proposal.id)}
               title="Open in browser → Ctrl+P to save as PDF"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 px-3 py-2 text-xs font-medium text-foreground/70 hover:bg-muted/40"
             >
               <Globe className="h-3.5 w-3.5" />
               PDF (HTML)
@@ -241,7 +241,7 @@ export default function ProposalDetailPage() {
             {/* Export: Word */}
             <button
               onClick={() => downloadProposalDocx(proposal.id)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 px-3 py-2 text-xs font-medium text-foreground/70 hover:bg-muted/40"
             >
               <Download className="h-3.5 w-3.5" />
               Word (.docx)
@@ -259,7 +259,7 @@ export default function ProposalDetailPage() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-border/60">
         <nav className="flex gap-0">
           {(['preview', 'sections'] as const).map((tab) => (
             <button
@@ -269,7 +269,7 @@ export default function ProposalDetailPage() {
                 'border-b-2 px-6 py-3 text-sm font-medium capitalize transition-colors',
                 activeTab === tab
                   ? 'border-indigo-600 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  : 'border-transparent text-muted-foreground hover:border-gray-300 hover:text-foreground/80'
               )}
             >
               {tab === 'preview' ? 'Proposal Preview' : 'Edit Sections'}
@@ -280,7 +280,7 @@ export default function ProposalDetailPage() {
 
       {/* Preview tab — render the stored HTML in an iframe */}
       {activeTab === 'preview' && (
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-border/60 bg-white shadow-sm">
           {proposal.content_html ? (
             <iframe
               srcDoc={proposal.content_html}
@@ -289,7 +289,7 @@ export default function ProposalDetailPage() {
               sandbox="allow-same-origin"
             />
           ) : (
-            <div className="flex items-center justify-center py-24 text-sm text-gray-400">
+            <div className="flex items-center justify-center py-24 text-sm text-muted-foreground/70">
               No preview available. The HTML may not have been generated yet.
             </div>
           )}
@@ -346,7 +346,7 @@ function SectionsEditor({
   ]
 
   return (
-    <div className="space-y-5 rounded-xl border border-gray-200 bg-white p-6">
+    <div className="space-y-5 rounded-2xl border border-border/60 bg-white p-6">
       {/* Save banner */}
       {dirty && (
         <div className="flex items-center justify-between rounded-lg bg-amber-50 px-4 py-3">
@@ -364,8 +364,8 @@ function SectionsEditor({
 
       {/* Deliverables */}
       <div>
-        <label className="mb-1.5 block text-sm font-semibold text-gray-700">Key Deliverables</label>
-        <p className="mb-2 text-xs text-gray-400">One deliverable per line</p>
+        <label className="mb-1.5 block text-sm font-semibold text-foreground/80">Key Deliverables</label>
+        <p className="mb-2 text-xs text-muted-foreground/70">One deliverable per line</p>
         <textarea
           rows={4}
           value={((secs.key_deliverables as string[]) || []).join('\n')}
@@ -378,8 +378,8 @@ function SectionsEditor({
 
       {/* Pricing */}
       <div>
-        <label className="mb-1.5 block text-sm font-semibold text-gray-700">Pricing</label>
-        <p className="mb-2 text-xs text-gray-400">
+        <label className="mb-1.5 block text-sm font-semibold text-foreground/80">Pricing</label>
+        <p className="mb-2 text-xs text-muted-foreground/70">
           Edit as JSON: {`[{"item": "...", "description": "...", "price": "₹X,XXX"}]`}
         </p>
         <textarea
@@ -399,7 +399,7 @@ function SectionsEditor({
       {/* Text sections */}
       {SECTION_FIELDS.map(({ key, label }) => (
         <div key={key}>
-          <label className="mb-1.5 block text-sm font-semibold text-gray-700">{label}</label>
+          <label className="mb-1.5 block text-sm font-semibold text-foreground/80">{label}</label>
           <textarea
             rows={5}
             value={(secs[key] as string) || ''}

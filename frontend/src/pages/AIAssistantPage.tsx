@@ -103,16 +103,16 @@ export default function AIAssistantPage() {
   return (
     <div className="flex h-[calc(100vh-7rem)] gap-6">
       {/* Left: Chat Interface (70%) */}
-      <div className="flex flex-[7] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white">
+      <div className="flex flex-[7] flex-col overflow-hidden rounded-2xl border border-border/60 bg-white shadow-sm">
         {/* Header */}
-        <div className="flex items-center gap-3 border-b border-gray-200 bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20">
+        <div className="flex items-center gap-3 border-b border-white/20 bg-gradient-to-r from-violet-600 to-indigo-600 px-6 py-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
             <Brain className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-white">AveonApex Assistant</h1>
-            <p className="text-xs text-purple-200">
-              {isStreaming ? 'Thinking...' : 'Ask me anything about your leads, campaigns, and pipeline'}
+            <h1 className="text-base font-extrabold text-white tracking-tight">AveonApex Assistant</h1>
+            <p className="text-xs text-violet-200 mt-0.5">
+              {isStreaming ? '⚡ Thinking...' : 'Ask me anything about your leads, campaigns, and pipeline'}
             </p>
           </div>
         </div>
@@ -140,13 +140,13 @@ export default function AIAssistantPage() {
                     onClick={() => handleChipClick(chip.label)}
                     disabled={isStreaming}
                     className={cn(
-                      'inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white',
-                      'px-4 py-2.5 text-sm text-gray-700 transition-all',
-                      'hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700 hover:shadow-sm',
+                      'inline-flex items-center gap-2 rounded-xl border border-border/60 bg-white',
+                      'px-4 py-2.5 text-sm font-medium text-foreground transition-all shadow-sm',
+                      'hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700 hover:shadow-md',
                       'disabled:cursor-not-allowed disabled:opacity-40'
                     )}
                   >
-                    <chip.icon className="h-4 w-4" />
+                    <chip.icon className="h-4 w-4 text-violet-500" />
                     {chip.label}
                   </button>
                 ))}
@@ -179,8 +179,8 @@ export default function AIAssistantPage() {
                       className={cn(
                         'rounded-2xl px-4 py-3 text-sm leading-relaxed',
                         isUser
-                          ? 'rounded-br-md bg-blue-600 text-white'
-                          : 'rounded-bl-md bg-gray-100 text-gray-800'
+                          ? 'rounded-br-md bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-200'
+                          : 'rounded-bl-md bg-muted/60 text-foreground'
                       )}
                     >
                       {isEmptyAssistant && isStreaming ? (
@@ -205,7 +205,7 @@ export default function AIAssistantPage() {
         </div>
 
         {/* Input */}
-        <div className="border-t border-gray-200 bg-gray-50 px-6 py-4">
+        <div className="border-t border-border/60 bg-muted/20 px-6 py-4">
           <div className="flex items-center gap-3">
             <input
               ref={inputRef}
@@ -216,8 +216,8 @@ export default function AIAssistantPage() {
               placeholder="Ask AveonApex anything..."
               disabled={isStreaming}
               className={cn(
-                'flex-1 rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm',
-                'placeholder:text-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100',
+                'flex-1 rounded-xl border border-border/60 bg-white px-4 py-2.5 text-sm',
+                'placeholder:text-muted-foreground/50 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10',
                 'disabled:cursor-not-allowed disabled:opacity-60'
               )}
             />
@@ -225,9 +225,9 @@ export default function AIAssistantPage() {
               onClick={handleSend}
               disabled={!input.trim() || isStreaming}
               className={cn(
-                'flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl',
-                'bg-gradient-to-br from-purple-600 to-indigo-600 text-white',
-                'transition-all hover:shadow-md disabled:opacity-40 disabled:hover:shadow-none'
+                'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl',
+                'bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-200',
+                'transition-all hover:opacity-90 hover:-translate-y-px disabled:opacity-40 disabled:hover:translate-y-0'
               )}
               aria-label="Send message"
             >
@@ -242,10 +242,10 @@ export default function AIAssistantPage() {
       </div>
 
       {/* Right: Context Sidebar (30%) */}
-      <div className="flex flex-[3] flex-col gap-4 overflow-y-auto">
+      <div className="flex flex-[3] flex-col gap-4 overflow-y-auto scrollbar-thin">
         {/* Quick Stats */}
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
-          <h3 className="mb-4 text-sm font-semibold text-gray-900">Quick Stats</h3>
+        <div className="rounded-2xl border border-border/60 bg-white shadow-sm p-5">
+          <h3 className="mb-4 text-sm font-bold text-foreground">Quick Stats</h3>
           <div className="space-y-3">
             <StatRow
               icon={Users}
@@ -272,8 +272,8 @@ export default function AIAssistantPage() {
         </div>
 
         {/* Recent Hot Leads */}
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
-          <h3 className="mb-4 text-sm font-semibold text-gray-900">Recent Hot Leads</h3>
+        <div className="rounded-2xl border border-border/60 bg-white shadow-sm p-5">
+          <h3 className="mb-4 text-sm font-bold text-foreground">Top Performing Sectors</h3>
           {dashboardData?.top_performing_sectors && dashboardData.top_performing_sectors.length > 0 ? (
             <div className="space-y-2">
               {dashboardData.top_performing_sectors.slice(0, 5).map((sector) => (
@@ -302,17 +302,17 @@ export default function AIAssistantPage() {
         </div>
 
         {/* Suggested Questions */}
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
-          <h3 className="mb-4 text-sm font-semibold text-gray-900">Suggested Questions</h3>
-          <div className="space-y-1.5">
+        <div className="rounded-2xl border border-border/60 bg-white shadow-sm p-5">
+          <h3 className="mb-3 text-sm font-bold text-foreground">Suggested Questions</h3>
+          <div className="space-y-1">
             {SUGGESTED_QUESTIONS.map((question) => (
               <button
                 key={question}
                 onClick={() => handleChipClick(question)}
                 disabled={isStreaming}
-                className="w-full rounded-lg px-3 py-2 text-left text-xs text-gray-600 transition-colors hover:bg-purple-50 hover:text-purple-700 disabled:cursor-not-allowed disabled:opacity-40"
+                className="w-full rounded-xl px-3 py-2.5 text-left text-xs font-medium text-muted-foreground transition-all hover:bg-violet-50 hover:text-violet-700 disabled:cursor-not-allowed disabled:opacity-40 border border-transparent hover:border-violet-100"
               >
-                {question}
+                💬 {question}
               </button>
             ))}
           </div>
@@ -337,12 +337,12 @@ function StatRow({
 }) {
   return (
     <div className="flex items-center gap-3">
-      <div className={cn('flex h-9 w-9 items-center justify-center rounded-lg', bgColor)}>
+      <div className={cn('flex h-9 w-9 items-center justify-center rounded-xl', bgColor)}>
         <Icon className={cn('h-4 w-4', iconColor)} />
       </div>
       <div className="flex-1">
-        <p className="text-xs text-gray-500">{label}</p>
-        <p className="text-sm font-semibold text-gray-900">{value}</p>
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="text-sm font-bold text-foreground">{value}</p>
       </div>
     </div>
   )

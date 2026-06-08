@@ -36,10 +36,10 @@ export default function AdminTenantsPage() {
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">
+              <h1 className="text-xl font-semibold text-foreground">
                 Tenant management
               </h1>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 Platform-level controls for every organisation on AveonApex
               </p>
             </div>
@@ -56,15 +56,15 @@ export default function AdminTenantsPage() {
       </div>
 
       {/* Filter bar */}
-      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border/60 bg-white p-3 shadow-sm">
         <div className="relative flex-1 min-w-[220px]">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
           <input
             type="text"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search by name or slug..."
-            className="w-full rounded-lg border border-gray-200 bg-white pl-9 pr-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="w-full rounded-lg border border-border/60 bg-white pl-9 pr-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           />
         </div>
 
@@ -73,7 +73,7 @@ export default function AdminTenantsPage() {
           onChange={(e) =>
             setStatusFilter(e.target.value as TenantStatus | '')
           }
-          className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          className="rounded-lg border border-border/60 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
         >
           <option value="">All statuses</option>
           <option value="active">Active</option>
@@ -81,7 +81,7 @@ export default function AdminTenantsPage() {
           <option value="cancelled">Cancelled</option>
         </select>
 
-        <div className="text-xs text-gray-400">
+        <div className="text-xs text-muted-foreground/70">
           {total} tenant{total === 1 ? '' : 's'}
         </div>
       </div>

@@ -433,7 +433,7 @@ export default function LeadDetailPage() {
   if (!lead) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <p className="text-sm text-gray-500">Lead not found</p>
+        <p className="text-sm text-muted-foreground">Lead not found</p>
         <button
           onClick={() => navigate('/leads')}
           className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700"
@@ -455,49 +455,55 @@ export default function LeadDetailPage() {
       {/* Back Button */}
       <button
         onClick={() => navigate('/leads')}
-        className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 transition-colors hover:text-gray-700"
+        className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Leads
       </button>
 
       {/* Header */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-white p-6 shadow-sm">
+        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-600" />
         <div className="flex items-start justify-between">
           <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-gray-900">{lead.company_name}</h1>
+            <div className="flex items-center gap-3 mt-1">
+              <h1 className="text-2xl font-extrabold tracking-tight text-foreground">{lead.company_name}</h1>
               <span
-                className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-                style={{ backgroundColor: `${sectorColor}15`, color: sectorColor }}
+                className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset"
+                style={{ backgroundColor: `${sectorColor}15`, color: sectorColor, '--tw-ring-color': `${sectorColor}30` } as React.CSSProperties}
               >
                 {SECTOR_NAMES[lead.sector_code] || lead.sector_code}
               </span>
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <span className={cn('inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold', scoreBadge.color)}>
-                Score: {lead.lead_score ?? 0} ({scoreBadge.label})
+              <span className={cn('inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset', scoreBadge.color)}>
+                Score: {lead.lead_score ?? 0} · {scoreBadge.label}
               </span>
               {icpBadge && (
-                <span className={cn('inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium', icpBadge.color)}>
+                <span className={cn('inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset', icpBadge.color)}>
                   ICP: {lead.icp_match}
                 </span>
               )}
               <span
-                className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-                style={{ backgroundColor: `${STAGE_COLORS[lead.stage]}15`, color: STAGE_COLORS[lead.stage] }}
+                className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset"
+                style={{ backgroundColor: `${STAGE_COLORS[lead.stage]}15`, color: STAGE_COLORS[lead.stage], '--tw-ring-color': `${STAGE_COLORS[lead.stage]}30` } as React.CSSProperties}
               >
                 {STAGE_LABELS[lead.stage] || lead.stage}
               </span>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <p className="text-sm text-gray-500">Contact: {lead.contact_name}</p>
+            {lead.contact_name && (
+              <p className="text-sm font-medium text-muted-foreground">
+                <span className="text-muted-foreground/60 text-xs">Contact</span><br />
+                {lead.contact_name}
+              </p>
+            )}
             <button
               onClick={handleEnrichLead}
               disabled={enrichLeadMutation.isPending}
               title="Auto-fill missing fields using Apollo.io + Hunter.io"
-              className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-medium text-violet-700 hover:bg-violet-100 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 px-3 py-2 text-xs font-bold text-white shadow-sm shadow-violet-200 hover:opacity-90 disabled:opacity-50 transition-all"
             >
               {enrichLeadMutation.isPending ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -516,33 +522,31 @@ export default function LeadDetailPage() {
       )}
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="flex gap-0">
-          {TABS.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={cn(
-                'border-b-2 px-6 py-3 text-sm font-medium transition-colors',
-                activeTab === tab.key
-                  ? 'border-indigo-600 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
+      <div className="flex gap-1.5 flex-wrap bg-muted/40 rounded-2xl p-1.5 border border-border/60">
+        {TABS.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={cn(
+              'px-4 py-2 rounded-xl text-sm font-semibold transition-all',
+              activeTab === tab.key
+                ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-sm'
+                : 'text-muted-foreground hover:text-foreground hover:bg-white/80'
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* Tab Content */}
-      <div className="rounded-xl border border-gray-200 bg-white">
+      <div className="rounded-2xl border border-border/60 bg-white shadow-sm">
         {/* OVERVIEW TAB */}
         {activeTab === 'overview' && (
           <div className="space-y-6 p-6">
             {/* Stage Pipeline */}
             <div>
-              <h4 className="mb-3 text-xs font-medium uppercase tracking-wider text-gray-500">Pipeline Stage</h4>
+              <h4 className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Pipeline Stage</h4>
               <div className="flex items-center gap-1">
                 {STAGES_ORDER.map((stage, idx) => {
                   const isActive = idx <= currentStageIdx && lead.stage !== 'lost'
@@ -551,11 +555,11 @@ export default function LeadDetailPage() {
                     <div key={stage} className="flex flex-1 flex-col items-center">
                       <div
                         className={cn(
-                          'h-2.5 w-full rounded-full',
-                          isLost ? 'bg-red-400' : isActive ? 'bg-indigo-500' : 'bg-gray-200'
+                          'h-2 w-full rounded-full',
+                          isLost ? 'bg-gradient-to-r from-rose-500 to-red-500' : isActive ? 'bg-gradient-to-r from-indigo-500 to-violet-500' : 'bg-muted'
                         )}
                       />
-                      <span className="mt-1 text-[10px] text-gray-400">{STAGE_LABELS[stage]}</span>
+                      <span className="mt-1 text-[10px] text-muted-foreground">{STAGE_LABELS[stage]}</span>
                     </div>
                   )
                 })}
@@ -566,16 +570,16 @@ export default function LeadDetailPage() {
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               {/* Company Info */}
               <div>
-                <h4 className="mb-3 text-xs font-medium uppercase tracking-wider text-gray-500">Company Information</h4>
-                <div className="rounded-lg border border-gray-200 bg-gray-50/50 p-4">
+                <h4 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">Company Information</h4>
+                <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
                   <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
                     <div>
-                      <dt className="flex items-center gap-1.5 text-xs text-gray-500"><Building2 className="h-3.5 w-3.5" /> Company</dt>
-                      <dd className="mt-0.5 text-sm font-medium text-gray-900">{lead.company_name}</dd>
+                      <dt className="flex items-center gap-1.5 text-xs text-muted-foreground"><Building2 className="h-3.5 w-3.5" /> Company</dt>
+                      <dd className="mt-0.5 text-sm font-medium text-foreground">{lead.company_name}</dd>
                     </div>
                     {lead.website && (
                       <div>
-                        <dt className="flex items-center gap-1.5 text-xs text-gray-500"><Globe className="h-3.5 w-3.5" /> Website</dt>
+                        <dt className="flex items-center gap-1.5 text-xs text-muted-foreground"><Globe className="h-3.5 w-3.5" /> Website</dt>
                         <dd className="mt-0.5">
                           <a
                             href={lead.website.startsWith('http') ? lead.website : `https://${lead.website}`}
@@ -589,22 +593,22 @@ export default function LeadDetailPage() {
                       </div>
                     )}
                     <div>
-                      <dt className="flex items-center gap-1.5 text-xs text-gray-500"><Users className="h-3.5 w-3.5" /> Size</dt>
-                      <dd className="mt-0.5 text-sm text-gray-900">{lead.company_size || 'N/A'}</dd>
+                      <dt className="flex items-center gap-1.5 text-xs text-muted-foreground"><Users className="h-3.5 w-3.5" /> Size</dt>
+                      <dd className="mt-0.5 text-sm text-foreground">{lead.company_size || 'N/A'}</dd>
                     </div>
                     {lead.annual_revenue_inr && (
                       <div>
-                        <dt className="flex items-center gap-1.5 text-xs text-gray-500"><IndianRupee className="h-3.5 w-3.5" /> Revenue</dt>
-                        <dd className="mt-0.5 text-sm text-gray-900">{formatINR(lead.annual_revenue_inr)}</dd>
+                        <dt className="flex items-center gap-1.5 text-xs text-muted-foreground"><IndianRupee className="h-3.5 w-3.5" /> Revenue</dt>
+                        <dd className="mt-0.5 text-sm text-foreground">{formatINR(lead.annual_revenue_inr)}</dd>
                       </div>
                     )}
                     <div>
-                      <dt className="flex items-center gap-1.5 text-xs text-gray-500"><MapPin className="h-3.5 w-3.5" /> Location</dt>
-                      <dd className="mt-0.5 text-sm text-gray-900">{[lead.city, lead.district, lead.state].filter(Boolean).join(', ')}</dd>
+                      <dt className="flex items-center gap-1.5 text-xs text-muted-foreground"><MapPin className="h-3.5 w-3.5" /> Location</dt>
+                      <dd className="mt-0.5 text-sm text-foreground">{[lead.city, lead.district, lead.state].filter(Boolean).join(', ')}</dd>
                     </div>
                     <div>
-                      <dt className="text-xs text-gray-500">Source</dt>
-                      <dd className="mt-0.5 text-sm text-gray-900">{lead.source || 'N/A'}</dd>
+                      <dt className="text-xs text-muted-foreground">Source</dt>
+                      <dd className="mt-0.5 text-sm text-foreground">{lead.source || 'N/A'}</dd>
                     </div>
                   </dl>
                 </div>
@@ -612,16 +616,16 @@ export default function LeadDetailPage() {
 
               {/* Contact Info */}
               <div>
-                <h4 className="mb-3 text-xs font-medium uppercase tracking-wider text-gray-500">Contact Information</h4>
-                <div className="rounded-lg border border-gray-200 bg-gray-50/50 p-4">
+                <h4 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">Contact Information</h4>
+                <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
                   <dl className="space-y-3">
                     <div>
-                      <dt className="text-xs text-gray-500">Name</dt>
-                      <dd className="mt-0.5 text-sm font-medium text-gray-900">{lead.contact_name}</dd>
+                      <dt className="text-xs text-muted-foreground">Name</dt>
+                      <dd className="mt-0.5 text-sm font-medium text-foreground">{lead.contact_name}</dd>
                     </div>
                     {lead.email && (
                       <div>
-                        <dt className="flex items-center gap-1.5 text-xs text-gray-500"><Mail className="h-3.5 w-3.5" /> Email</dt>
+                        <dt className="flex items-center gap-1.5 text-xs text-muted-foreground"><Mail className="h-3.5 w-3.5" /> Email</dt>
                         <dd className="mt-0.5">
                           <a href={`mailto:${lead.email}`} className="text-sm text-indigo-600 hover:underline">
                             {lead.email}
@@ -631,7 +635,7 @@ export default function LeadDetailPage() {
                     )}
                     {lead.phone && (
                       <div>
-                        <dt className="flex items-center gap-1.5 text-xs text-gray-500"><Phone className="h-3.5 w-3.5" /> Phone</dt>
+                        <dt className="flex items-center gap-1.5 text-xs text-muted-foreground"><Phone className="h-3.5 w-3.5" /> Phone</dt>
                         <dd className="mt-0.5">
                           <a href={`tel:${lead.phone}`} className="text-sm text-indigo-600 hover:underline">
                             {lead.phone}
@@ -641,7 +645,7 @@ export default function LeadDetailPage() {
                     )}
                     {lead.linkedin_url && (
                       <div>
-                        <dt className="text-xs text-gray-500">LinkedIn</dt>
+                        <dt className="text-xs text-muted-foreground">LinkedIn</dt>
                         <dd className="mt-0.5">
                           <a
                             href={lead.linkedin_url}
@@ -656,8 +660,8 @@ export default function LeadDetailPage() {
                     )}
                     {lead.designation && (
                       <div>
-                        <dt className="text-xs text-gray-500">Designation</dt>
-                        <dd className="mt-0.5 text-sm text-gray-900">{lead.designation}</dd>
+                        <dt className="text-xs text-muted-foreground">Designation</dt>
+                        <dd className="mt-0.5 text-sm text-foreground">{lead.designation}</dd>
                       </div>
                     )}
                   </dl>
@@ -668,9 +672,9 @@ export default function LeadDetailPage() {
             {/* AI Summary */}
             {aiSummary && (
               <div>
-                <h4 className="mb-3 text-xs font-medium uppercase tracking-wider text-gray-500">AI Summary</h4>
+                <h4 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">AI Summary</h4>
                 <div className="rounded-lg border border-indigo-100 bg-indigo-50/50 p-4">
-                  <p className="text-sm leading-relaxed text-gray-700">{aiSummary}</p>
+                  <p className="text-sm leading-relaxed text-foreground/80">{aiSummary}</p>
                 </div>
               </div>
             )}
@@ -678,12 +682,12 @@ export default function LeadDetailPage() {
             {/* Tags */}
             {lead.tags && lead.tags.length > 0 && (
               <div>
-                <h4 className="mb-3 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-gray-500">
+                <h4 className="mb-3 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   <Tag className="h-3.5 w-3.5" /> Tags
                 </h4>
                 <div className="flex flex-wrap gap-1.5">
                   {lead.tags.map((tag) => (
-                    <span key={tag} className="inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
+                    <span key={tag} className="inline-flex rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground/80">
                       {tag}
                     </span>
                   ))}
@@ -692,8 +696,8 @@ export default function LeadDetailPage() {
             )}
 
             {/* Metadata */}
-            <div className="border-t border-gray-200 pt-4">
-              <dl className="flex gap-6 text-xs text-gray-400">
+            <div className="border-t border-border/60 pt-4">
+              <dl className="flex gap-6 text-xs text-muted-foreground/70">
                 <div>
                   <dt>Created</dt>
                   <dd>{format(new Date(lead.created_at), 'dd MMM yyyy')}</dd>
@@ -714,12 +718,12 @@ export default function LeadDetailPage() {
               {!showActivityForm ? (
                 <button
                   onClick={() => setShowActivityForm(true)}
-                  className="inline-flex items-center gap-2 rounded-lg border border-dashed border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-600 hover:border-indigo-300 hover:text-indigo-600"
+                  className="inline-flex items-center gap-2 rounded-lg border border-dashed border-gray-300 px-4 py-2.5 text-sm font-medium text-foreground/70 hover:border-indigo-300 hover:text-indigo-600"
                 >
                   <Plus className="h-4 w-4" /> Add Activity
                 </button>
               ) : (
-                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <div className="rounded-lg border border-border/60 bg-muted/40 p-4">
                   <div className="mb-3 flex gap-2">
                     {ACTIVITY_TYPES.map((at) => (
                       <button
@@ -729,7 +733,7 @@ export default function LeadDetailPage() {
                           'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
                           newActivity.type === at.value
                             ? 'bg-indigo-600 text-white'
-                            : 'bg-white text-gray-600 hover:bg-gray-100'
+                            : 'bg-white text-foreground/70 hover:bg-muted'
                         )}
                       >
                         <at.icon className="h-3.5 w-3.5" /> {at.label}
@@ -759,7 +763,7 @@ export default function LeadDetailPage() {
                     </button>
                     <button
                       onClick={() => setShowActivityForm(false)}
-                      className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
+                      className="rounded-lg px-4 py-2 text-sm font-medium text-foreground/70 hover:bg-muted"
                     >
                       Cancel
                     </button>
@@ -771,7 +775,7 @@ export default function LeadDetailPage() {
             {activities.length === 0 ? (
               <div className="py-12 text-center">
                 <Clock className="mx-auto h-8 w-8 text-gray-300" />
-                <p className="mt-2 text-sm text-gray-500">No activities recorded yet</p>
+                <p className="mt-2 text-sm text-muted-foreground">No activities recorded yet</p>
               </div>
             ) : (
               <div className="space-y-0">
@@ -788,12 +792,12 @@ export default function LeadDetailPage() {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-baseline justify-between">
-                          <p className="text-sm font-medium capitalize text-gray-900">{activity.type}</p>
-                          <span className="text-xs text-gray-400">{timeAgo(activity.created_at)}</span>
+                          <p className="text-sm font-medium capitalize text-foreground">{activity.type}</p>
+                          <span className="text-xs text-muted-foreground/70">{timeAgo(activity.created_at)}</span>
                         </div>
-                        <p className="mt-0.5 text-sm text-gray-600">{activity.note}</p>
+                        <p className="mt-0.5 text-sm text-foreground/70">{activity.note}</p>
                         {activity.outcome && (
-                          <p className="mt-1 text-xs text-gray-400">Outcome: {activity.outcome}</p>
+                          <p className="mt-1 text-xs text-muted-foreground/70">Outcome: {activity.outcome}</p>
                         )}
                       </div>
                     </div>
@@ -810,11 +814,11 @@ export default function LeadDetailPage() {
             {/* Enrichment card */}
             <EnrichmentCard leadId={id || ''} onEnrich={handleEnrichLead} isPending={enrichLeadMutation.isPending} />
             {/* Score Lead */}
-            <div className="rounded-lg border border-gray-200 p-4">
+            <div className="rounded-lg border border-border/60 p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900">AI Lead Scoring</h4>
-                  <p className="mt-0.5 text-xs text-gray-500">Analyze lead quality with AI</p>
+                  <h4 className="text-sm font-medium text-foreground">AI Lead Scoring</h4>
+                  <p className="mt-0.5 text-xs text-muted-foreground">Analyze lead quality with AI</p>
                 </div>
                 <button
                   onClick={handleScoreLead}
@@ -830,25 +834,25 @@ export default function LeadDetailPage() {
                 </button>
               </div>
               {scoreResult && (
-                <div className="mt-4 space-y-3 border-t border-gray-100 pt-4">
+                <div className="mt-4 space-y-3 border-t border-border/40 pt-4">
                   <div className="flex items-center gap-4">
                     <div className={cn('rounded-lg px-3 py-1.5 text-lg font-bold', getScoreBadge(scoreResult.score).color)}>
                       {scoreResult.score}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">ICP: <span className="capitalize">{scoreResult.icp_fit}</span></p>
-                      <p className="text-xs text-gray-500">{scoreResult.reasoning}</p>
+                      <p className="text-sm font-medium text-foreground">ICP: <span className="capitalize">{scoreResult.icp_fit}</span></p>
+                      <p className="text-xs text-muted-foreground">{scoreResult.reasoning}</p>
                     </div>
                   </div>
                   {scoreResult.factors.length > 0 && (
                     <div className="space-y-1.5">
-                      <p className="text-xs font-medium text-gray-500">Score Factors</p>
+                      <p className="text-xs font-medium text-muted-foreground">Score Factors</p>
                       {scoreResult.factors.map((f, i) => (
-                        <div key={i} className="flex items-center justify-between rounded bg-gray-50 px-3 py-1.5 text-xs">
-                          <span className="text-gray-700">{f.factor}</span>
+                        <div key={i} className="flex items-center justify-between rounded bg-muted/40 px-3 py-1.5 text-xs">
+                          <span className="text-foreground/80">{f.factor}</span>
                           <span className={cn(
                             'font-medium',
-                            f.impact === 'positive' ? 'text-green-600' : f.impact === 'negative' ? 'text-red-600' : 'text-gray-500'
+                            f.impact === 'positive' ? 'text-green-600' : f.impact === 'negative' ? 'text-red-600' : 'text-muted-foreground'
                           )}>
                             {f.impact === 'positive' ? '+' : f.impact === 'negative' ? '-' : '~'}{f.weight}
                           </span>
@@ -861,9 +865,9 @@ export default function LeadDetailPage() {
             </div>
 
             {/* Generate Email */}
-            <div className="rounded-lg border border-gray-200 p-4">
-              <h4 className="text-sm font-medium text-gray-900">Generate Email</h4>
-              <p className="mt-0.5 text-xs text-gray-500">AI-powered email generation for this lead</p>
+            <div className="rounded-lg border border-border/60 p-4">
+              <h4 className="text-sm font-medium text-foreground">Generate Email</h4>
+              <p className="mt-0.5 text-xs text-muted-foreground">AI-powered email generation for this lead</p>
               <div className="mt-3 flex gap-2">
                 <select
                   value={emailType}
@@ -899,10 +903,10 @@ export default function LeadDetailPage() {
               </div>
               {generatedEmail && (
                 <div className="mt-4 space-y-2 rounded-lg border border-indigo-100 bg-indigo-50/50 p-4">
-                  <p className="text-xs font-medium text-gray-500">Subject</p>
-                  <p className="text-sm font-medium text-gray-900">{generatedEmail.subject}</p>
-                  <p className="text-xs font-medium text-gray-500">Body</p>
-                  <pre className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700">{generatedEmail.body}</pre>
+                  <p className="text-xs font-medium text-muted-foreground">Subject</p>
+                  <p className="text-sm font-medium text-foreground">{generatedEmail.subject}</p>
+                  <p className="text-xs font-medium text-muted-foreground">Body</p>
+                  <pre className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/80">{generatedEmail.body}</pre>
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(`Subject: ${generatedEmail.subject}\n\n${generatedEmail.body}`)
@@ -917,11 +921,11 @@ export default function LeadDetailPage() {
             </div>
 
             {/* AI Summary */}
-            <div className="rounded-lg border border-gray-200 p-4">
+            <div className="rounded-lg border border-border/60 p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900">AI Summary</h4>
-                  <p className="mt-0.5 text-xs text-gray-500">Generate an AI-powered lead summary</p>
+                  <h4 className="text-sm font-medium text-foreground">AI Summary</h4>
+                  <p className="mt-0.5 text-xs text-muted-foreground">Generate an AI-powered lead summary</p>
                 </div>
                 <button
                   onClick={handleGetSummary}
@@ -938,7 +942,7 @@ export default function LeadDetailPage() {
               </div>
               {aiSummary && (
                 <div className="mt-4 rounded-lg border border-indigo-100 bg-indigo-50/50 p-4">
-                  <p className="text-sm leading-relaxed text-gray-700">{aiSummary}</p>
+                  <p className="text-sm leading-relaxed text-foreground/80">{aiSummary}</p>
                 </div>
               )}
             </div>
@@ -952,8 +956,8 @@ export default function LeadDetailPage() {
             <div className="rounded-lg border border-indigo-100 bg-indigo-50/40 p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-900">Generate AI Proposal</h4>
-                  <p className="mt-0.5 text-xs text-gray-500">
+                  <h4 className="text-sm font-semibold text-foreground">Generate AI Proposal</h4>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
                     AI writes a full sector-specific sales proposal for this lead
                   </p>
                 </div>
@@ -1001,15 +1005,15 @@ export default function LeadDetailPage() {
             ) : proposals.length === 0 ? (
               <div className="py-10 text-center">
                 <FileSignature className="mx-auto h-8 w-8 text-gray-300" />
-                <p className="mt-2 text-sm text-gray-500">No proposals generated yet</p>
+                <p className="mt-2 text-sm text-muted-foreground">No proposals generated yet</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {proposals.map((p) => (
-                  <div key={p.id} className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4">
+                  <div key={p.id} className="flex items-center justify-between rounded-lg border border-border/60 bg-white p-4">
                     <div>
-                      <p className="text-sm font-medium text-gray-900 truncate max-w-xs">{p.title}</p>
-                      <p className="mt-0.5 text-xs text-gray-400">
+                      <p className="text-sm font-medium text-foreground truncate max-w-xs">{p.title}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground/70">
                         {p.proposal_type.replace(/_/g, ' ')} · {p.status} · {formatDate(p.created_at)}
                       </p>
                     </div>
@@ -1017,14 +1021,14 @@ export default function LeadDetailPage() {
                       <button
                         onClick={() => openProposalHtmlExport(p.id)}
                         title="View / Print as PDF"
-                        className="rounded-lg border border-gray-200 p-1.5 text-gray-500 hover:bg-gray-50"
+                        className="rounded-lg border border-border/60 p-1.5 text-muted-foreground hover:bg-muted/40"
                       >
                         <FileText className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => downloadProposalDocx(p.id)}
                         title="Download Word"
-                        className="rounded-lg border border-gray-200 p-1.5 text-gray-500 hover:bg-gray-50"
+                        className="rounded-lg border border-border/60 p-1.5 text-muted-foreground hover:bg-muted/40"
                       >
                         <Download className="h-4 w-4" />
                       </button>
@@ -1048,7 +1052,7 @@ export default function LeadDetailPage() {
             {/* Header row */}
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
                   <div className="flex h-6 w-6 items-center justify-center rounded bg-blue-600">
                     <Linkedin className="h-3.5 w-3.5 text-white" />
                   </div>
@@ -1065,7 +1069,7 @@ export default function LeadDetailPage() {
                     {lead.linkedin_url.replace(/https?:\/\/(www\.)?linkedin\.com\/in\//, '').replace(/\/$/, '')}
                   </a>
                 ) : (
-                  <p className="mt-0.5 text-xs text-gray-400">No LinkedIn URL on this lead</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground/70">No LinkedIn URL on this lead</p>
                 )}
               </div>
               {lead.linkedin_url && (
@@ -1088,10 +1092,10 @@ export default function LeadDetailPage() {
             {liEnrichResult && liEnrichResult.source === 'proxycurl' && (
               <div className="rounded-lg border border-blue-100 bg-blue-50/60 p-4">
                 {liEnrichResult.headline && (
-                  <p className="text-sm font-medium text-gray-900">{liEnrichResult.headline}</p>
+                  <p className="text-sm font-medium text-foreground">{liEnrichResult.headline}</p>
                 )}
                 {liEnrichResult.summary && (
-                  <p className="mt-1 line-clamp-3 text-xs text-gray-600">{liEnrichResult.summary}</p>
+                  <p className="mt-1 line-clamp-3 text-xs text-foreground/70">{liEnrichResult.summary}</p>
                 )}
               </div>
             )}
@@ -1104,7 +1108,7 @@ export default function LeadDetailPage() {
 
             {/* Generate panel */}
             <div className="rounded-lg border border-blue-100 bg-blue-50/30 p-4">
-              <h4 className="mb-3 text-sm font-semibold text-gray-900">Generate AI Messages</h4>
+              <h4 className="mb-3 text-sm font-semibold text-foreground">Generate AI Messages</h4>
               {/* Tone chips */}
               <div className="mb-3 flex flex-wrap gap-2">
                 {TONE_OPTIONS.map((t) => (
@@ -1117,7 +1121,7 @@ export default function LeadDetailPage() {
                       'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
                       liTone === t.value
                         ? 'border-blue-500 bg-blue-100 text-blue-700'
-                        : 'border-gray-200 text-gray-600 hover:border-blue-300'
+                        : 'border-border/60 text-foreground/70 hover:border-blue-300'
                     )}
                   >
                     {t.label}
@@ -1130,7 +1134,7 @@ export default function LeadDetailPage() {
                 value={liContext}
                 onChange={(e) => setLiContext(e.target.value)}
                 placeholder="Optional: what you offer (e.g. 'We help IT firms hire remote engineers at 40% lower cost')"
-                className="mb-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-700 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="mb-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-foreground/80 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
               <button
                 onClick={handleGenerateLiMessage}
@@ -1154,21 +1158,21 @@ export default function LeadDetailPage() {
             ) : linkedInMessages.length === 0 ? (
               <div className="py-8 text-center">
                 <Linkedin className="mx-auto h-8 w-8 text-gray-300" />
-                <p className="mt-2 text-sm text-gray-500">No messages generated yet</p>
+                <p className="mt-2 text-sm text-muted-foreground">No messages generated yet</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {linkedInMessages.map((msg) => {
                   const statusMeta = LINKEDIN_STATUSES.find((s) => s.value === msg.status) || LINKEDIN_STATUSES[0]
                   return (
-                    <div key={msg.id} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                    <div key={msg.id} className="rounded-2xl border border-border/60 bg-white p-4 shadow-sm">
                       {/* Status + actions row */}
                       <div className="mb-3 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className={cn('rounded-full px-2.5 py-1 text-xs font-medium', statusMeta.color)}>
                             {statusMeta.label}
                           </span>
-                          <span className="text-xs text-gray-400">{msg.ai_tone} · {formatDate(msg.created_at)}</span>
+                          <span className="text-xs text-muted-foreground/70">{msg.ai_tone} · {formatDate(msg.created_at)}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           {/* Status change */}
@@ -1188,7 +1192,7 @@ export default function LeadDetailPage() {
                                 await deleteLiMutation.mutateAsync(msg.id)
                               }
                             }}
-                            className="ml-1 rounded-lg p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
+                            className="ml-1 rounded-lg p-1 text-muted-foreground/70 hover:bg-red-50 hover:text-red-500"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
@@ -1198,7 +1202,7 @@ export default function LeadDetailPage() {
                       {/* Connection note */}
                       <div className="mb-3">
                         <div className="mb-1 flex items-center justify-between">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                             Connection Note ({msg.connection_note.length}/300)
                           </p>
                           <button
@@ -1218,7 +1222,7 @@ export default function LeadDetailPage() {
                       {msg.followup_message && (
                         <div>
                           <div className="mb-1 flex items-center justify-between">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Follow-up Message</p>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Follow-up Message</p>
                             <button
                               onClick={() => copyLi(msg.followup_message!, `followup-${msg.id}`)}
                               className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
@@ -1227,7 +1231,7 @@ export default function LeadDetailPage() {
                               Copy
                             </button>
                           </div>
-                          <p className="rounded-lg bg-gray-50 px-3 py-2.5 text-sm text-gray-700 leading-relaxed">
+                          <p className="rounded-lg bg-muted/40 px-3 py-2.5 text-sm text-foreground/80 leading-relaxed">
                             {msg.followup_message}
                           </p>
                         </div>
@@ -1245,14 +1249,14 @@ export default function LeadDetailPage() {
           <div className="space-y-5 p-6">
             {/* Header row */}
             <div className="flex items-center justify-between">
-              <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
                 <div className="flex h-6 w-6 items-center justify-center rounded bg-green-500">
                   <MessageCircle className="h-3.5 w-3.5 text-white" />
                 </div>
                 WhatsApp Outreach
               </h3>
               {lead.phone ? (
-                <span className="flex items-center gap-1.5 text-xs text-gray-500">
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Phone className="h-3.5 w-3.5" />
                   {lead.phone}
                 </span>
@@ -1266,7 +1270,7 @@ export default function LeadDetailPage() {
 
             {/* Generate panel */}
             <div className="rounded-lg border border-green-100 bg-green-50/30 p-4">
-              <h4 className="mb-3 text-sm font-semibold text-gray-900">Generate AI Message</h4>
+              <h4 className="mb-3 text-sm font-semibold text-foreground">Generate AI Message</h4>
 
               {/* Tone chips */}
               <div className="mb-3 flex flex-wrap gap-2">
@@ -1280,7 +1284,7 @@ export default function LeadDetailPage() {
                       'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
                       waTone === t.value
                         ? 'border-green-500 bg-green-100 text-green-700'
-                        : 'border-gray-200 text-gray-600 hover:border-green-300'
+                        : 'border-border/60 text-foreground/70 hover:border-green-300'
                     )}
                   >
                     {t.label}
@@ -1294,7 +1298,7 @@ export default function LeadDetailPage() {
                 value={waContext}
                 onChange={(e) => setWaContext(e.target.value)}
                 placeholder="Optional: what you offer (e.g. 'We help IT firms cut hiring costs by 40%')"
-                className="mb-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-700 placeholder-gray-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                className="mb-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-foreground/80 placeholder-gray-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
               />
 
               <button
@@ -1319,8 +1323,8 @@ export default function LeadDetailPage() {
             ) : waMessages.length === 0 ? (
               <div className="py-8 text-center">
                 <MessageCircle className="mx-auto h-8 w-8 text-gray-300" />
-                <p className="mt-2 text-sm text-gray-500">No messages yet</p>
-                <p className="mt-1 text-xs text-gray-400">Generate a message above to get started.</p>
+                <p className="mt-2 text-sm text-muted-foreground">No messages yet</p>
+                <p className="mt-1 text-xs text-muted-foreground/70">Generate a message above to get started.</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -1343,7 +1347,7 @@ export default function LeadDetailPage() {
                           'relative max-w-[80%] rounded-2xl px-4 py-3 shadow-sm',
                           isOutbound
                             ? 'rounded-tr-sm bg-green-50 border border-green-200'
-                            : 'rounded-tl-sm bg-white border border-gray-200'
+                            : 'rounded-tl-sm bg-white border border-border/60'
                         )}
                       >
                         {/* Message content */}
@@ -1360,7 +1364,7 @@ export default function LeadDetailPage() {
                               </span>
                             )}
                             {msg.ai_tone && (
-                              <span className="text-xs text-gray-400 capitalize">{msg.ai_tone}</span>
+                              <span className="text-xs text-muted-foreground/70 capitalize">{msg.ai_tone}</span>
                             )}
                           </div>
 
@@ -1368,7 +1372,7 @@ export default function LeadDetailPage() {
                             {/* Copy */}
                             <button
                               onClick={() => copyWa(msg.content, msg.id)}
-                              className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                              className="rounded p-1 text-muted-foreground/70 hover:bg-muted hover:text-foreground/70"
                               title="Copy message"
                             >
                               {waCopied === msg.id ? (
@@ -1402,7 +1406,7 @@ export default function LeadDetailPage() {
                                   await deleteWaMutation.mutateAsync(msg.id)
                                 }
                               }}
-                              className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
+                              className="rounded p-1 text-muted-foreground/70 hover:bg-red-50 hover:text-red-500"
                               title="Delete"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
@@ -1427,7 +1431,7 @@ export default function LeadDetailPage() {
         {activeTab === 'sequences' && (
           <div className="space-y-5 p-6">
             <div className="flex items-center justify-between">
-              <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
                 <Mail className="h-4 w-4 text-indigo-500" />
                 Email Sequences
               </h3>
@@ -1441,31 +1445,31 @@ export default function LeadDetailPage() {
 
             {/* Current enrollments */}
             {seqEnrollmentsLoaded && seqEnrollments.length > 0 && (
-              <div className="rounded-lg border border-gray-100 overflow-hidden">
+              <div className="rounded-lg border border-border/40 overflow-hidden">
                 <table className="w-full">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-muted/40">
                     <tr>
-                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500">Sequence</th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500">Status</th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500">Step</th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500">Next send</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-muted-foreground">Sequence</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-muted-foreground">Status</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-muted-foreground">Step</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-muted-foreground">Next send</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {seqEnrollments.map((e) => {
                       const statusMeta = ENROLLMENT_STATUSES.find((s) => s.value === e.status)
                       return (
-                        <tr key={e.id} className="hover:bg-gray-50">
+                        <tr key={e.id} className="hover:bg-muted/40">
                           <td className="px-3 py-2 text-sm font-medium text-gray-800">
                             {e.sequence_name ?? 'Sequence'}
                           </td>
                           <td className="px-3 py-2">
-                            <span className={cn('rounded-full px-2 py-0.5 text-xs font-medium', statusMeta?.color ?? 'bg-gray-100 text-gray-500')}>
+                            <span className={cn('rounded-full px-2 py-0.5 text-xs font-medium', statusMeta?.color ?? 'bg-muted text-muted-foreground')}>
                               {statusMeta?.label ?? e.status}
                             </span>
                           </td>
-                          <td className="px-3 py-2 text-xs text-gray-600">{e.current_step}</td>
-                          <td className="px-3 py-2 text-xs text-gray-400">
+                          <td className="px-3 py-2 text-xs text-foreground/70">{e.current_step}</td>
+                          <td className="px-3 py-2 text-xs text-muted-foreground/70">
                             {e.next_step_at
                               ? new Date(e.next_step_at).toLocaleString('en-IN')
                               : '—'}
@@ -1479,14 +1483,14 @@ export default function LeadDetailPage() {
             )}
 
             {seqEnrollmentsLoaded && seqEnrollments.length === 0 && (
-              <p className="text-xs text-gray-400">This lead is not enrolled in any sequences.</p>
+              <p className="text-xs text-muted-foreground/70">This lead is not enrolled in any sequences.</p>
             )}
 
             {/* Enroll in a sequence */}
             <div className="rounded-lg border border-indigo-100 bg-indigo-50/30 p-4">
-              <h4 className="text-sm font-semibold text-gray-900 mb-3">Enroll in a Sequence</h4>
+              <h4 className="text-sm font-semibold text-foreground mb-3">Enroll in a Sequence</h4>
               {allSequences.filter((s) => s.status === 'active').length === 0 ? (
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   No active sequences yet.{' '}
                   <a href="/email-sequences" className="text-indigo-600 hover:underline">
                     Create one first →
@@ -1503,11 +1507,11 @@ export default function LeadDetailPage() {
                       return (
                         <div
                           key={seq.id}
-                          className="flex items-center justify-between rounded-lg bg-white border border-gray-200 px-3 py-2"
+                          className="flex items-center justify-between rounded-lg bg-white border border-border/60 px-3 py-2"
                         >
                           <div>
                             <p className="text-sm font-medium text-gray-800">{seq.name}</p>
-                            <p className="text-xs text-gray-400">{seq.step_count} steps · {seq.enrolled_count} enrolled</p>
+                            <p className="text-xs text-muted-foreground/70">{seq.step_count} steps · {seq.enrolled_count} enrolled</p>
                           </div>
                           <button
                             disabled={alreadyEnrolled || enrollingSeqId === seq.id || !id}
@@ -1558,8 +1562,8 @@ export default function LeadDetailPage() {
           <div className="p-6">
             <div className="py-12 text-center">
               <MessageSquare className="mx-auto h-8 w-8 text-gray-300" />
-              <p className="mt-2 text-sm font-medium text-gray-900">No campaigns yet</p>
-              <p className="mt-1 text-xs text-gray-500">This lead is not enrolled in any campaigns.</p>
+              <p className="mt-2 text-sm font-medium text-foreground">No campaigns yet</p>
+              <p className="mt-1 text-xs text-muted-foreground">This lead is not enrolled in any campaigns.</p>
               <button className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
                 <Plus className="h-4 w-4" /> Add to Campaign
               </button>
@@ -1572,7 +1576,7 @@ export default function LeadDetailPage() {
           <div className="p-6 space-y-4">
             {/* Header */}
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-900">Deals</h3>
+              <h3 className="text-sm font-semibold text-foreground">Deals</h3>
               <button
                 onClick={() => {
                   loadDealStages()
@@ -1589,7 +1593,7 @@ export default function LeadDetailPage() {
               <form onSubmit={handleCreateDeal} className="rounded-xl border border-indigo-200 bg-indigo-50/30 p-4 space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="col-span-2">
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Deal title *</label>
+                    <label className="block text-xs font-medium text-foreground/70 mb-1">Deal title *</label>
                     <input
                       required
                       type="text"
@@ -1600,7 +1604,7 @@ export default function LeadDetailPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Stage *</label>
+                    <label className="block text-xs font-medium text-foreground/70 mb-1">Stage *</label>
                     <select
                       value={dealForm.stage_id}
                       onChange={(e) => setDealForm((f) => ({ ...f, stage_id: e.target.value }))}
@@ -1612,7 +1616,7 @@ export default function LeadDetailPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Value (₹)</label>
+                    <label className="block text-xs font-medium text-foreground/70 mb-1">Value (₹)</label>
                     <input
                       type="number" min={0}
                       value={dealForm.value_inr}
@@ -1622,7 +1626,7 @@ export default function LeadDetailPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Probability (%)</label>
+                    <label className="block text-xs font-medium text-foreground/70 mb-1">Probability (%)</label>
                     <input
                       type="number" min={0} max={100}
                       value={dealForm.probability}
@@ -1631,7 +1635,7 @@ export default function LeadDetailPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Close date</label>
+                    <label className="block text-xs font-medium text-foreground/70 mb-1">Close date</label>
                     <input
                       type="date"
                       value={dealForm.close_date}
@@ -1650,7 +1654,7 @@ export default function LeadDetailPage() {
                     Create
                   </button>
                   <button type="button" onClick={() => setShowCreateDeal(false)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 px-3 py-1.5 text-xs font-medium text-foreground/70 hover:bg-muted/40"
                   >
                     Cancel
                   </button>
@@ -1664,8 +1668,8 @@ export default function LeadDetailPage() {
             ) : leadDeals.length === 0 ? (
               <div className="py-10 text-center">
                 <IndianRupee className="mx-auto h-7 w-7 text-gray-300" />
-                <p className="mt-2 text-sm font-medium text-gray-500">No deals yet</p>
-                <p className="text-xs text-gray-400 mt-1">Click "New Deal" to track a revenue opportunity.</p>
+                <p className="mt-2 text-sm font-medium text-muted-foreground">No deals yet</p>
+                <p className="text-xs text-muted-foreground/70 mt-1">Click "New Deal" to track a revenue opportunity.</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -1673,13 +1677,13 @@ export default function LeadDetailPage() {
                   const statusMeta = DEAL_STATUS_META[deal.status] ?? DEAL_STATUS_META.open
                   const weighted = ((deal.value_inr ?? 0) * (deal.probability ?? 0)) / 100
                   return (
-                    <div key={deal.id} className="rounded-xl border border-gray-200 bg-white p-4 hover:border-indigo-200 transition-colors">
+                    <div key={deal.id} className="rounded-2xl border border-border/60 bg-white p-4 hover:border-indigo-200 transition-colors">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <Link
                               to={`/deals/${deal.id}`}
-                              className="text-sm font-semibold text-gray-900 hover:text-indigo-600 truncate"
+                              className="text-sm font-semibold text-foreground hover:text-indigo-600 truncate"
                             >
                               {deal.title}
                             </Link>
@@ -1687,7 +1691,7 @@ export default function LeadDetailPage() {
                               {statusMeta.label}
                             </span>
                           </div>
-                          <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-gray-500">
+                          <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
                             {deal.value_inr != null && (
                               <span className="flex items-center gap-0.5">
                                 <IndianRupee className="w-3 h-3" />
@@ -1697,7 +1701,7 @@ export default function LeadDetailPage() {
                             {deal.probability != null && (
                               <span>{deal.probability}% → {formatINR(weighted)} weighted</span>
                             )}
-                            {deal.stage_name && <span className="text-gray-400">{deal.stage_name}</span>}
+                            {deal.stage_name && <span className="text-muted-foreground/70">{deal.stage_name}</span>}
                             {deal.close_date && (
                               <span className={cn(
                                 'flex items-center gap-0.5',
@@ -1736,7 +1740,7 @@ export default function LeadDetailPage() {
                           )}
                           <Link
                             to={`/deals/${deal.id}`}
-                            className="rounded-lg border border-gray-200 px-2 py-1 text-xs text-gray-500 hover:bg-gray-50"
+                            className="rounded-lg border border-border/60 px-2 py-1 text-xs text-muted-foreground hover:bg-muted/40"
                           >
                             View →
                           </Link>
@@ -1797,7 +1801,7 @@ function LeadTasksPanel({ leadId }: { leadId: string }) {
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-900">
+        <h3 className="text-sm font-semibold text-foreground">
           Tasks
           {open.length > 0 && (
             <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-700">
@@ -1842,7 +1846,7 @@ function LeadTasksPanel({ leadId }: { leadId: string }) {
               {createMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin inline" /> : 'Add'}
             </button>
             <button type="button" onClick={() => setShowForm(false)}
-              className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">
+              className="rounded-lg border border-border/60 px-3 py-1.5 text-xs text-foreground/70 hover:bg-muted/40">
               Cancel
             </button>
           </div>
@@ -1854,7 +1858,7 @@ function LeadTasksPanel({ leadId }: { leadId: string }) {
       ) : tasks.length === 0 && !showForm ? (
         <div className="py-10 text-center">
           <CheckCircle2 className="mx-auto h-8 w-8 text-gray-200" />
-          <p className="mt-2 text-sm text-gray-400">No tasks yet for this lead.</p>
+          <p className="mt-2 text-sm text-muted-foreground/70">No tasks yet for this lead.</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -1866,9 +1870,9 @@ function LeadTasksPanel({ leadId }: { leadId: string }) {
             return (
               <div key={t.id} className={cn(
                 'group flex items-center gap-3 rounded-xl border p-3 transition-colors',
-                isDone ? 'border-gray-100 bg-gray-50/50 opacity-60'
+                isDone ? 'border-border/40 bg-muted/20 opacity-60'
                   : t.is_overdue ? 'border-red-200 bg-red-50/30'
-                  : 'border-gray-200 hover:border-indigo-200'
+                  : 'border-border/60 hover:border-indigo-200'
               )}>
                 <button
                   onClick={async () => {
@@ -1882,15 +1886,15 @@ function LeadTasksPanel({ leadId }: { leadId: string }) {
                   {isDone && <Check className="w-3 h-3" />}
                 </button>
                 <div className="flex-1 min-w-0">
-                  <p className={cn('text-sm', isDone && 'line-through text-gray-400')}>{t.title}</p>
+                  <p className={cn('text-sm', isDone && 'line-through text-muted-foreground/70')}>{t.title}</p>
                   <div className="flex flex-wrap items-center gap-2 mt-0.5">
-                    <span className="text-[10px] text-gray-400">{tm.icon} {tm.label}</span>
+                    <span className="text-[10px] text-muted-foreground/70">{tm.icon} {tm.label}</span>
                     <span className={cn('rounded-full px-1.5 py-0.5 text-[9px] font-medium', pm.color)}>{pm.label}</span>
                     {t.is_overdue && !isDone && (
                       <span className="text-[9px] text-red-500 font-medium">⚠ Overdue</span>
                     )}
                     {dueDate && (
-                      <span className="text-[9px] text-gray-400">
+                      <span className="text-[9px] text-muted-foreground/70">
                         {formatDate(dueDate.toISOString())}
                       </span>
                     )}
@@ -1926,11 +1930,11 @@ function EnrichmentCard({
   const latestLog = logs[0]
 
   return (
-    <div className="rounded-lg border border-gray-200 p-4">
+    <div className="rounded-lg border border-border/60 p-4">
       <div className="flex items-center justify-between">
         <div>
-          <h4 className="text-sm font-medium text-gray-900">Lead Enrichment</h4>
-          <p className="mt-0.5 text-xs text-gray-500">
+          <h4 className="text-sm font-medium text-foreground">Lead Enrichment</h4>
+          <p className="mt-0.5 text-xs text-muted-foreground">
             Auto-fill missing contact &amp; company data via Apollo.io + Hunter.io
           </p>
         </div>
@@ -1949,8 +1953,8 @@ function EnrichmentCard({
       </div>
 
       {latestLog && (
-        <div className="mt-4 rounded-lg border border-gray-100 bg-gray-50 p-3">
-          <div className="flex items-center justify-between text-xs text-gray-500">
+        <div className="mt-4 rounded-lg border border-border/40 bg-muted/40 p-3">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>
               Last enrichment via <strong>{latestLog.source}</strong> · {latestLog.status}
             </span>
@@ -1994,7 +1998,7 @@ function EnrichmentBanner({
           ? 'border-amber-200 bg-amber-50'
           : isSuccess
           ? 'border-green-200 bg-green-50'
-          : 'border-gray-200 bg-gray-50'
+          : 'border-border/60 bg-muted/40'
       )}
     >
       <div className="flex items-start gap-3">
@@ -2003,13 +2007,13 @@ function EnrichmentBanner({
         ) : isSuccess ? (
           <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-600" />
         ) : (
-          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-gray-400" />
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground/70" />
         )}
         <div>
           <p
             className={cn(
               'text-sm font-medium',
-              isNoKey ? 'text-amber-800' : isSuccess ? 'text-green-800' : 'text-gray-700'
+              isNoKey ? 'text-amber-800' : isSuccess ? 'text-green-800' : 'text-foreground/80'
             )}
           >
             {result.message}
@@ -2031,7 +2035,7 @@ function EnrichmentBanner({
           )}
 
           {result.skipped_fields.length > 0 && (
-            <p className="mt-1.5 text-xs text-gray-500">
+            <p className="mt-1.5 text-xs text-muted-foreground">
               Already had data (not overwritten):{' '}
               {result.skipped_fields.map((f) => FIELD_LABELS[f] || f).join(', ')}
             </p>
@@ -2048,7 +2052,7 @@ function EnrichmentBanner({
       </div>
       <button
         onClick={onDismiss}
-        className="shrink-0 rounded p-1 text-gray-400 hover:bg-gray-200"
+        className="shrink-0 rounded p-1 text-muted-foreground/70 hover:bg-gray-200"
       >
         ×
       </button>
@@ -2060,9 +2064,9 @@ function LeadDetailSkeleton() {
   return (
     <div className="space-y-6">
       <div className="h-5 w-32 animate-pulse rounded bg-gray-200" />
-      <div className="h-32 animate-pulse rounded-xl bg-gray-100" />
-      <div className="h-10 animate-pulse rounded bg-gray-100" />
-      <div className="h-96 animate-pulse rounded-xl bg-gray-100" />
+      <div className="h-32 animate-pulse rounded-xl bg-muted" />
+      <div className="h-10 animate-pulse rounded bg-muted" />
+      <div className="h-96 animate-pulse rounded-xl bg-muted" />
     </div>
   )
 }

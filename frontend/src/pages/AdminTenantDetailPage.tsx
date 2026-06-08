@@ -54,7 +54,7 @@ export default function AdminTenantDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-10 text-sm text-gray-400">
+      <div className="flex items-center justify-center p-10 text-sm text-muted-foreground/70">
         <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading tenant...
       </div>
     )
@@ -104,7 +104,7 @@ export default function AdminTenantDetailPage() {
           <button
             type="button"
             onClick={() => navigate('/admin/tenants')}
-            className="mb-2 inline-flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-700"
+            className="mb-2 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground/80"
           >
             <ArrowLeft className="h-3 w-3" /> All tenants
           </button>
@@ -114,12 +114,12 @@ export default function AdminTenantDetailPage() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-semibold text-gray-900">
+                <h1 className="text-xl font-semibold text-foreground">
                   {tenant.name}
                 </h1>
                 <TenantStatusPill status={tenant.status} />
               </div>
-              <p className="font-mono text-xs text-gray-400">{tenant.slug}</p>
+              <p className="font-mono text-xs text-muted-foreground/70">{tenant.slug}</p>
             </div>
           </div>
         </div>
@@ -127,7 +127,7 @@ export default function AdminTenantDetailPage() {
         <button
           type="button"
           onClick={() => setEditOpen(true)}
-          className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50"
+          className="inline-flex items-center gap-1 rounded-lg border border-border/60 bg-white px-3 py-2 text-xs font-medium text-foreground/80 hover:bg-muted/40"
         >
           <Edit3 className="h-3 w-3" /> Edit
         </button>
@@ -173,7 +173,7 @@ export default function AdminTenantDetailPage() {
       </div>
 
       {/* Metadata */}
-      <div className="grid gap-3 rounded-xl border border-gray-200 bg-white p-5 shadow-sm md:grid-cols-2">
+      <div className="grid gap-3 rounded-xl border border-border/60 bg-white p-5 shadow-sm md:grid-cols-2">
         <MetaField label="Plan" value={tenant.plan} />
         <MetaField label="Status" value={tenant.status} />
         <MetaField
@@ -203,8 +203,8 @@ export default function AdminTenantDetailPage() {
       </div>
 
       {/* Actions */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-3 text-sm font-semibold text-gray-900">
+      <div className="rounded-xl border border-border/60 bg-white p-5 shadow-sm">
+        <h2 className="mb-3 text-sm font-semibold text-foreground">
           Lifecycle actions
         </h2>
         {isSelf && (
@@ -246,8 +246,8 @@ export default function AdminTenantDetailPage() {
         </div>
       </div>
 
-      <div className="text-xs text-gray-400">
-        <Link to="/admin/tenants" className="hover:text-gray-600">
+      <div className="text-xs text-muted-foreground/70">
+        <Link to="/admin/tenants" className="hover:text-foreground/70">
           ← Back to all tenants
         </Link>
       </div>
@@ -284,20 +284,20 @@ function StatCard({
   isText?: boolean
 }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-      <div className="flex items-center gap-2 text-xs text-gray-500">
+    <div className="rounded-xl border border-border/60 bg-white p-4 shadow-sm">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <Icon className="h-3 w-3" /> {label}
       </div>
       <div
         className={
           isText
-            ? 'mt-1 text-sm font-medium text-gray-700'
-            : 'mt-1 text-2xl font-semibold text-gray-900'
+            ? 'mt-1 text-sm font-medium text-foreground/80'
+            : 'mt-1 text-2xl font-semibold text-foreground'
         }
       >
         {value}
       </div>
-      {sub && <div className="text-[11px] text-gray-400">{sub}</div>}
+      {sub && <div className="text-[11px] text-muted-foreground/70">{sub}</div>}
     </div>
   )
 }
@@ -305,7 +305,7 @@ function StatCard({
 function MetaField({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="text-[11px] uppercase tracking-wide text-gray-400">
+      <div className="text-[11px] uppercase tracking-wide text-muted-foreground/70">
         {label}
       </div>
       <div className="mt-0.5 text-sm capitalize text-gray-800">{value}</div>

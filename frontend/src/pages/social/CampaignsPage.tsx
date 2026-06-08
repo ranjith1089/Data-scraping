@@ -49,7 +49,7 @@ export default function CampaignsPage() {
     <div className="max-w-5xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Social campaigns</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground">Social campaigns</h1>
           <p className="text-muted-foreground mt-1">
             Group automation rules + posts under one banner.
           </p>
@@ -86,7 +86,7 @@ export default function CampaignsPage() {
               onChange={(e) => setName(e.target.value)}
             />
             <div>
-              <p className="text-xs font-medium text-gray-700 mb-2">
+              <p className="text-xs font-medium text-foreground/80 mb-2">
                 Attach posts ({selectedPosts.length} selected)
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-64 overflow-y-auto">
@@ -107,7 +107,7 @@ export default function CampaignsPage() {
                               : [...prev, p.id],
                           )
                         }
-                        className={`text-left rounded-lg border p-2 ${checked ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'}`}
+                        className={`text-left rounded-lg border p-2 ${checked ? 'border-indigo-500 bg-indigo-50' : 'border-border/60'}`}
                       >
                         {p.media_url ? (
                           // eslint-disable-next-line @next/next/no-img-element

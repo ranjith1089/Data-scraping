@@ -30,7 +30,7 @@ const TABS: { key: TabKey; label: string }[] = [
 ]
 
 const STATUS_BADGE: Record<string, { color: string; label: string }> = {
-  draft: { color: 'bg-gray-100 text-gray-700', label: 'Draft' },
+  draft: { color: 'bg-muted text-foreground/80', label: 'Draft' },
   active: { color: 'bg-green-50 text-green-700', label: 'Active' },
   paused: { color: 'bg-yellow-50 text-yellow-700', label: 'Paused' },
   completed: { color: 'bg-blue-50 text-blue-700', label: 'Completed' },
@@ -80,7 +80,7 @@ export default function CampaignDetailPage() {
   if (!campaign) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <p className="text-sm text-gray-500">Campaign not found</p>
+        <p className="text-sm text-muted-foreground">Campaign not found</p>
         <button
           onClick={() => navigate('/campaigns')}
           className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700"
@@ -105,23 +105,23 @@ export default function CampaignDetailPage() {
       {/* Back Button */}
       <button
         onClick={() => navigate('/campaigns')}
-        className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 transition-colors hover:text-gray-700"
+        className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground/80"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Campaigns
       </button>
 
       {/* Header */}
-      <div className="flex items-start justify-between rounded-xl border border-gray-200 bg-white p-6">
+      <div className="flex items-start justify-between rounded-2xl border border-border/60 bg-white p-6">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-gray-900">{campaign.name}</h1>
+            <h1 className="text-2xl font-bold text-foreground">{campaign.name}</h1>
             <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-medium', status.color)}>
               {status.label}
             </span>
           </div>
           {description && (
-            <p className="mt-2 text-sm text-gray-500">{description}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{description}</p>
           )}
         </div>
         <div className="flex items-center gap-2">
@@ -146,7 +146,7 @@ export default function CampaignDetailPage() {
           <button
             type="button"
             onClick={handleEdit}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted/40"
           >
             <Pencil className="h-4 w-4" />
             Edit
@@ -155,7 +155,7 @@ export default function CampaignDetailPage() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-border/60">
         <nav className="flex gap-0">
           {TABS.map((tab) => (
             <button
@@ -165,7 +165,7 @@ export default function CampaignDetailPage() {
                 'border-b-2 px-6 py-3 text-sm font-medium transition-colors',
                 activeTab === tab.key
                   ? 'border-indigo-600 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  : 'border-transparent text-muted-foreground hover:border-gray-300 hover:text-foreground/80'
               )}
             >
               {tab.label}
@@ -185,14 +185,14 @@ export default function CampaignDetailPage() {
           />
 
           {/* Sector(s) */}
-          <div className="rounded-xl border border-gray-200 bg-white p-5">
-            <div className="flex items-center gap-2 text-xs font-medium text-gray-500">
+          <div className="rounded-2xl border border-border/60 bg-white p-5">
+            <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
               <Hash className="h-3.5 w-3.5" />
               {(campaign.sector_codes?.length ?? 0) > 1 ? 'Sectors' : 'Sector'}
             </div>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {(campaign.sector_codes ?? []).length === 0 ? (
-                <span className="text-sm text-gray-400">No sector selected</span>
+                <span className="text-sm text-muted-foreground/70">No sector selected</span>
               ) : (
                 campaign.sector_codes.map((code) => (
                   <span
@@ -241,17 +241,17 @@ export default function CampaignDetailPage() {
       )}
 
       {activeTab === 'steps' && (
-        <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <h3 className="mb-4 text-sm font-semibold text-gray-900">
+        <div className="rounded-2xl border border-border/60 bg-white p-6">
+          <h3 className="mb-4 text-sm font-semibold text-foreground">
             Campaign Steps
-            <span className="ml-2 text-xs font-normal text-gray-400">
+            <span className="ml-2 text-xs font-normal text-muted-foreground/70">
               ({steps.length} step{steps.length !== 1 ? 's' : ''})
             </span>
           </h3>
           {steps.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50 py-10 text-center">
-              <p className="text-sm text-gray-500">No steps configured yet.</p>
-              <p className="mt-1 text-xs text-gray-400">
+            <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/40 py-10 text-center">
+              <p className="text-sm text-muted-foreground">No steps configured yet.</p>
+              <p className="mt-1 text-xs text-muted-foreground/70">
                 Add steps when creating or editing a campaign.
               </p>
             </div>
@@ -260,7 +260,7 @@ export default function CampaignDetailPage() {
               {steps.map((step) => (
                 <div
                   key={step.id}
-                  className="rounded-lg border border-gray-100 bg-gray-50 p-4"
+                  className="rounded-lg border border-border/40 bg-muted/40 p-4"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -268,30 +268,30 @@ export default function CampaignDetailPage() {
                         {step.step_number}
                       </span>
                       <div>
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium text-foreground">
                           {CHANNEL_LABELS[step.channel] || step.channel}
                           {step.delay_days > 0 && (
-                            <span className="ml-2 text-xs font-normal text-gray-400">
+                            <span className="ml-2 text-xs font-normal text-muted-foreground/70">
                               · Day {step.delay_days}
                             </span>
                           )}
                         </p>
                         {step.subject && (
-                          <p className="mt-0.5 text-xs text-gray-500 truncate max-w-xs">
+                          <p className="mt-0.5 text-xs text-muted-foreground truncate max-w-xs">
                             {step.subject}
                           </p>
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       <span>
-                        <span className="font-medium text-gray-700">{step.sent_count}</span> sent
+                        <span className="font-medium text-foreground/80">{step.sent_count}</span> sent
                       </span>
                       <span>
-                        <span className="font-medium text-gray-700">{step.open_count}</span> opened
+                        <span className="font-medium text-foreground/80">{step.open_count}</span> opened
                       </span>
                       <span>
-                        <span className="font-medium text-gray-700">{step.reply_count}</span> replied
+                        <span className="font-medium text-foreground/80">{step.reply_count}</span> replied
                       </span>
                       {step.variant_b_subject || step.variant_b_body ? (
                         <span className="rounded-full bg-purple-100 px-2 py-0.5 text-purple-700 font-medium">
@@ -324,12 +324,12 @@ function InfoCard({
   value: string
 }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5">
-      <div className="flex items-center gap-2 text-xs font-medium text-gray-500">
+    <div className="rounded-2xl border border-border/60 bg-white p-5">
+      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
         <Icon className="h-3.5 w-3.5" />
         {label}
       </div>
-      <p className="mt-2 text-lg font-semibold text-gray-900">{value}</p>
+      <p className="mt-2 text-lg font-semibold text-foreground">{value}</p>
     </div>
   )
 }
@@ -338,11 +338,11 @@ function CampaignDetailSkeleton() {
   return (
     <div className="space-y-6">
       <div className="h-5 w-40 animate-pulse rounded bg-gray-200" />
-      <div className="h-32 animate-pulse rounded-xl bg-gray-100" />
-      <div className="h-10 animate-pulse rounded bg-gray-100" />
+      <div className="h-32 animate-pulse rounded-xl bg-muted" />
+      <div className="h-10 animate-pulse rounded bg-muted" />
       <div className="grid grid-cols-3 gap-4">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="h-24 animate-pulse rounded-xl bg-gray-100" />
+          <div key={i} className="h-24 animate-pulse rounded-xl bg-muted" />
         ))}
       </div>
     </div>

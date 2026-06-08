@@ -56,25 +56,25 @@ function pct(num: number, den: number) {
 // ─── Small reusable bits ──────────────────────────────────────────────────────
 
 function StatCard({
-  label, value, sub, icon, color = 'bg-gray-50 border-gray-200',
+  label, value, sub, icon, color = 'bg-white border-border/60',
 }: {
   label: string; value: string | number; sub?: string
   icon: React.ReactNode; color?: string
 }) {
   return (
-    <div className={cn('rounded-xl border p-4', color)}>
+    <div className={cn('rounded-2xl border p-4 shadow-sm relative overflow-hidden card-lift', color)}>
       <div className="flex items-center justify-between mb-2">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-500">{label}</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{label}</p>
         {icon}
       </div>
-      <p className="text-xl font-bold text-gray-900">{value}</p>
-      {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
+      <p className="text-2xl font-extrabold text-foreground">{value}</p>
+      {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
     </div>
   )
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <h3 className="text-sm font-semibold text-gray-700 mb-3">{children}</h3>
+  return <h3 className="text-sm font-bold text-foreground mb-3">{children}</h3>
 }
 
 const CHART_COLORS = {
@@ -153,14 +153,14 @@ function LeadsTab() {
       </div>
 
       {/* Range picker + growth chart */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <div className="rounded-2xl border border-border/60 bg-white shadow-sm p-5">
         <div className="flex items-center justify-between mb-4">
           <SectionTitle>Lead Growth</SectionTitle>
           <div className="flex gap-1">
             {([30, 60, 90] as const).map((d) => (
               <button key={d} onClick={() => setDays(d)}
-                className={cn('px-2.5 py-1 rounded text-xs font-medium transition-colors',
-                  days === d ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-100'
+                className={cn('px-2.5 py-1 rounded-lg text-xs font-semibold transition-all',
+                  days === d ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white' : 'text-muted-foreground hover:bg-muted'
                 )}>
                 {d}d
               </button>
@@ -178,7 +178,7 @@ function LeadsTab() {
                   <stop offset="95%" stopColor={CHART_COLORS.indigo} stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="label" tick={{ fontSize: 11 }} interval="preserveStartEnd" />
               <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
               <Tooltip formatter={(v: number) => [v, 'New leads']} />
@@ -190,14 +190,14 @@ function LeadsTab() {
 
       {/* Sector + Stage */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <div className="rounded-2xl border border-border/60 bg-white shadow-sm p-5">
           <SectionTitle>Leads by Sector</SectionTitle>
           {sectorData.length === 0 ? (
             <p className="text-sm text-gray-400 text-center py-8">No sector data.</p>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={sectorData} layout="vertical" margin={{ top: 0, right: 10, left: 80, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
                 <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
                 <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width={76} />
                 <Tooltip formatter={(v: number) => [v, 'Leads']} />
@@ -207,14 +207,14 @@ function LeadsTab() {
           )}
         </div>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <div className="rounded-2xl border border-border/60 bg-white shadow-sm p-5">
           <SectionTitle>Leads by Stage</SectionTitle>
           {stageData.length === 0 ? (
             <p className="text-sm text-gray-400 text-center py-8">No stage data.</p>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={stageData} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                 <Tooltip formatter={(v: number) => [v, 'Leads']} />
@@ -231,11 +231,11 @@ function LeadsTab() {
 
       {/* Score distribution + ICP */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <div className="rounded-2xl border border-border/60 bg-white shadow-sm p-5">
           <SectionTitle>Lead Score Distribution</SectionTitle>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={data.by_score} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="bucket" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
               <Tooltip formatter={(v: number) => [v, 'Leads']} />
@@ -249,7 +249,7 @@ function LeadsTab() {
           </ResponsiveContainer>
         </div>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <div className="rounded-2xl border border-border/60 bg-white shadow-sm p-5">
           <SectionTitle>ICP Fit Breakdown</SectionTitle>
           {data.by_icp.length === 0 ? (
             <p className="text-sm text-gray-400 text-center py-8">No ICP data yet — score some leads first.</p>
@@ -328,7 +328,7 @@ function RevenueTab() {
       </div>
 
       {/* Monthly won revenue */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <div className="rounded-2xl border border-border/60 bg-white shadow-sm p-5">
         <div className="flex items-center justify-between mb-4">
           <SectionTitle>Monthly Won Revenue</SectionTitle>
           <div className="flex gap-1">
@@ -344,7 +344,7 @@ function RevenueTab() {
         </div>
         <ResponsiveContainer width="100%" height={210}>
           <BarChart data={monthlyData} margin={{ top: 5, right: 5, left: 10, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis dataKey="label" tick={{ fontSize: 11 }} />
             <YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => `₹${(v / 1000).toFixed(0)}k`} />
             <Tooltip formatter={(v: number) => [formatINR(v), 'Won revenue']} />
@@ -355,11 +355,11 @@ function RevenueTab() {
 
       {/* Win/Loss trend + Pipeline by stage */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <div className="rounded-2xl border border-border/60 bg-white shadow-sm p-5">
           <SectionTitle>Win / Loss Trend</SectionTitle>
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={wlData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="label" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
               <Tooltip />
@@ -370,14 +370,14 @@ function RevenueTab() {
           </ResponsiveContainer>
         </div>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <div className="rounded-2xl border border-border/60 bg-white shadow-sm p-5">
           <SectionTitle>Pipeline Value by Stage</SectionTitle>
           {data.pipeline_by_stage.length === 0 ? (
             <p className="text-sm text-gray-400 text-center py-8">No pipeline stages yet.</p>
           ) : (
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={data.pipeline_by_stage} layout="vertical" margin={{ top: 0, right: 10, left: 70, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
                 <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v: number) => `₹${(v / 1000).toFixed(0)}k`} />
                 <YAxis dataKey="stage_name" type="category" tick={{ fontSize: 11 }} width={66} />
                 <Tooltip formatter={(v: number) => [formatINR(v), '']} />
@@ -392,7 +392,7 @@ function RevenueTab() {
 
       {/* Top open deals */}
       {data.top_deals.length > 0 && (
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <div className="rounded-2xl border border-border/60 bg-white shadow-sm p-5">
           <SectionTitle>Top Open Deals by Value</SectionTitle>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -438,7 +438,7 @@ function ChannelCard({
   stats: { label: string; value: string | number; highlight?: boolean }[]
 }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5">
+    <div className="rounded-2xl border border-border/60 bg-white shadow-sm p-5">
       <div className="flex items-center gap-2 mb-4">
         {icon}
         <h4 className="text-sm font-semibold text-gray-800">{title}</h4>
@@ -466,11 +466,11 @@ function OutreachTab() {
   return (
     <div className="space-y-6">
       {/* Channel summary bar */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <div className="rounded-2xl border border-border/60 bg-white shadow-sm p-5">
         <SectionTitle>Sent vs Replied by Channel</SectionTitle>
         <ResponsiveContainer width="100%" height={200}>
           <BarChart data={data.channel_summary} margin={{ top: 5, right: 20, left: -10, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis dataKey="channel" tick={{ fontSize: 11 }} />
             <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
             <Tooltip />
@@ -531,7 +531,7 @@ function OutreachTab() {
 
       {/* Campaign performance table */}
       {data.email_campaigns.length > 0 && (
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <div className="rounded-2xl border border-border/60 bg-white shadow-sm p-5">
           <SectionTitle>Campaign Performance</SectionTitle>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -604,7 +604,7 @@ function ActivitiesTab() {
           const count = found?.count ?? 0
           const labels: Record<string, string> = { call: 'Calls', email: 'Emails', meeting: 'Meetings', note: 'Notes' }
           return (
-            <div key={t} className="rounded-xl border border-gray-200 bg-white p-4">
+            <div key={t} className="rounded-2xl border border-border/60 bg-white shadow-sm p-4">
               <div className="flex items-center gap-2 mb-2">
                 {ACTIVITY_ICONS[t]}
                 <p className="text-xs font-medium text-gray-600">{labels[t]}</p>
@@ -617,14 +617,14 @@ function ActivitiesTab() {
       </div>
 
       {/* Weekly stacked bar */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <div className="rounded-2xl border border-border/60 bg-white shadow-sm p-5">
         <div className="flex items-center justify-between mb-4">
           <SectionTitle>Activity by Week</SectionTitle>
           <div className="flex gap-1">
             {([4, 8, 12] as const).map((w) => (
               <button key={w} onClick={() => setWeeks(w)}
-                className={cn('px-2.5 py-1 rounded text-xs font-medium transition-colors',
-                  weeks === w ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-100'
+                className={cn('px-2.5 py-1 rounded-lg text-xs font-semibold transition-all',
+                  weeks === w ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white' : 'text-muted-foreground hover:bg-muted'
                 )}>
                 {w}w
               </button>
@@ -633,7 +633,7 @@ function ActivitiesTab() {
         </div>
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={weeklyData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis dataKey="label" tick={{ fontSize: 11 }} />
             <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
             <Tooltip />
@@ -647,7 +647,7 @@ function ActivitiesTab() {
       </div>
 
       {/* Recent activity feed */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <div className="rounded-2xl border border-border/60 bg-white shadow-sm p-5">
         <SectionTitle>Recent Activity Feed</SectionTitle>
         {data.recent.length === 0 ? (
           <p className="text-sm text-gray-400 text-center py-6">No activities logged yet.</p>
@@ -695,19 +695,19 @@ function TabSkeleton() {
 function ErrorState({ onRetry }: { onRetry: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
-      <div className="w-14 h-14 rounded-full bg-red-50 border border-red-100 flex items-center justify-center">
-        <AlertCircle className="w-7 h-7 text-red-400" />
+      <div className="w-14 h-14 rounded-2xl bg-rose-50 flex items-center justify-center">
+        <AlertCircle className="w-7 h-7 text-rose-400" />
       </div>
       <div>
-        <p className="text-base font-semibold text-gray-900">Failed to load report</p>
-        <p className="text-sm text-gray-500 mt-1 max-w-sm">
+        <p className="text-base font-bold text-foreground">Failed to load report</p>
+        <p className="text-sm text-muted-foreground mt-1 max-w-sm">
           The backend could not be reached or returned an error.
           Check that the Railway service is running and the API URL is configured.
         </p>
       </div>
       <button
         onClick={onRetry}
-        className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
+        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:opacity-90 transition-all"
       >
         <RefreshCw className="w-4 h-4" />
         Retry
@@ -722,26 +722,26 @@ export default function ReportsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('leads')
 
   return (
-    <div className="max-w-7xl mx-auto space-y-5 p-6">
+    <div className="max-w-7xl mx-auto space-y-5">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Reports &amp; Analytics</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-extrabold tracking-tight text-foreground">Reports &amp; Analytics</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">
           Comprehensive insights across leads, revenue, outreach channels, and team activity.
         </p>
       </div>
 
       {/* Tab bar */}
-      <div className="flex gap-1 rounded-xl border border-gray-200 bg-gray-50 p-1 w-fit">
+      <div className="flex gap-0.5 rounded-2xl border border-border/60 bg-white shadow-sm p-1.5 w-fit">
         {TABS.map((t) => (
           <button
             key={t.key}
             onClick={() => setActiveTab(t.key)}
             className={cn(
-              'inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+              'inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold transition-all',
               activeTab === t.key
-                ? 'bg-white text-indigo-700 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-sm'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted',
             )}
           >
             {t.icon}
