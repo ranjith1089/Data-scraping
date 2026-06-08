@@ -64,7 +64,7 @@ function ActivityItem({
 
   return (
     <div className="flex items-start gap-3 group">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-sm">
         {meta.icon}
       </div>
       <div className="flex-1 min-w-0">
@@ -81,7 +81,7 @@ function ActivityItem({
             <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>
-        <p className="text-xs text-gray-400 mt-0.5">
+        <p className="text-xs text-muted-foreground/70 mt-0.5">
           {meta.label} · {formatDistanceToNow(new Date(activity.occurred_at), { addSuffix: true })}
         </p>
       </div>
@@ -120,7 +120,7 @@ function AddActivityForm({ dealId }: { dealId: string }) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 rounded-xl border-2 border-dashed border-gray-200 px-4 py-3 text-sm text-gray-400 hover:border-indigo-300 hover:text-indigo-500 w-full transition-colors"
+        className="flex items-center gap-2 rounded-xl border-2 border-dashed border-border/60 px-4 py-3 text-sm text-muted-foreground/70 hover:border-indigo-300 hover:text-indigo-500 w-full transition-colors"
       >
         <Plus className="w-4 h-4" /> Log activity
       </button>
@@ -140,7 +140,7 @@ function AddActivityForm({ dealId }: { dealId: string }) {
               'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors',
               type === t.value
                 ? 'border-indigo-500 bg-indigo-100 text-indigo-700'
-                : 'border-gray-200 text-gray-600 hover:border-indigo-300'
+                : 'border-border/60 text-foreground/70 hover:border-indigo-300'
             )}
           >
             {t.icon} {t.label}
@@ -172,7 +172,7 @@ function AddActivityForm({ dealId }: { dealId: string }) {
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 px-3 py-1.5 text-xs font-medium text-foreground/70 hover:bg-muted/40"
         >
           <X className="w-3.5 h-3.5" /> Cancel
         </button>
@@ -219,9 +219,9 @@ function EditDealForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 p-4 border border-gray-200 rounded-xl bg-gray-50">
+    <form onSubmit={handleSubmit} className="space-y-3 p-4 border border-border/60 rounded-xl bg-muted/40">
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">Title</label>
+        <label className="block text-xs font-medium text-foreground/70 mb-1">Title</label>
         <input
           type="text"
           value={form.title}
@@ -231,7 +231,7 @@ function EditDealForm({
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Value (₹)</label>
+          <label className="block text-xs font-medium text-foreground/70 mb-1">Value (₹)</label>
           <input
             type="number" min={0}
             value={form.value_inr}
@@ -240,7 +240,7 @@ function EditDealForm({
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Probability (%)</label>
+          <label className="block text-xs font-medium text-foreground/70 mb-1">Probability (%)</label>
           <input
             type="number" min={0} max={100}
             value={form.probability}
@@ -250,7 +250,7 @@ function EditDealForm({
         </div>
       </div>
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">Close date</label>
+        <label className="block text-xs font-medium text-foreground/70 mb-1">Close date</label>
         <input
           type="date"
           value={form.close_date}
@@ -259,7 +259,7 @@ function EditDealForm({
         />
       </div>
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">Notes</label>
+        <label className="block text-xs font-medium text-foreground/70 mb-1">Notes</label>
         <textarea
           rows={3}
           value={form.notes}
@@ -276,7 +276,7 @@ function EditDealForm({
           <Save className="w-3.5 h-3.5" /> Save
         </button>
         <button type="button" onClick={onClose}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 px-3 py-1.5 text-xs font-medium text-foreground/70 hover:bg-muted/40"
         >
           <X className="w-3.5 h-3.5" /> Cancel
         </button>
@@ -317,17 +317,17 @@ export default function DealDetailPage() {
       {/* Back */}
       <button
         onClick={() => navigate('/pipeline')}
-        className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground/80"
       >
         <ArrowLeft className="w-4 h-4" /> Back to Pipeline
       </button>
 
       {/* Header card */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="rounded-2xl border border-border/60 bg-white p-6">
         <div className="flex items-start justify-between gap-4 mb-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-xl font-bold text-gray-900 truncate">{deal.title}</h1>
+              <h1 className="text-xl font-bold text-foreground truncate">{deal.title}</h1>
               <span className={cn('shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium', statusMeta.color)}>
                 {statusMeta.label}
               </span>
@@ -342,13 +342,13 @@ export default function DealDetailPage() {
               </Link>
             )}
             {deal.stage_name && (
-              <p className="text-xs text-gray-400 mt-0.5">Stage: {deal.stage_name}</p>
+              <p className="text-xs text-muted-foreground/70 mt-0.5">Stage: {deal.stage_name}</p>
             )}
           </div>
 
           <button
             onClick={() => setEditing((e) => !e)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 px-3 py-1.5 text-xs font-medium text-foreground/70 hover:bg-muted/40"
           >
             <Edit3 className="w-3.5 h-3.5" /> Edit
           </button>
@@ -357,32 +357,32 @@ export default function DealDetailPage() {
         {editing && <EditDealForm deal={deal} onClose={() => setEditing(false)} />}
 
         {/* Metrics strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 pt-4 border-t border-gray-100">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 pt-4 border-t border-border/40">
           <div className="text-center">
-            <p className="text-xs text-gray-400 mb-1 flex items-center justify-center gap-1">
+            <p className="text-xs text-muted-foreground/70 mb-1 flex items-center justify-center gap-1">
               <IndianRupee className="w-3 h-3" /> Deal value
             </p>
-            <p className="text-lg font-bold text-gray-900">{formatINR(deal.value_inr ?? 0)}</p>
+            <p className="text-lg font-bold text-foreground">{formatINR(deal.value_inr ?? 0)}</p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-gray-400 mb-1 flex items-center justify-center gap-1">
+            <p className="text-xs text-muted-foreground/70 mb-1 flex items-center justify-center gap-1">
               <Target className="w-3 h-3" /> Probability
             </p>
-            <p className="text-lg font-bold text-gray-900">{deal.probability ?? 0}%</p>
+            <p className="text-lg font-bold text-foreground">{deal.probability ?? 0}%</p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-gray-400 mb-1">Weighted value</p>
+            <p className="text-xs text-muted-foreground/70 mb-1">Weighted value</p>
             <p className="text-lg font-bold text-indigo-600">{formatINR(weighted)}</p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-gray-400 mb-1 flex items-center justify-center gap-1">
+            <p className="text-xs text-muted-foreground/70 mb-1 flex items-center justify-center gap-1">
               <Calendar className="w-3 h-3" /> Close date
             </p>
             <p className={cn(
               'text-sm font-semibold',
               deal.close_date && new Date(deal.close_date) < new Date() && deal.status === 'open'
                 ? 'text-red-500'
-                : 'text-gray-900'
+                : 'text-foreground'
             )}>
               {deal.close_date
                 ? new Date(deal.close_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -392,9 +392,9 @@ export default function DealDetailPage() {
         </div>
 
         {deal.notes && (
-          <div className="mt-4 pt-4 border-t border-gray-100">
-            <p className="text-xs font-medium text-gray-500 mb-1">Notes</p>
-            <p className="text-sm text-gray-700 whitespace-pre-wrap">{deal.notes}</p>
+          <div className="mt-4 pt-4 border-t border-border/40">
+            <p className="text-xs font-medium text-muted-foreground mb-1">Notes</p>
+            <p className="text-sm text-foreground/80 whitespace-pre-wrap">{deal.notes}</p>
           </div>
         )}
 
@@ -434,7 +434,7 @@ export default function DealDetailPage() {
                 toast.success('Deal reopened')
               }}
               disabled={reopen.isPending}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 px-4 py-2 text-sm font-medium text-foreground/70 hover:bg-muted/40 disabled:opacity-50"
             >
               <RotateCcw className="w-4 h-4" /> Reopen
             </button>
@@ -457,7 +457,7 @@ export default function DealDetailPage() {
       {showLostModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-sm rounded-2xl bg-white shadow-2xl p-6 space-y-4">
-            <h3 className="text-base font-semibold text-gray-900">Mark Deal as Lost</h3>
+            <h3 className="text-base font-semibold text-foreground">Mark Deal as Lost</h3>
             <textarea
               rows={3}
               value={lostReason}
@@ -480,7 +480,7 @@ export default function DealDetailPage() {
               </button>
               <button
                 onClick={() => setShowLostModal(false)}
-                className="flex-1 rounded-lg border border-gray-200 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+                className="flex-1 rounded-lg border border-border/60 py-2 text-sm font-medium text-foreground/70 hover:bg-muted/40"
               >
                 Cancel
               </button>
@@ -490,11 +490,11 @@ export default function DealDetailPage() {
       )}
 
       {/* Activity timeline */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
-        <h3 className="text-sm font-semibold text-gray-900 mb-4">Activity Timeline</h3>
+      <div className="rounded-2xl border border-border/60 bg-white p-6">
+        <h3 className="text-sm font-semibold text-foreground mb-4">Activity Timeline</h3>
         <div className="space-y-4 mb-4">
           {activities.length === 0 ? (
-            <p className="text-sm text-gray-400 py-4 text-center">No activities yet. Log a call, email or note below.</p>
+            <p className="text-sm text-muted-foreground/70 py-4 text-center">No activities yet. Log a call, email or note below.</p>
           ) : (
             activities.map((a) => (
               <ActivityItem key={a.id} activity={a} dealId={deal.id} />
@@ -508,7 +508,7 @@ export default function DealDetailPage() {
       <DealTasksCard dealId={deal.id} />
 
       {/* Meta */}
-      <div className="text-xs text-gray-400 text-right">
+      <div className="text-xs text-muted-foreground/70 text-right">
         Created {formatDate(deal.created_at)}
         {deal.updated_at && ` · Updated ${formatDate(deal.updated_at)}`}
       </div>
@@ -552,9 +552,9 @@ function DealTasksCard({ dealId }: { dealId: string }) {
   const done = tasks.filter((t) => t.status === 'done')
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6">
+    <div className="rounded-2xl border border-border/60 bg-white p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
           <CheckSquare className="w-4 h-4 text-indigo-400" />
           Tasks
           {open.length > 0 && (
@@ -565,7 +565,7 @@ function DealTasksCard({ dealId }: { dealId: string }) {
         </h3>
         <button
           onClick={() => setShowForm((v) => !v)}
-          className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50"
+          className="inline-flex items-center gap-1 rounded-lg border border-border/60 px-2.5 py-1 text-xs font-medium text-foreground/70 hover:bg-muted/40"
         >
           <Plus className="w-3.5 h-3.5" /> Add Task
         </button>
@@ -602,7 +602,7 @@ function DealTasksCard({ dealId }: { dealId: string }) {
               Add
             </button>
             <button type="button" onClick={() => setShowForm(false)}
-              className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">
+              className="rounded-lg border border-border/60 px-3 py-1.5 text-xs text-foreground/70 hover:bg-muted/40">
               Cancel
             </button>
           </div>
@@ -610,7 +610,7 @@ function DealTasksCard({ dealId }: { dealId: string }) {
       )}
 
       {tasks.length === 0 && !showForm ? (
-        <p className="text-sm text-gray-400 text-center py-4">No tasks yet. Click "Add Task" to create one.</p>
+        <p className="text-sm text-muted-foreground/70 text-center py-4">No tasks yet. Click "Add Task" to create one.</p>
       ) : (
         <div className="space-y-2">
           {[...open, ...done].map((t) => {
@@ -620,9 +620,9 @@ function DealTasksCard({ dealId }: { dealId: string }) {
             return (
               <div key={t.id} className={cn(
                 'group flex items-center gap-3 rounded-lg border p-3 transition-colors',
-                isDone ? 'border-gray-100 bg-gray-50/50 opacity-60'
+                isDone ? 'border-border/40 bg-muted/40/50 opacity-60'
                   : t.is_overdue ? 'border-red-200 bg-red-50/30'
-                  : 'border-gray-200 hover:border-indigo-200'
+                  : 'border-border/60 hover:border-indigo-200'
               )}>
                 <button
                   onClick={async () => {
@@ -636,7 +636,7 @@ function DealTasksCard({ dealId }: { dealId: string }) {
                   {isDone && <CheckCheck className="w-2.5 h-2.5" />}
                 </button>
                 <div className="flex-1 min-w-0">
-                  <span className={cn('text-sm', isDone && 'line-through text-gray-400')}>{t.title}</span>
+                  <span className={cn('text-sm', isDone && 'line-through text-muted-foreground/70')}>{t.title}</span>
                   <div className="flex gap-2 mt-0.5 flex-wrap">
                     <span className={cn('rounded-full px-1.5 py-0.5 text-[9px] font-medium', pm.color)}>{pm.label}</span>
                     {t.is_overdue && !isDone && (
@@ -648,7 +648,7 @@ function DealTasksCard({ dealId }: { dealId: string }) {
                       <span className="text-[9px] text-amber-600">Due today</span>
                     )}
                     {dueDate && (
-                      <span className="text-[9px] text-gray-400">
+                      <span className="text-[9px] text-muted-foreground/70">
                         {formatDistanceToNow(dueDate, { addSuffix: true })}
                       </span>
                     )}
