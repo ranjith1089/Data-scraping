@@ -28,6 +28,9 @@ from .enrichment_log import EnrichmentLog
 # LinkedIn Prospecting module (Phase 4 — ProxyCurl + AI messages; migration 011).
 from .linkedin_message import LinkedInMessage
 
+# WhatsApp Outreach module (Phase 5 — Meta Cloud API + AI messages; migration 012).
+from .whatsapp_message import WhatsAppMessage
+
 # Social module (Phase 1 — Instagram DM automation; migration 006).
 from .social.social_account import SocialAccount
 from .social.social_conversation import SocialConversation
@@ -65,6 +68,8 @@ __all__ = [
     "EnrichmentLog",
     # LinkedIn Prospecting module
     "LinkedInMessage",
+    # WhatsApp Outreach module
+    "WhatsAppMessage",
     # Social module
     "SocialAccount",
     "SocialConversation",

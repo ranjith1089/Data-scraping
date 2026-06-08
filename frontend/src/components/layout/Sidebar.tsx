@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom'
+import { useState } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
   Users,
@@ -17,6 +18,8 @@ import {
   FileSignature,
   Compass,
   Linkedin,
+  MessageCircle,
+  ChevronDown,
 } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
 import { useUIStore } from '@/store/uiStore'
@@ -34,32 +37,43 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>
 }
 
-// Reference sidebar nav — matches the Replit reference design 1:1.
 const mainNav: NavItem[] = [
-  { title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { title: 'Leads', href: '/leads', icon: Users },
-  { title: 'Discover', href: '/discover', icon: Compass },
-  { title: 'Sectors', href: '/sectors', icon: Briefcase },
-  { title: 'Campaigns', href: '/campaigns', icon: Megaphone },
-  { title: 'Proposals', href: '/proposals', icon: FileSignature },
-  { title: 'LinkedIn', href: '/linkedin', icon: Linkedin },
-  { title: 'Pipeline', href: '/pipeline', icon: Target },
-  { title: 'Forms', href: '/forms', icon: FileText },
-  { title: 'Social', href: '/social', icon: Instagram },
-  { title: 'Integrations', href: '/integrations', icon: Plug },
-  { title: 'Developer', href: '/developer', icon: Code2 },
+  { title: 'Dashboard',  href: '/dashboard',  icon: LayoutDashboard },
+  { title: 'Leads',      href: '/leads',      icon: Users },
+  { title: 'Discover',   href: '/discover',   icon: Compass },
+  { title: 'Sectors',    href: '/sectors',    icon: Briefcase },
+  { title: 'Campaigns',  href: '/campaigns',  icon: Megaphone },
+  { title: 'Proposals',  href: '/proposals',  icon: FileSignature },
+  { title: 'LinkedIn',   href: '/linkedin',   icon: Linkedin },
+  { title: 'WhatsApp',   href: '/whatsapp',   icon: MessageCircle },
+  { title: 'Pipeline',   href: '/pipeline',   icon: Target },
+  { title: 'Forms',      href: '/forms',      icon: FileText },
+  { title: 'Social',     href: '/social',     icon: Instagram },
 ]
 
 const footerNav: NavItem[] = [
-  { title: 'AI Assistant', href: '/ai', icon: Bot },
-  { title: 'Billing', href: '/billing', icon: CreditCard },
-  { title: 'Settings', href: '/settings', icon: Settings },
+  { title: 'AI Assistant', href: '/ai',       icon: Bot },
 ]
+
+// Items nested under Settings
+const settingsChildren: NavItem[] = [
+  { title: 'Integrations', href: '/integrations', icon: Plug },
+  { title: 'Developer',    href: '/developer',    icon: Code2 },
+  { title: 'Billing',      href: '/billing',      icon: CreditCard },
+]
+
+const SETTINGS_PATHS = ['/settings', ...settingsChildren.map((s) => s.href)]
 
 export default function Sidebar() {
   const collapsed = useUIStore((s) => s.sidebarCollapsed)
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
+  const { pathname } = useLocation()
+
+  // Auto-open when on any settings-family route
+  const [settingsOpen, setSettingsOpen] = useState(() =>
+    SETTINGS_PATHS.some((p) => pathname.startsWith(p))
+  )
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -96,9 +110,7 @@ export default function Sidebar() {
             ))}
           </ul>
 
-          {/* Platform-admin section — only rendered for super-admins.
-              Gated on ``user.is_superuser`` which is populated from the
-              /auth/me response after login. */}
+          {/* Platform-admin section */}
           {user?.is_superuser && (
             <div className="mt-6 border-t border-sidebar-border/50 pt-4">
               {!collapsed && (
@@ -108,11 +120,7 @@ export default function Sidebar() {
               )}
               <ul className="space-y-1">
                 <SidebarLink
-                  item={{
-                    title: 'Tenants',
-                    href: '/admin/tenants',
-                    icon: ShieldCheck,
-                  }}
+                  item={{ title: 'Tenants', href: '/admin/tenants', icon: ShieldCheck }}
                   collapsed={collapsed}
                 />
               </ul>
@@ -126,6 +134,14 @@ export default function Sidebar() {
             {footerNav.map((item) => (
               <SidebarLink key={item.href} item={item} collapsed={collapsed} />
             ))}
+
+            {/* Settings group */}
+            <SettingsGroup
+              collapsed={collapsed}
+              open={settingsOpen}
+              onToggle={() => setSettingsOpen((o) => !o)}
+              children={settingsChildren}
+            />
           </ul>
 
           {user && (
@@ -168,13 +184,116 @@ export default function Sidebar() {
   )
 }
 
-function SidebarLink({
-  item,
+// ─── Settings expandable group ────────────────────────────────────────────────
+
+function SettingsGroup({
   collapsed,
+  open,
+  onToggle,
+  children,
 }: {
-  item: NavItem
   collapsed: boolean
+  open: boolean
+  onToggle: () => void
+  children: NavItem[]
 }) {
+  const { pathname } = useLocation()
+  const isActive = SETTINGS_PATHS.some((p) => pathname.startsWith(p))
+
+  if (collapsed) {
+    // Collapsed mode: show Settings icon + child icons individually with tooltips
+    return (
+      <>
+        <li>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <NavLink
+                to="/settings"
+                className={({ isActive }) =>
+                  cn(
+                    'group flex items-center justify-center rounded-md px-2 py-2 text-sm font-medium transition-colors',
+                    isActive
+                      ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                      : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground',
+                  )
+                }
+              >
+                <Settings className="h-4 w-4 shrink-0" />
+              </NavLink>
+            </TooltipTrigger>
+            <TooltipContent side="right">Settings</TooltipContent>
+          </Tooltip>
+        </li>
+        {children.map((item) => (
+          <SidebarLink key={item.href} item={item} collapsed={true} />
+        ))}
+      </>
+    )
+  }
+
+  return (
+    <li>
+      {/* Settings parent row — navigates to /settings + toggles sub-menu */}
+      <div className="flex items-center">
+        <NavLink
+          to="/settings"
+          className={({ isActive: linkActive }) =>
+            cn(
+              'flex flex-1 items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+              linkActive || isActive
+                ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground',
+            )
+          }
+        >
+          <Settings className="h-4 w-4 shrink-0" />
+          <span className="truncate">Settings</span>
+        </NavLink>
+        {/* Chevron toggle — separate click target so navigating and toggling are independent */}
+        <button
+          type="button"
+          onClick={onToggle}
+          className="ml-0.5 rounded-md p-1.5 text-sidebar-foreground/50 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
+          aria-label={open ? 'Collapse settings' : 'Expand settings'}
+        >
+          <ChevronDown
+            className={cn('h-3.5 w-3.5 transition-transform duration-200', open && 'rotate-180')}
+          />
+        </button>
+      </div>
+
+      {/* Sub-items */}
+      {open && (
+        <ul className="mt-0.5 space-y-0.5 pl-4">
+          {children.map((item) => {
+            const Icon = item.icon
+            const childActive = pathname.startsWith(item.href)
+            return (
+              <li key={item.href}>
+                <NavLink
+                  to={item.href}
+                  className={cn(
+                    'flex items-center gap-3 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                    childActive
+                      ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                      : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground',
+                  )}
+                >
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{item.title}</span>
+                </NavLink>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </li>
+  )
+}
+
+// ─── Generic sidebar link ─────────────────────────────────────────────────────
+
+function SidebarLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
   const Icon = item.icon
 
   const link = (
