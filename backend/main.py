@@ -81,6 +81,7 @@ try:
     from routers import linkedin as linkedin_router
     from routers import whatsapp as whatsapp_router
     from routers import email_sequences as email_sequences_router
+    from routers import reports as reports_router
     from routers.social import oauth as social_oauth
     from routers.social import webhook_inbound as social_webhook_inbound
     from routers.social import automations as social_automations
@@ -373,6 +374,8 @@ app.include_router(linkedin_router.router, prefix=PREFIX)
 app.include_router(whatsapp_router.router, prefix=PREFIX)
 # Email Sequences (Phase 6 — drip campaigns with APScheduler + SendGrid)
 app.include_router(email_sequences_router.router, prefix=PREFIX)
+# Reports (Phase 8 — comprehensive reporting & analytics)
+app.include_router(reports_router.router, prefix=PREFIX)
 
 # Public API (X-API-Key auth), public forms, and the public form shim/iframe
 app.include_router(public_api.router, prefix=PREFIX)
