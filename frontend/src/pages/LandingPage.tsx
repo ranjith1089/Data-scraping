@@ -140,7 +140,7 @@ function Navbar() {
               <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <span className={`font-bold text-xl tracking-tight transition-colors ${scrolled ? 'text-gray-900' : 'text-white'}`}>
+          <span className={`font-bold text-xl tracking-tight transition-colors ${scrolled ? 'text-foreground' : 'text-white'}`}>
             Aveon<span className={scrolled ? 'text-indigo-600' : 'text-indigo-300'}>Apex</span>
           </span>
         </div>
@@ -149,14 +149,14 @@ function Navbar() {
         <nav className="hidden md:flex items-center gap-8">
           {NAV.map(([id,label]) => (
             <button key={id} onClick={() => scrollTo(id)}
-              className={`text-sm font-medium transition-colors hover:text-indigo-400 ${scrolled ? 'text-gray-600' : 'text-white/80'}`}>
+              className={`text-sm font-medium transition-colors hover:text-indigo-400 ${scrolled ? 'text-foreground/70' : 'text-white/80'}`}>
               {label}
             </button>
           ))}
         </nav>
 
         <div className="hidden md:flex items-center gap-3">
-          <Link to="/login" className={`text-sm font-medium px-4 py-2 transition-colors ${scrolled ? 'text-gray-700 hover:text-indigo-600' : 'text-white/80 hover:text-white'}`}>
+          <Link to="/login" className={`text-sm font-medium px-4 py-2 transition-colors ${scrolled ? 'text-foreground/80 hover:text-indigo-600' : 'text-white/80 hover:text-white'}`}>
             Sign In
           </Link>
           <Link to="/register"
@@ -168,7 +168,7 @@ function Navbar() {
           </Link>
         </div>
 
-        <button className={`md:hidden p-2 rounded-lg transition-colors ${scrolled ? 'text-gray-600' : 'text-white'}`}
+        <button className={`md:hidden p-2 rounded-lg transition-colors ${scrolled ? 'text-foreground/70' : 'text-white'}`}
           onClick={() => setMenuOpen(v => !v)}>
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
             {menuOpen
@@ -179,15 +179,15 @@ function Navbar() {
       </div>
 
       {menuOpen && (
-        <div className="md:hidden bg-white/95 backdrop-blur-xl border-t border-gray-100 px-6 py-4 space-y-2">
+        <div className="md:hidden bg-white/95 backdrop-blur-xl border-t border-border/40 px-6 py-4 space-y-2">
           {NAV.map(([id,label]) => (
             <button key={id} onClick={() => scrollTo(id)}
-              className="block w-full text-left py-3 text-sm font-medium text-gray-700 border-b border-gray-50 last:border-0">
+              className="block w-full text-left py-3 text-sm font-medium text-foreground/80 border-b border-gray-50 last:border-0">
               {label}
             </button>
           ))}
           <div className="pt-3 flex flex-col gap-2">
-            <Link to="/login" className="block text-center rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700">Sign In</Link>
+            <Link to="/login" className="block text-center rounded-xl border border-border/60 px-4 py-2.5 text-sm font-medium text-foreground/80">Sign In</Link>
             <Link to="/register" className="block text-center rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white">Get Started Free</Link>
           </div>
         </div>
@@ -285,7 +285,7 @@ function ProductMockup() {
           <div className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-white shadow" />
         </div>
         <div>
-          <p className="text-xs font-bold text-gray-900 leading-none">Lead Scored!</p>
+          <p className="text-xs font-bold text-foreground leading-none">Lead Scored!</p>
           <p className="text-[10px] text-indigo-600 font-semibold mt-0.5">Score: 92 · Hot 🔥</p>
         </div>
       </div>
@@ -294,7 +294,7 @@ function ProductMockup() {
       <div className="absolute -bottom-5 -left-4 anim-float-slow glass-light rounded-2xl px-3 py-2.5 flex items-center gap-2.5 shadow-xl shadow-green-200/40">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-base shadow-lg">💬</div>
         <div>
-          <p className="text-xs font-bold text-gray-900 leading-none">Message Sent</p>
+          <p className="text-xs font-bold text-foreground leading-none">Message Sent</p>
           <p className="text-[10px] text-emerald-600 font-semibold mt-0.5">WhatsApp · Delivered ✓✓</p>
         </div>
       </div>
@@ -303,7 +303,7 @@ function ProductMockup() {
       <div className="absolute top-1/2 -left-6 anim-float glass-light rounded-xl px-3 py-2 shadow-lg shadow-amber-200/30 hidden xl:flex items-center gap-2">
         <span className="text-base">🏆</span>
         <div>
-          <p className="text-[10px] font-bold text-gray-900 leading-none">Deal Won</p>
+          <p className="text-[10px] font-bold text-foreground leading-none">Deal Won</p>
           <p className="text-[9px] text-amber-600 font-semibold mt-0.5">+₹2.4L revenue</p>
         </div>
       </div>
@@ -435,14 +435,14 @@ const STATS = [
 function StatsSection() {
   const ref = useReveal()
   return (
-    <section ref={ref} className="py-14 bg-white border-b border-gray-100">
+    <section ref={ref} className="py-14 bg-white border-b border-border/40">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-y-10 gap-x-4 text-center">
           {STATS.map((s, i) => (
             <div key={s.label} className={`reveal reveal-delay-${i + 1} group`}>
               <div className="text-3xl mb-2 transition-transform group-hover:scale-110 duration-200">{s.icon}</div>
               <div className={`text-3xl font-extrabold ${s.color}`}>{s.value}</div>
-              <div className="text-sm text-gray-500 mt-1 font-medium">{s.label}</div>
+              <div className="text-sm text-muted-foreground mt-1 font-medium">{s.label}</div>
             </div>
           ))}
         </div>
@@ -479,10 +479,10 @@ function FeaturesSection() {
           <div className="reveal inline-flex items-center gap-2 rounded-full bg-indigo-50 border border-indigo-100 px-4 py-1.5 text-sm font-semibold text-indigo-700 mb-5">
             ⚡ Core Features
           </div>
-          <h2 className="reveal reveal-delay-1 text-4xl lg:text-5xl font-extrabold text-gray-900 leading-[1.1]">
+          <h2 className="reveal reveal-delay-1 text-4xl lg:text-5xl font-extrabold text-foreground leading-[1.1]">
             Everything Your Sales Team Needs
           </h2>
-          <p className="reveal reveal-delay-2 mt-4 text-lg text-gray-500 leading-relaxed">
+          <p className="reveal reveal-delay-2 mt-4 text-lg text-muted-foreground leading-relaxed">
             One platform to discover, score, engage, and close — powered by AI and built for speed.
           </p>
         </div>
@@ -500,8 +500,8 @@ function FeaturesSection() {
                   <span className={`rounded-full px-3 py-1 text-xs font-bold ${a.badge}`}>{f.badge}</span>
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">{f.title}</h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">{f.desc}</p>
+                  <h3 className="text-lg font-bold text-foreground mb-2">{f.title}</h3>
+                  <p className="text-sm text-foreground/70 leading-relaxed">{f.desc}</p>
                 </div>
                 <div className="mt-auto pt-3">
                   <Link to="/register" className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 group">
@@ -551,10 +551,10 @@ function SolutionsSection() {
           <div className="reveal inline-flex items-center gap-2 rounded-full bg-violet-100 border border-violet-200 px-4 py-1.5 text-sm font-semibold text-violet-700 mb-5">
             🎯 Solutions
           </div>
-          <h2 className="reveal reveal-delay-1 text-4xl lg:text-5xl font-extrabold text-gray-900 leading-[1.1]">
+          <h2 className="reveal reveal-delay-1 text-4xl lg:text-5xl font-extrabold text-foreground leading-[1.1]">
             Built for Every Sales Team
           </h2>
-          <p className="reveal reveal-delay-2 mt-4 text-lg text-gray-500">
+          <p className="reveal reveal-delay-2 mt-4 text-lg text-muted-foreground">
             Whether you're a 2-person startup or a 50-person sales org, AveonApex scales with you.
           </p>
         </div>
@@ -562,7 +562,7 @@ function SolutionsSection() {
         <div className="grid lg:grid-cols-3 gap-8">
           {SOLUTIONS.map((s, i) => (
             <article key={s.title}
-              className={`reveal reveal-delay-${i + 1} card-hover rounded-3xl overflow-hidden bg-white border border-gray-200/80 shadow-lg ${s.glow} flex flex-col`}>
+              className={`reveal reveal-delay-${i + 1} card-hover rounded-3xl overflow-hidden bg-white border border-border/60/80 shadow-lg ${s.glow} flex flex-col`}>
               <div className={`bg-gradient-to-br ${s.g} p-8 relative overflow-hidden`}>
                 <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full bg-white/10" />
                 <div className="absolute -bottom-4 -left-4 w-20 h-20 rounded-full bg-white/10" />
@@ -573,10 +573,10 @@ function SolutionsSection() {
                 </div>
               </div>
               <div className="p-7 flex-1 flex flex-col gap-5">
-                <p className="text-sm text-gray-600 leading-relaxed">{s.desc}</p>
+                <p className="text-sm text-foreground/70 leading-relaxed">{s.desc}</p>
                 <ul className="space-y-2.5 flex-1">
                   {s.bullets.map(b => (
-                    <li key={b} className="flex items-start gap-2.5 text-sm text-gray-700">
+                    <li key={b} className="flex items-start gap-2.5 text-sm text-foreground/80">
                       <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 mt-0.5">
                         <svg className="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
                           <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
@@ -616,10 +616,10 @@ function HowItWorksSection() {
           <div className="reveal inline-flex items-center gap-2 rounded-full bg-emerald-50 border border-emerald-200 px-4 py-1.5 text-sm font-semibold text-emerald-700 mb-5">
             🔄 How It Works
           </div>
-          <h2 className="reveal reveal-delay-1 text-4xl lg:text-5xl font-extrabold text-gray-900 leading-[1.1]">
+          <h2 className="reveal reveal-delay-1 text-4xl lg:text-5xl font-extrabold text-foreground leading-[1.1]">
             From Zero to Closed Deal
           </h2>
-          <p className="reveal reveal-delay-2 mt-4 text-lg text-gray-500">
+          <p className="reveal reveal-delay-2 mt-4 text-lg text-muted-foreground">
             Four steps. Most teams are up and running in under an hour.
           </p>
         </div>
@@ -638,8 +638,8 @@ function HowItWorksSection() {
                     {s.num.replace('0','')}
                   </span>
                 </div>
-                <h3 className="text-base font-extrabold text-gray-900 mb-2">{s.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{s.desc}</p>
+                <h3 className="text-base font-extrabold text-foreground mb-2">{s.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -687,10 +687,10 @@ function BlogSection() {
             <div className="reveal inline-flex items-center gap-2 rounded-full bg-amber-100 border border-amber-200 px-4 py-1.5 text-sm font-semibold text-amber-700 mb-4">
               📚 Blog
             </div>
-            <h2 className="reveal reveal-delay-1 text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight">
+            <h2 className="reveal reveal-delay-1 text-4xl lg:text-5xl font-extrabold text-foreground leading-tight">
               Sales Insights & Guides
             </h2>
-            <p className="reveal reveal-delay-2 mt-3 text-lg text-gray-500">Practical tips to level up your B2B sales.</p>
+            <p className="reveal reveal-delay-2 mt-3 text-lg text-muted-foreground">Practical tips to level up your B2B sales.</p>
           </div>
           <a href="#" className="reveal reveal-delay-3 shrink-0 inline-flex items-center gap-1 text-sm font-bold text-indigo-600 hover:text-indigo-700">
             View all posts
@@ -702,7 +702,7 @@ function BlogSection() {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {BLOG_POSTS.map((p, i) => (
-            <article key={p.title} className={`reveal reveal-delay-${i + 1} card-hover rounded-3xl overflow-hidden bg-white border border-gray-200/80 shadow-sm flex flex-col`}>
+            <article key={p.title} className={`reveal reveal-delay-${i + 1} card-hover rounded-3xl overflow-hidden bg-white border border-border/60/80 shadow-sm flex flex-col`}>
               <div className={`bg-gradient-to-br ${p.g} h-48 flex items-center justify-center relative overflow-hidden`}>
                 <div className="absolute inset-0 bg-black/10" />
                 <span className="relative text-8xl drop-shadow-lg">{p.emoji}</span>
@@ -710,21 +710,21 @@ function BlogSection() {
               <div className="p-6 flex-1 flex flex-col gap-3">
                 <div className="flex items-center gap-3">
                   <span className={`rounded-full px-3 py-1 text-xs font-bold ${p.catStyle}`}>{p.cat}</span>
-                  <span className="text-xs text-gray-400">{p.read}</span>
+                  <span className="text-xs text-muted-foreground/70">{p.read}</span>
                 </div>
-                <h3 className="text-base font-extrabold text-gray-900 leading-snug hover:text-indigo-700 transition-colors cursor-pointer">{p.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed flex-1">{p.excerpt}</p>
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                <h3 className="text-base font-extrabold text-foreground leading-snug hover:text-indigo-700 transition-colors cursor-pointer">{p.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed flex-1">{p.excerpt}</p>
+                <div className="flex items-center justify-between pt-4 border-t border-border/40">
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 flex items-center justify-center text-xs font-bold text-white">
                       {p.author[0]}
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-gray-900">{p.author}</p>
-                      <p className="text-[10px] text-gray-400">{p.role}</p>
+                      <p className="text-xs font-bold text-foreground">{p.author}</p>
+                      <p className="text-[10px] text-muted-foreground/70">{p.role}</p>
                     </div>
                   </div>
-                  <span className="text-xs text-gray-400">{p.date}</span>
+                  <span className="text-xs text-muted-foreground/70">{p.date}</span>
                 </div>
               </div>
             </article>
@@ -751,28 +751,28 @@ function TestimonialsSection() {
           <div className="reveal inline-flex items-center gap-2 rounded-full bg-rose-50 border border-rose-200 px-4 py-1.5 text-sm font-semibold text-rose-600 mb-5">
             ❤️ Customer Stories
           </div>
-          <h2 className="reveal reveal-delay-1 text-4xl lg:text-5xl font-extrabold text-gray-900">Loved by Sales Teams</h2>
-          <p className="reveal reveal-delay-2 mt-3 text-lg text-gray-500">Real results from real teams across India.</p>
+          <h2 className="reveal reveal-delay-1 text-4xl lg:text-5xl font-extrabold text-foreground">Loved by Sales Teams</h2>
+          <p className="reveal reveal-delay-2 mt-3 text-lg text-muted-foreground">Real results from real teams across India.</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
           {TESTIMONIALS.map((t, i) => (
             <blockquote key={t.name}
-              className={`reveal reveal-delay-${i + 1} card-hover rounded-3xl bg-white border border-gray-200/80 shadow-sm p-8 flex flex-col gap-5`}>
+              className={`reveal reveal-delay-${i + 1} card-hover rounded-3xl bg-white border border-border/60/80 shadow-sm p-8 flex flex-col gap-5`}>
               {/* Quote mark */}
               <div className="text-4xl font-black text-indigo-200 leading-none -mb-2">"</div>
               {/* Stars */}
               <div className="flex gap-0.5">
                 {[1,2,3,4,5].map(j => <span key={j} className="text-amber-400 text-base">★</span>)}
               </div>
-              <p className="text-gray-700 leading-relaxed text-sm flex-1">{t.q}</p>
-              <div className="flex items-center gap-3 pt-4 border-t border-gray-100">
+              <p className="text-foreground/80 leading-relaxed text-sm flex-1">{t.q}</p>
+              <div className="flex items-center gap-3 pt-4 border-t border-border/40">
                 <div className={`w-11 h-11 rounded-full bg-gradient-to-br ${t.g} flex items-center justify-center text-sm font-extrabold text-white shadow-md`}>
                   {t.av}
                 </div>
                 <div>
-                  <p className="text-sm font-extrabold text-gray-900">{t.name}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{t.title}</p>
+                  <p className="text-sm font-extrabold text-foreground">{t.name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t.title}</p>
                 </div>
               </div>
             </blockquote>
