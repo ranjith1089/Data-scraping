@@ -1,6 +1,7 @@
 import { useSearchParams } from 'react-router-dom'
-import { LayoutGrid, Filter as FilterIcon } from 'lucide-react'
+import { LayoutGrid, Filter as FilterIcon, TrendingUp, Trophy, AlertTriangle, Target } from 'lucide-react'
 import { usePipeline } from '@/hooks/useAnalytics'
+import { useRevenueForecast } from '@/hooks/usePipelineDeals'
 import {
   Card,
   CardContent,
@@ -162,6 +163,75 @@ function FunnelSVG3D({ stages }: { stages: Stage[] }) {
   )
 }
 
+// ─── Revenue bar ──────────────────────────────────────────────────────────────
+
+function RevenueBar() {
+  const { data: fc, isLoading } = useRevenueForecast()
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        {Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
+      </div>
+    )
+  }
+
+  if (!fc) return null
+
+  const stats = [
+    {
+      label: 'Total Pipeline',
+      value: formatINR(fc.total_pipeline_inr),
+      sub: `${fc.open_count} open deals`,
+      icon: <TrendingUp className="w-4 h-4 text-indigo-400" />,
+      color: 'border-indigo-200 bg-indigo-50/40',
+    },
+    {
+      label: 'Weighted Value',
+      value: formatINR(fc.weighted_pipeline_inr),
+      sub: 'probability-adjusted',
+      icon: <Target className="w-4 h-4 text-purple-400" />,
+      color: 'border-purple-200 bg-purple-50/40',
+    },
+    {
+      label: 'Won This Month',
+      value: formatINR(fc.won_this_month_inr),
+      sub: `${fc.won_this_month_count} deal${fc.won_this_month_count !== 1 ? 's' : ''}`,
+      icon: <Trophy className="w-4 h-4 text-green-500" />,
+      color: 'border-green-200 bg-green-50/40',
+    },
+    {
+      label: 'Win Rate',
+      value: `${Math.round(fc.win_rate)}%`,
+      sub: `${fc.won_count} won · ${fc.lost_count} lost`,
+      icon: <TrendingUp className="w-4 h-4 text-blue-400" />,
+      color: 'border-blue-200 bg-blue-50/40',
+    },
+    {
+      label: 'Overdue Deals',
+      value: fc.overdue_deals,
+      sub: `${fc.deals_closing_this_month} closing this month`,
+      icon: <AlertTriangle className={cn('w-4 h-4', fc.overdue_deals > 0 ? 'text-red-400' : 'text-gray-300')} />,
+      color: fc.overdue_deals > 0 ? 'border-red-200 bg-red-50/40' : 'border-gray-200 bg-gray-50/30',
+    },
+  ]
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      {stats.map((s) => (
+        <div key={s.label} className={cn('rounded-xl border p-4', s.color)}>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-500">{s.label}</p>
+            {s.icon}
+          </div>
+          <p className="text-lg font-bold text-gray-900">{s.value}</p>
+          <p className="text-xs text-gray-400 mt-0.5">{s.sub}</p>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 type PipelineView = 'funnel' | 'board'
 
 export default function PipelinePage() {
@@ -242,6 +312,9 @@ export default function PipelinePage() {
           </button>
         </div>
       </div>
+
+      {/* Revenue forecast bar — shown in both views */}
+      <RevenueBar />
 
       {/* Board view renders the Kanban and skips everything else on the page. */}
       {view === 'board' && <LeadKanban />}

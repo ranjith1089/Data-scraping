@@ -38,6 +38,11 @@ class Deal(Base):
     close_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     probability: Mapped[int] = mapped_column(Integer, default=20)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    # Phase 7 — won/lost tracking
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="open")
+    lost_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    won_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    lost_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("now()")
     )

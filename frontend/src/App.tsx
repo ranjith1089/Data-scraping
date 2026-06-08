@@ -34,6 +34,7 @@ import LinkedInPage from './pages/LinkedInPage'
 import WhatsAppPage from './pages/WhatsAppPage'
 import EmailSequencesPage from './pages/EmailSequencesPage'
 import EmailSequenceDetailPage from './pages/EmailSequenceDetailPage'
+import DealDetailPage from './pages/DealDetailPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -76,6 +77,8 @@ export default function App() {
           <Route path="proposals" element={<ProposalsPage />} />
           <Route path="proposals/:id" element={<ProposalDetailPage />} />
           <Route path="pipeline" element={<PipelinePage />} />
+          {/* Deal detail (Phase 7 — won/lost tracking + activity timeline) */}
+          <Route path="deals/:id" element={<DealDetailPage />} />
           {/*
             Canonical AI Assistant route is /ai — the Sidebar, TopBar breadcrumb
             lookup, and the URL users have already bookmarked all point here.
