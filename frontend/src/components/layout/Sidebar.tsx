@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Users, Megaphone, Target, Briefcase,
@@ -56,21 +56,46 @@ const SETTINGS_PATHS = ['/settings', ...settingsChildren.map((s) => s.href)]
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function Sidebar() {
-  const collapsed   = useUIStore((s) => s.sidebarCollapsed)
-  const user        = useAuthStore((s) => s.user)
-  const logout      = useAuthStore((s) => s.logout)
-  const { pathname } = useLocation()
+  const collapsed          = useUIStore((s) => s.sidebarCollapsed)
+  const mobileSidebarOpen  = useUIStore((s) => s.mobileSidebarOpen)
+  const closeMobileSidebar = useUIStore((s) => s.closeMobileSidebar)
+  const user               = useAuthStore((s) => s.user)
+  const logout             = useAuthStore((s) => s.logout)
+  const { pathname }       = useLocation()
 
   const [settingsOpen, setSettingsOpen] = useState(() =>
     SETTINGS_PATHS.some((p) => pathname.startsWith(p))
   )
 
+  // On mobile, always show expanded content (width is always w-64 when open)
+  // On desktop, respect the collapsed state
+  const showExpanded = !collapsed || mobileSidebarOpen
+
+  // Close mobile sidebar on navigation
+  useEffect(() => {
+    closeMobileSidebar()
+  }, [pathname]) // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <TooltipProvider delayDuration={0}>
+      {/* Mobile backdrop overlay */}
+      {mobileSidebarOpen && (
+        <div
+          className="fixed inset-0 z-20 bg-black/50 lg:hidden"
+          onClick={closeMobileSidebar}
+          aria-hidden="true"
+        />
+      )}
+
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-30 flex flex-col shadow-xl transition-[width] duration-300',
-          collapsed ? 'w-16' : 'w-64',
+          'fixed inset-y-0 left-0 z-30 flex flex-col shadow-xl',
+          'transition-[width,transform] duration-300',
+          // Mobile: slide in/out; Desktop: always visible
+          mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+          // Width: always w-64 on mobile (when visible), desktop respects collapsed state
+          'w-64',
+          collapsed ? 'lg:w-16' : 'lg:w-64',
         )}
         style={{
           background: 'linear-gradient(180deg, hsl(230,38%,11%) 0%, hsl(228,32%,9%) 100%)',
@@ -79,9 +104,8 @@ export default function Sidebar() {
       >
         {/* ── Brand logo ───────────────────────────────────────────────────── */}
         <div className={cn(
-          'flex h-16 items-center shrink-0 border-b',
-          'border-white/8',
-          collapsed ? 'justify-center px-0' : 'px-4 gap-3',
+          'flex h-16 items-center shrink-0 border-b border-white/8',
+          showExpanded ? 'px-4 gap-3' : 'justify-center px-0',
         )}>
           <div className="relative flex-shrink-0">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-900/40"
@@ -91,7 +115,7 @@ export default function Sidebar() {
             <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2"
               style={{ borderColor: 'hsl(230,38%,11%)' }} />
           </div>
-          {!collapsed && (
+          {showExpanded && (
             <div>
               <p className="font-extrabold text-[15px] tracking-tight leading-none">
                 <span className="text-white">Aveon</span>
@@ -104,26 +128,26 @@ export default function Sidebar() {
 
         {/* ── Main nav ─────────────────────────────────────────────────────── */}
         <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin px-2 py-3 space-y-0.5">
-          {!collapsed && (
+          {showExpanded && (
             <p className="px-3 mb-2 text-[9px] font-black tracking-[0.18em] text-slate-600 uppercase">
               Navigation
             </p>
           )}
           {mainNav.map((item) => (
-            <SidebarLink key={item.href} item={item} collapsed={collapsed} />
+            <SidebarLink key={item.href} item={item} collapsed={!showExpanded} />
           ))}
 
           {/* Superuser section */}
           {user?.is_superuser && (
             <div className="mt-4 pt-3 border-t border-white/8">
-              {!collapsed && (
+              {showExpanded && (
                 <p className="px-3 mb-2 text-[9px] font-black tracking-[0.18em] text-slate-600 uppercase">
                   Admin
                 </p>
               )}
               <SidebarLink
                 item={{ title: 'Tenants', href: '/admin/tenants', icon: ShieldCheck, color: 'text-amber-400' }}
-                collapsed={collapsed}
+                collapsed={!showExpanded}
               />
             </div>
           )}
@@ -133,12 +157,12 @@ export default function Sidebar() {
         <div className="shrink-0 border-t border-white/8 px-2 py-2 space-y-0.5">
           {/* AI Assistant — highlighted */}
           {footerNav.map((item) => (
-            <SidebarLink key={item.href} item={item} collapsed={collapsed} highlight />
+            <SidebarLink key={item.href} item={item} collapsed={!showExpanded} highlight />
           ))}
 
           {/* Settings group */}
           <SettingsGroup
-            collapsed={collapsed}
+            collapsed={!showExpanded}
             open={settingsOpen}
             onToggle={() => setSettingsOpen((o) => !o)}
             children={settingsChildren}
@@ -149,13 +173,13 @@ export default function Sidebar() {
             <div className={cn(
               'mt-2 border-t border-white/8 pt-2 flex items-center rounded-xl px-2 py-2',
               'transition-colors hover:bg-white/5 cursor-default',
-              collapsed ? 'justify-center' : 'gap-2.5',
+              showExpanded ? 'gap-2.5' : 'justify-center',
             )}>
               <div className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-md"
                 style={{ background: 'linear-gradient(135deg,#6366f1,#a855f7)' }}>
                 {getInitials(user.full_name)}
               </div>
-              {!collapsed && (
+              {showExpanded && (
                 <>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[13px] font-semibold text-slate-200 leading-tight">{user.full_name}</p>

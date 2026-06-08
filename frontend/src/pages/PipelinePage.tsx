@@ -248,11 +248,11 @@ function FunnelView({ pipelineData, isLoading, totalLeads, totalValue, wonCount,
               <div className="w-60 space-y-4">{Array(7).fill(0).map((_, i) => <Skeleton key={i} className="h-14 rounded-xl" />)}</div>
             </div>
           ) : pipelineData.length > 0 ? (
-            <div className="flex gap-6 items-start">
-              <div className="flex-1 min-w-0">
+            <div className="flex flex-col md:flex-row gap-6 items-start">
+              <div className="flex-1 min-w-0 w-full">
                 <FunnelSVG3D stages={pipelineData} />
               </div>
-              <div className="w-64 shrink-0 flex flex-col justify-between" style={{ height: 430 }}>
+              <div className="w-full md:w-64 md:shrink-0 flex flex-col justify-between md:h-[430px] gap-1">
                 {pipelineData.map((s, i) => {
                   const meta = STAGE_META[s.stage]
                   const prevCount = i === 0 ? s.count : pipelineData[i - 1].count

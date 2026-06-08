@@ -277,7 +277,8 @@ export default function WhatsAppPage() {
             </p>
           </div>
         ) : (
-          <table className="w-full">
+          <div className="overflow-x-auto scrollbar-thin">
+          <table className="w-full min-w-[560px]">
             <thead className="bg-muted/40 border-b border-border/60">
               <tr>
                 <th className="px-4 py-3 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Lead</th>
@@ -294,6 +295,7 @@ export default function WhatsAppPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>
