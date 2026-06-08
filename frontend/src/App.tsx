@@ -30,6 +30,7 @@ import SocialCampaignsPage from './pages/social/CampaignsPage'
 import SocialAnalyticsPage from './pages/social/AnalyticsPage'
 import SocialTemplatesPage from './pages/social/TemplatesPage'
 import LeadDiscoveryPage from './pages/LeadDiscoveryPage'
+import LinkedInPage from './pages/LinkedInPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -58,6 +59,8 @@ export default function App() {
           <Route path="leads/:id" element={<LeadDetailPage />} />
           {/* Lead Discovery (Phase 3 — Apollo.io people search) */}
           <Route path="discover" element={<LeadDiscoveryPage />} />
+          {/* LinkedIn Prospecting (Phase 4 — AI outreach messages) */}
+          <Route path="linkedin" element={<LinkedInPage />} />
           <Route path="sectors" element={<SectorsPage />} />
           <Route path="campaigns" element={<CampaignsPage />} />
           <Route path="campaigns/:id" element={<CampaignDetailPage />} />

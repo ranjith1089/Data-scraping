@@ -25,6 +25,9 @@ from .proposal import Proposal
 # Lead Enrichment module (Phase 2 — Apollo.io / Hunter.io; migration 010).
 from .enrichment_log import EnrichmentLog
 
+# LinkedIn Prospecting module (Phase 4 — ProxyCurl + AI messages; migration 011).
+from .linkedin_message import LinkedInMessage
+
 # Social module (Phase 1 — Instagram DM automation; migration 006).
 from .social.social_account import SocialAccount
 from .social.social_conversation import SocialConversation
@@ -60,6 +63,8 @@ __all__ = [
     "Proposal",
     # Lead Enrichment module
     "EnrichmentLog",
+    # LinkedIn Prospecting module
+    "LinkedInMessage",
     # Social module
     "SocialAccount",
     "SocialConversation",

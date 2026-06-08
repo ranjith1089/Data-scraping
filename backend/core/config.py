@@ -90,6 +90,13 @@ class Settings(BaseSettings):
     # Get key at https://hunter.io/api
     HUNTER_API_KEY: str = ""
 
+    # ------------------------------------------------------------------
+    # LinkedIn Prospecting (Phase 4 — ProxyCurl profile enrichment)
+    # ------------------------------------------------------------------
+    # ProxyCurl — LinkedIn data API. Free trial: 10 credits.
+    # Get key at https://nubela.co/proxycurl
+    PROXYCURL_API_KEY: str = ""
+
     # SMTP alternative to SendGrid
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587

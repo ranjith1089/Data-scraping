@@ -26,11 +26,27 @@ import {
   Wand2,
   CheckCircle2,
   AlertCircle,
+  Linkedin,
+  Copy,
+  Check,
+  UserCheck,
+  MessageCircle,
+  Trash2,
 } from 'lucide-react'
 import { useLead } from '@/hooks/useLeads'
 import { useLeadScore, useEmailGen, type EmailGenRequest } from '@/hooks/useAI'
 import { useProposals, useGenerateProposal, openProposalHtmlExport, downloadProposalDocx } from '@/hooks/useProposals'
 import { useEnrichLead, useEnrichmentLogs, FIELD_LABELS, type EnrichmentResult } from '@/hooks/useEnrichment'
+import {
+  useLeadLinkedInMessages,
+  useGenerateLinkedInMessage,
+  useUpdateLinkedInMessage,
+  useDeleteLinkedInMessage,
+  useEnrichLinkedInProfile,
+  LINKEDIN_STATUSES,
+  TONE_OPTIONS,
+  type LinkedInMessage,
+} from '@/hooks/useLinkedIn'
 import {
   cn,
   SECTOR_COLORS,
@@ -47,13 +63,14 @@ import { format } from 'date-fns'
 import toast from 'react-hot-toast'
 import api from '@/lib/api'
 
-type TabKey = 'overview' | 'activity' | 'ai' | 'campaigns' | 'deals' | 'proposals'
+type TabKey = 'overview' | 'activity' | 'ai' | 'campaigns' | 'deals' | 'proposals' | 'linkedin'
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'overview', label: 'Overview' },
   { key: 'activity', label: 'Activity' },
   { key: 'ai', label: 'AI Actions' },
   { key: 'proposals', label: 'Proposals' },
+  { key: 'linkedin', label: 'LinkedIn' },
   { key: 'campaigns', label: 'Campaigns' },
   { key: 'deals', label: 'Deals' },
 ]
@@ -128,6 +145,66 @@ export default function LeadDetailPage() {
   const generateProposalMutation = useGenerateProposal()
   const [proposalType, setProposalType] = useState<'service_proposal' | 'project_quote' | 'intro_letter'>('service_proposal')
   const [proposalTone, setProposalTone] = useState<'professional' | 'friendly' | 'formal' | 'consultative'>('professional')
+
+  // LinkedIn state
+  const { data: linkedInMessages = [], isLoading: liLoading } = useLeadLinkedInMessages(id || '')
+  const generateLiMutation = useGenerateLinkedInMessage(id || '')
+  const updateLiMutation = useUpdateLinkedInMessage()
+  const deleteLiMutation = useDeleteLinkedInMessage()
+  const enrichLiMutation = useEnrichLinkedInProfile(id || '')
+  const [liTone, setLiTone] = useState<'professional' | 'friendly' | 'value-first' | 'curiosity'>('professional')
+  const [liContext, setLiContext] = useState('')
+  const [liEnrichResult, setLiEnrichResult] = useState<{ source: string; headline: string | null; summary: string | null; warning: string | null } | null>(null)
+  const [liCopied, setLiCopied] = useState<string | null>(null)
+
+  async function handleGenerateLiMessage() {
+    if (!id) return
+    try {
+      await generateLiMutation.mutateAsync({
+        tone: liTone,
+        context: liContext.trim() || undefined,
+        include_followup: true,
+      })
+      toast.success('LinkedIn messages generated!')
+    } catch {
+      toast.error('Failed to generate. Check AI quota.')
+    }
+  }
+
+  async function handleLiEnrich() {
+    if (!id) return
+    try {
+      const result = await enrichLiMutation.mutateAsync()
+      setLiEnrichResult(result)
+      if (result.source === 'proxycurl') {
+        toast.success('LinkedIn profile enriched!')
+      } else {
+        toast(result.warning || 'Could not enrich profile', { icon: 'ℹ️' })
+      }
+    } catch {
+      toast.error('LinkedIn enrichment failed')
+    }
+  }
+
+  function copyLi(text: string, id: string) {
+    navigator.clipboard.writeText(text)
+    setLiCopied(id)
+    toast.success('Copied!')
+    setTimeout(() => setLiCopied(null), 2000)
+  }
+
+  async function handleLiStatusChange(msg: LinkedInMessage, newStatus: LinkedInMessage['status']) {
+    const now = new Date().toISOString()
+    const extra: Record<string, string> = {}
+    if (newStatus === 'sent' && !msg.sent_at) extra.sent_at = now
+    if (newStatus === 'connected' && !msg.connected_at) extra.connected_at = now
+    if (newStatus === 'replied' && !msg.replied_at) extra.replied_at = now
+    try {
+      await updateLiMutation.mutateAsync({ id: msg.id, updates: { status: newStatus, ...extra } })
+    } catch {
+      toast.error('Failed to update status')
+    }
+  }
 
   async function handleScoreLead() {
     if (!id) return
@@ -813,6 +890,204 @@ export default function LeadDetailPage() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* LINKEDIN TAB */}
+        {activeTab === 'linkedin' && (
+          <div className="space-y-5 p-6">
+            {/* Header row */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                  <div className="flex h-6 w-6 items-center justify-center rounded bg-blue-600">
+                    <Linkedin className="h-3.5 w-3.5 text-white" />
+                  </div>
+                  LinkedIn Outreach
+                </h3>
+                {lead.linkedin_url ? (
+                  <a
+                    href={lead.linkedin_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-0.5 flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    {lead.linkedin_url.replace(/https?:\/\/(www\.)?linkedin\.com\/in\//, '').replace(/\/$/, '')}
+                  </a>
+                ) : (
+                  <p className="mt-0.5 text-xs text-gray-400">No LinkedIn URL on this lead</p>
+                )}
+              </div>
+              {lead.linkedin_url && (
+                <button
+                  onClick={handleLiEnrich}
+                  disabled={enrichLiMutation.isPending}
+                  className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+                >
+                  {enrichLiMutation.isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <UserCheck className="h-3.5 w-3.5" />
+                  )}
+                  Enrich from LinkedIn
+                </button>
+              )}
+            </div>
+
+            {/* Enrichment result */}
+            {liEnrichResult && liEnrichResult.source === 'proxycurl' && (
+              <div className="rounded-lg border border-blue-100 bg-blue-50/60 p-4">
+                {liEnrichResult.headline && (
+                  <p className="text-sm font-medium text-gray-900">{liEnrichResult.headline}</p>
+                )}
+                {liEnrichResult.summary && (
+                  <p className="mt-1 line-clamp-3 text-xs text-gray-600">{liEnrichResult.summary}</p>
+                )}
+              </div>
+            )}
+            {liEnrichResult?.warning && liEnrichResult.source !== 'proxycurl' && (
+              <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+                <AlertCircle className="h-4 w-4 shrink-0 text-amber-600" />
+                <p className="text-xs text-amber-800">{liEnrichResult.warning}</p>
+              </div>
+            )}
+
+            {/* Generate panel */}
+            <div className="rounded-lg border border-blue-100 bg-blue-50/30 p-4">
+              <h4 className="mb-3 text-sm font-semibold text-gray-900">Generate AI Messages</h4>
+              {/* Tone chips */}
+              <div className="mb-3 flex flex-wrap gap-2">
+                {TONE_OPTIONS.map((t) => (
+                  <button
+                    key={t.value}
+                    type="button"
+                    onClick={() => setLiTone(t.value)}
+                    title={t.description}
+                    className={cn(
+                      'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+                      liTone === t.value
+                        ? 'border-blue-500 bg-blue-100 text-blue-700'
+                        : 'border-gray-200 text-gray-600 hover:border-blue-300'
+                    )}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+              {/* Context input */}
+              <textarea
+                rows={2}
+                value={liContext}
+                onChange={(e) => setLiContext(e.target.value)}
+                placeholder="Optional: what you offer (e.g. 'We help IT firms hire remote engineers at 40% lower cost')"
+                className="mb-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-700 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <button
+                onClick={handleGenerateLiMessage}
+                disabled={generateLiMutation.isPending}
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                {generateLiMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+                {generateLiMutation.isPending ? 'Generating…' : 'Generate Messages'}
+              </button>
+            </div>
+
+            {/* Messages list */}
+            {liLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+              </div>
+            ) : linkedInMessages.length === 0 ? (
+              <div className="py-8 text-center">
+                <Linkedin className="mx-auto h-8 w-8 text-gray-300" />
+                <p className="mt-2 text-sm text-gray-500">No messages generated yet</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {linkedInMessages.map((msg) => {
+                  const statusMeta = LINKEDIN_STATUSES.find((s) => s.value === msg.status) || LINKEDIN_STATUSES[0]
+                  return (
+                    <div key={msg.id} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                      {/* Status + actions row */}
+                      <div className="mb-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className={cn('rounded-full px-2.5 py-1 text-xs font-medium', statusMeta.color)}>
+                            {statusMeta.label}
+                          </span>
+                          <span className="text-xs text-gray-400">{msg.ai_tone} · {formatDate(msg.created_at)}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {/* Status change */}
+                          {LINKEDIN_STATUSES.filter((s) => s.value !== msg.status).slice(0, 3).map((s) => (
+                            <button
+                              key={s.value}
+                              onClick={() => handleLiStatusChange(msg, s.value)}
+                              disabled={updateLiMutation.isPending}
+                              className={cn('rounded-full px-2 py-0.5 text-xs font-medium transition-colors', s.color, 'opacity-60 hover:opacity-100')}
+                            >
+                              → {s.label}
+                            </button>
+                          ))}
+                          <button
+                            onClick={async () => {
+                              if (window.confirm('Delete this message?')) {
+                                await deleteLiMutation.mutateAsync(msg.id)
+                              }
+                            }}
+                            className="ml-1 rounded-lg p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Connection note */}
+                      <div className="mb-3">
+                        <div className="mb-1 flex items-center justify-between">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                            Connection Note ({msg.connection_note.length}/300)
+                          </p>
+                          <button
+                            onClick={() => copyLi(msg.connection_note, `note-${msg.id}`)}
+                            className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
+                          >
+                            {liCopied === `note-${msg.id}` ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                            Copy
+                          </button>
+                        </div>
+                        <p className="rounded-lg bg-blue-50/60 px-3 py-2.5 text-sm text-gray-800 leading-relaxed">
+                          {msg.connection_note}
+                        </p>
+                      </div>
+
+                      {/* Follow-up */}
+                      {msg.followup_message && (
+                        <div>
+                          <div className="mb-1 flex items-center justify-between">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Follow-up Message</p>
+                            <button
+                              onClick={() => copyLi(msg.followup_message!, `followup-${msg.id}`)}
+                              className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
+                            >
+                              {liCopied === `followup-${msg.id}` ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                              Copy
+                            </button>
+                          </div>
+                          <p className="rounded-lg bg-gray-50 px-3 py-2.5 text-sm text-gray-700 leading-relaxed">
+                            {msg.followup_message}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             )}
           </div>

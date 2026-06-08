@@ -16,6 +16,7 @@ import {
   Instagram,
   FileSignature,
   Compass,
+  Linkedin,
 } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
 import { useUIStore } from '@/store/uiStore'
@@ -41,6 +42,7 @@ const mainNav: NavItem[] = [
   { title: 'Sectors', href: '/sectors', icon: Briefcase },
   { title: 'Campaigns', href: '/campaigns', icon: Megaphone },
   { title: 'Proposals', href: '/proposals', icon: FileSignature },
+  { title: 'LinkedIn', href: '/linkedin', icon: Linkedin },
   { title: 'Pipeline', href: '/pipeline', icon: Target },
   { title: 'Forms', href: '/forms', icon: FileText },
   { title: 'Social', href: '/social', icon: Instagram },
