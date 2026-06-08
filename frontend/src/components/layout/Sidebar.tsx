@@ -18,6 +18,7 @@ import {
   FileSignature,
   Compass,
   Linkedin,
+  MessageCircle,
   ChevronDown,
 } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
@@ -44,6 +45,7 @@ const mainNav: NavItem[] = [
   { title: 'Campaigns',  href: '/campaigns',  icon: Megaphone },
   { title: 'Proposals',  href: '/proposals',  icon: FileSignature },
   { title: 'LinkedIn',   href: '/linkedin',   icon: Linkedin },
+  { title: 'WhatsApp',   href: '/whatsapp',   icon: MessageCircle },
   { title: 'Pipeline',   href: '/pipeline',   icon: Target },
   { title: 'Forms',      href: '/forms',      icon: FileText },
   { title: 'Social',     href: '/social',     icon: Instagram },

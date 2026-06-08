@@ -31,6 +31,7 @@ import {
   Check,
   UserCheck,
   Trash2,
+  MessageCircle,
 } from 'lucide-react'
 import { useLead } from '@/hooks/useLeads'
 import { useLeadScore, useEmailGen, type EmailGenRequest } from '@/hooks/useAI'
@@ -47,6 +48,14 @@ import {
   type LinkedInMessage,
 } from '@/hooks/useLinkedIn'
 import {
+  useWhatsAppThread,
+  useGenerateWhatsAppMessage,
+  useSendWhatsAppMessage,
+  useDeleteWhatsAppMessage,
+  WA_TONE_OPTIONS,
+  WA_STATUSES,
+} from '@/hooks/useWhatsApp'
+import {
   cn,
   SECTOR_COLORS,
   SECTOR_NAMES,
@@ -62,7 +71,7 @@ import { format } from 'date-fns'
 import toast from 'react-hot-toast'
 import api from '@/lib/api'
 
-type TabKey = 'overview' | 'activity' | 'ai' | 'campaigns' | 'deals' | 'proposals' | 'linkedin'
+type TabKey = 'overview' | 'activity' | 'ai' | 'campaigns' | 'deals' | 'proposals' | 'linkedin' | 'whatsapp'
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'overview', label: 'Overview' },
@@ -70,6 +79,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'ai', label: 'AI Actions' },
   { key: 'proposals', label: 'Proposals' },
   { key: 'linkedin', label: 'LinkedIn' },
+  { key: 'whatsapp', label: 'WhatsApp' },
   { key: 'campaigns', label: 'Campaigns' },
   { key: 'deals', label: 'Deals' },
 ]
@@ -155,6 +165,50 @@ export default function LeadDetailPage() {
   const [liContext, setLiContext] = useState('')
   const [liEnrichResult, setLiEnrichResult] = useState<{ source: string; headline: string | null; summary: string | null; warning: string | null } | null>(null)
   const [liCopied, setLiCopied] = useState<string | null>(null)
+
+  // WhatsApp state
+  const { data: waMessages = [], isLoading: waLoading } = useWhatsAppThread(id || '')
+  const generateWaMutation = useGenerateWhatsAppMessage(id || '')
+  const sendWaMutation = useSendWhatsAppMessage(id || '')
+  const deleteWaMutation = useDeleteWhatsAppMessage()
+  const [waTone, setWaTone] = useState<'friendly' | 'professional' | 'value-first' | 'curiosity'>('friendly')
+  const [waContext, setWaContext] = useState('')
+  const [waCopied, setWaCopied] = useState<string | null>(null)
+  const [waSendingId, setWaSendingId] = useState<string | null>(null)
+
+  async function handleGenerateWaMessage() {
+    if (!id) return
+    try {
+      await generateWaMutation.mutateAsync({ tone: waTone, context: waContext.trim() || undefined })
+      toast.success('WhatsApp message generated!')
+    } catch {
+      toast.error('Failed to generate. Check AI quota.')
+    }
+  }
+
+  async function handleSendWaMessage(msgId: string, content: string) {
+    if (!id) return
+    setWaSendingId(msgId)
+    try {
+      const result = await sendWaMutation.mutateAsync({ content, message_type: 'ai_generated', ai_tone: waTone })
+      if (result.success) {
+        toast.success('Sent via WhatsApp!')
+      } else {
+        toast.error(result.warning ?? 'Send failed — check WA_API_KEY on Railway.')
+      }
+    } catch {
+      toast.error('Failed to send message')
+    } finally {
+      setWaSendingId(null)
+    }
+  }
+
+  function copyWa(text: string, key: string) {
+    navigator.clipboard.writeText(text)
+    setWaCopied(key)
+    toast.success('Copied!')
+    setTimeout(() => setWaCopied(null), 2000)
+  }
 
   async function handleGenerateLiMessage() {
     if (!id) return
@@ -1084,6 +1138,189 @@ export default function LeadDetailPage() {
                           </p>
                         </div>
                       )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* WHATSAPP TAB */}
+        {activeTab === 'whatsapp' && (
+          <div className="space-y-5 p-6">
+            {/* Header row */}
+            <div className="flex items-center justify-between">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                <div className="flex h-6 w-6 items-center justify-center rounded bg-green-500">
+                  <MessageCircle className="h-3.5 w-3.5 text-white" />
+                </div>
+                WhatsApp Outreach
+              </h3>
+              {lead.phone ? (
+                <span className="flex items-center gap-1.5 text-xs text-gray-500">
+                  <Phone className="h-3.5 w-3.5" />
+                  {lead.phone}
+                </span>
+              ) : (
+                <span className="flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs text-amber-700">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  No phone number — add one before sending
+                </span>
+              )}
+            </div>
+
+            {/* Generate panel */}
+            <div className="rounded-lg border border-green-100 bg-green-50/30 p-4">
+              <h4 className="mb-3 text-sm font-semibold text-gray-900">Generate AI Message</h4>
+
+              {/* Tone chips */}
+              <div className="mb-3 flex flex-wrap gap-2">
+                {WA_TONE_OPTIONS.map((t) => (
+                  <button
+                    key={t.value}
+                    type="button"
+                    onClick={() => setWaTone(t.value)}
+                    title={t.description}
+                    className={cn(
+                      'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+                      waTone === t.value
+                        ? 'border-green-500 bg-green-100 text-green-700'
+                        : 'border-gray-200 text-gray-600 hover:border-green-300'
+                    )}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Context input */}
+              <textarea
+                rows={2}
+                value={waContext}
+                onChange={(e) => setWaContext(e.target.value)}
+                placeholder="Optional: what you offer (e.g. 'We help IT firms cut hiring costs by 40%')"
+                className="mb-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-700 placeholder-gray-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+              />
+
+              <button
+                onClick={handleGenerateWaMessage}
+                disabled={generateWaMutation.isPending}
+                className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+              >
+                {generateWaMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+                {generateWaMutation.isPending ? 'Generating…' : 'Generate Message'}
+              </button>
+            </div>
+
+            {/* Chat thread */}
+            {waLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-green-600" />
+              </div>
+            ) : waMessages.length === 0 ? (
+              <div className="py-8 text-center">
+                <MessageCircle className="mx-auto h-8 w-8 text-gray-300" />
+                <p className="mt-2 text-sm text-gray-500">No messages yet</p>
+                <p className="mt-1 text-xs text-gray-400">Generate a message above to get started.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {waMessages.map((msg) => {
+                  const isOutbound = msg.direction === 'outbound'
+                  const statusMeta = WA_STATUSES.find((s) => s.value === msg.status)
+                  const isPending = msg.status === 'pending'
+                  const isSending = waSendingId === msg.id
+
+                  return (
+                    <div
+                      key={msg.id}
+                      className={cn(
+                        'flex',
+                        isOutbound ? 'justify-end' : 'justify-start'
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          'relative max-w-[80%] rounded-2xl px-4 py-3 shadow-sm',
+                          isOutbound
+                            ? 'rounded-tr-sm bg-green-50 border border-green-200'
+                            : 'rounded-tl-sm bg-white border border-gray-200'
+                        )}
+                      >
+                        {/* Message content */}
+                        <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
+                          {msg.content}
+                        </p>
+
+                        {/* Footer row */}
+                        <div className="mt-2 flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-1.5">
+                            {statusMeta && (
+                              <span className={cn('inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-medium', statusMeta.color)}>
+                                {msg.status}
+                              </span>
+                            )}
+                            {msg.ai_tone && (
+                              <span className="text-xs text-gray-400 capitalize">{msg.ai_tone}</span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-1">
+                            {/* Copy */}
+                            <button
+                              onClick={() => copyWa(msg.content, msg.id)}
+                              className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                              title="Copy message"
+                            >
+                              {waCopied === msg.id ? (
+                                <Check className="h-3.5 w-3.5 text-green-500" />
+                              ) : (
+                                <Copy className="h-3.5 w-3.5" />
+                              )}
+                            </button>
+
+                            {/* Send (only for pending outbound) */}
+                            {isOutbound && isPending && (
+                              <button
+                                onClick={() => handleSendWaMessage(msg.id, msg.content)}
+                                disabled={isSending || sendWaMutation.isPending}
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                                title="Send via WhatsApp"
+                              >
+                                {isSending ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <Send className="h-3 w-3" />
+                                )}
+                                Send
+                              </button>
+                            )}
+
+                            {/* Delete */}
+                            <button
+                              onClick={async () => {
+                                if (window.confirm('Delete this message?')) {
+                                  await deleteWaMutation.mutateAsync(msg.id)
+                                }
+                              }}
+                              className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
+                              title="Delete"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Error */}
+                        {msg.error_message && (
+                          <p className="mt-1 text-xs text-red-500">⚠ {msg.error_message}</p>
+                        )}
+                      </div>
                     </div>
                   )
                 })}
