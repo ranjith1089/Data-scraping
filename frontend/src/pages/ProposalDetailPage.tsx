@@ -20,6 +20,7 @@ import {
   useDeleteProposal,
   openProposalHtmlExport,
   downloadProposalDocx,
+  type ProposalSections,
 } from '@/hooks/useProposals'
 import { cn, formatDate } from '@/lib/utils'
 import toast from 'react-hot-toast'
@@ -114,7 +115,7 @@ export default function ProposalDetailPage() {
   async function handleDelete() {
     if (!window.confirm('Delete this proposal? This cannot be undone.')) return
     try {
-      await deleteProposal.mutateAsync(proposal.id)
+      await deleteProposal.mutateAsync(proposal!.id)
       toast.success('Proposal deleted')
       navigate('/proposals')
     } catch {
@@ -310,11 +311,14 @@ function SectionsEditor({
   initialSections,
 }: {
   proposalId: string
-  initialSections: Record<string, unknown>
+  initialSections: ProposalSections
 }) {
   const updateProposal = useUpdateProposal(proposalId)
 
-  const [secs, setSecs] = useState<Record<string, unknown>>({ ...initialSections })
+  // Use Record<string,unknown> internally so dynamic key access (secs[key]) is valid
+  const [secs, setSecs] = useState<Record<string, unknown>>(
+    initialSections as Record<string, unknown>
+  )
   const [dirty, setDirty] = useState(false)
 
   function updateField(key: string, value: unknown) {
@@ -324,7 +328,7 @@ function SectionsEditor({
 
   async function saveChanges() {
     try {
-      await updateProposal.mutateAsync({ sections: secs })
+      await updateProposal.mutateAsync({ sections: secs as Partial<ProposalSections> })
       toast.success('Sections saved & HTML re-rendered')
       setDirty(false)
     } catch {

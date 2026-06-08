@@ -46,7 +46,8 @@ interface GenerateModalProps {
 
 function GenerateModal({ onClose, onGenerated }: GenerateModalProps) {
   const generateMutation = useGenerateProposal()
-  const { data: leads = [] } = useLeads()
+  const { data: leadsData } = useLeads()
+  const leads = leadsData?.items ?? []
 
   const [leadId, setLeadId] = useState('')
   const [proposalType, setProposalType] = useState<GenerateProposalRequest['proposal_type']>('service_proposal')

@@ -17,7 +17,7 @@ import {
   Wand2,
 } from 'lucide-react'
 import { useLeads, useDeleteLead, type Lead } from '@/hooks/useLeads'
-import { useEnrichLead, useBulkEnrichLeads } from '@/hooks/useEnrichment'
+import { useEnrichLead } from '@/hooks/useEnrichment'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
