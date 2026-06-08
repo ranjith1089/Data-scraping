@@ -14,7 +14,9 @@ export default function AppLayout() {
       <div
         className={cn(
           'flex flex-1 flex-col min-w-0 transition-[margin] duration-300',
-          sidebarCollapsed ? 'ml-16' : 'ml-64',
+          // Mobile: no margin (sidebar slides over content)
+          // Desktop: margin matches sidebar width
+          sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64',
         )}
       >
         <TopBar />

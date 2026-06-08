@@ -266,7 +266,7 @@ export default function TasksPage() {
 
       {/* Summary cards */}
       {summary && (
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
           {SUMMARY_CONFIG.map((s) => {
             const value = summary[s.key as keyof typeof summary] as number
             return (

@@ -150,7 +150,8 @@ export default function LinkedInPage() {
         <EmptyState onGoToLeads={() => navigate('/leads')} />
       ) : (
         <div className="overflow-hidden rounded-2xl border border-border/60 bg-white shadow-sm">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto scrollbar-thin">
+          <table className="w-full text-sm min-w-[560px]">
             <thead className="border-b border-border/60 bg-muted/40">
               <tr>
                 <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Lead</th>
@@ -175,6 +176,7 @@ export default function LinkedInPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

@@ -116,6 +116,10 @@
   .scrollbar-thin::-webkit-scrollbar       { width: 4px; height: 4px; }
   .scrollbar-thin::-webkit-scrollbar-thumb { @apply bg-border/70 rounded-full; }
   .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+
+  /* Hide scrollbar but keep scrolling functional (for tab bars etc.) */
+  .scrollbar-none { scrollbar-width: none; }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
 }
 
 /* ── Page background texture ────────────────────────────────────────────────── */

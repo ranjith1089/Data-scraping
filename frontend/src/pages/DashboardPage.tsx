@@ -326,7 +326,7 @@ export default function DashboardPage() {
                 ? Math.round((nextStage.count / stage.count) * 100) : null
 
               return (
-                <div key={stage.stage} className="grid grid-cols-[120px_1fr_72px] items-center gap-3">
+                <div key={stage.stage} className="grid grid-cols-[80px_1fr_56px] sm:grid-cols-[120px_1fr_72px] items-center gap-2 sm:gap-3">
                   <div className="flex items-center gap-2 justify-end">
                     <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
                     <span className="text-xs font-semibold text-muted-foreground truncate">
@@ -372,7 +372,7 @@ export default function DashboardPage() {
 
       {/* ── Top sectors table ───────────────────────────────────────────────── */}
       <div className="rounded-2xl bg-white border border-border/60 shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-border/60 flex items-center justify-between">
+        <div className="px-4 sm:px-5 py-4 border-b border-border/60 flex items-center justify-between">
           <div>
             <h2 className="text-base font-bold text-foreground">Top Performing Sectors</h2>
             <p className="text-xs text-muted-foreground mt-0.5">Sectors with strongest conversion metrics</p>
@@ -386,7 +386,8 @@ export default function DashboardPage() {
             {Array(4).fill(0).map((_, i) => <Skeleton key={i} className="h-12 rounded-xl" />)}
           </div>
         ) : dashboard?.top_performing_sectors?.length ? (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto scrollbar-thin">
+          <table className="w-full text-sm min-w-[480px]">
             <thead>
               <tr className="bg-muted/30 text-muted-foreground border-b border-border/40">
                 <th className="py-3 px-5 text-left text-xs font-semibold uppercase tracking-wider">Sector</th>
@@ -432,6 +433,7 @@ export default function DashboardPage() {
               ))}
             </tbody>
           </table>
+          </div>
         ) : (
           <div className="py-14 text-center text-muted-foreground/50 text-sm">No sector data available.</div>
         )}

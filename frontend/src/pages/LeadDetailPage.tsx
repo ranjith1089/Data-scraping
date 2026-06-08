@@ -522,13 +522,13 @@ export default function LeadDetailPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1.5 flex-wrap bg-muted/40 rounded-2xl p-1.5 border border-border/60">
+      <div className="flex gap-1.5 overflow-x-auto scrollbar-none bg-muted/40 rounded-2xl p-1.5 border border-border/60 min-w-0">
         {TABS.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={cn(
-              'px-4 py-2 rounded-xl text-sm font-semibold transition-all',
+              'shrink-0 px-3 sm:px-4 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap',
               activeTab === tab.key
                 ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-sm'
                 : 'text-muted-foreground hover:text-foreground hover:bg-white/80'
