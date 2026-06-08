@@ -94,19 +94,19 @@ export default function LinkedInPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
+          <h1 className="flex items-center gap-2 text-2xl font-extrabold tracking-tight text-foreground">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-sm">
               <Linkedin className="h-4 w-4 text-white" />
             </div>
             LinkedIn Outreach
           </h1>
-          <p className="mt-0.5 text-sm text-gray-500">
+          <p className="mt-0.5 text-sm text-muted-foreground ml-10">
             Track AI-generated connection notes and follow-up messages per lead
           </p>
         </div>
         <button
           onClick={() => refetch()}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 bg-white px-3 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all shadow-sm"
         >
           <RefreshCw className="h-3.5 w-3.5" />
           Refresh
@@ -115,25 +115,24 @@ export default function LinkedInPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard label="Total" value={stats.total} icon={MessageSquare} color="text-gray-700" bg="bg-gray-50" />
-        <StatCard label="Sent" value={stats.sent} icon={MessageSquare} color="text-blue-700" bg="bg-blue-50" />
-        <StatCard label="Connected" value={stats.connected} icon={UserCheck} color="text-indigo-700" bg="bg-indigo-50" />
-        <StatCard label="Replied" value={stats.replied} icon={MessageCircle} color="text-green-700" bg="bg-green-50" suffix={stats.replied > 0 ? `${replyRate}% rate` : undefined} />
+        <StatCard label="Total" value={stats.total} icon={MessageSquare} gradient="from-slate-500 to-gray-600" />
+        <StatCard label="Sent" value={stats.sent} icon={MessageSquare} gradient="from-blue-500 to-sky-500" />
+        <StatCard label="Connected" value={stats.connected} icon={UserCheck} gradient="from-indigo-500 to-violet-600" />
+        <StatCard label="Replied" value={stats.replied} icon={MessageCircle} gradient="from-emerald-500 to-teal-500" suffix={stats.replied > 0 ? `${replyRate}% rate` : undefined} />
       </div>
 
       {/* Filter */}
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-gray-600">Filter:</span>
+      <div className="flex flex-wrap items-center gap-2">
         {[{ value: '', label: 'All' }, ...LINKEDIN_STATUSES.map((s) => ({ value: s.value, label: s.label }))].map(
           (opt) => (
             <button
               key={opt.value}
               onClick={() => setStatusFilter(opt.value)}
               className={cn(
-                'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+                'rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all',
                 statusFilter === opt.value
-                  ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                  : 'border-gray-200 text-gray-600 hover:border-indigo-300'
+                  ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white border-transparent shadow-sm'
+                  : 'bg-white border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted'
               )}
             >
               {opt.label}
@@ -150,18 +149,18 @@ export default function LinkedInPage() {
       ) : messages.length === 0 ? (
         <EmptyState onGoToLeads={() => navigate('/leads')} />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-border/60 bg-white shadow-sm">
           <table className="w-full text-sm">
-            <thead className="border-b border-gray-100 bg-gray-50">
+            <thead className="border-b border-border/60 bg-muted/40">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Lead</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Connection Note</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Created</th>
+                <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Lead</th>
+                <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Connection Note</th>
+                <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status</th>
+                <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Created</th>
                 <th className="w-24 px-4 py-3" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-border/40">
               {messages.map((msg) => (
                 <MessageRow
                   key={msg.id}
@@ -218,26 +217,26 @@ function MessageRow({
 
   return (
     <>
-      <tr className="hover:bg-gray-50/60 transition-colors">
+      <tr className="hover:bg-muted/30 transition-colors">
         {/* Lead */}
         <td className="px-4 py-3">
-          <p className="font-medium text-gray-900 truncate max-w-[160px]">
+          <p className="font-semibold text-foreground truncate max-w-[160px]">
             {msg.lead_company || '—'}
           </p>
           {msg.lead_contact && (
-            <p className="text-xs text-gray-500 truncate max-w-[160px]">{msg.lead_contact}</p>
+            <p className="text-xs text-muted-foreground truncate max-w-[160px]">{msg.lead_contact}</p>
           )}
           {msg.lead_designation && (
-            <p className="text-xs text-gray-400 truncate max-w-[160px]">{msg.lead_designation}</p>
+            <p className="text-xs text-muted-foreground/70 truncate max-w-[160px]">{msg.lead_designation}</p>
           )}
         </td>
 
         {/* Note preview */}
         <td className="px-4 py-3">
-          <p className="text-sm text-gray-700 line-clamp-2 max-w-[320px]">
+          <p className="text-sm text-foreground/80 line-clamp-2 max-w-[320px]">
             {msg.connection_note}
           </p>
-          <p className="mt-0.5 text-xs text-gray-400">
+          <p className="mt-0.5 text-xs text-muted-foreground">
             {msg.connection_note.length}/300 chars
             {msg.followup_message && ' · has follow-up'}
           </p>
@@ -249,7 +248,7 @@ function MessageRow({
             <button
               onClick={() => setShowStatusMenu(!showStatusMenu)}
               className={cn(
-                'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium',
+                'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset transition-all',
                 meta.color
               )}
             >
@@ -258,7 +257,7 @@ function MessageRow({
               <ChevronDown className="h-3 w-3" />
             </button>
             {showStatusMenu && (
-              <div className="absolute left-0 top-full z-20 mt-1 w-36 rounded-xl border border-gray-200 bg-white py-1 shadow-lg">
+              <div className="absolute left-0 top-full z-20 mt-1 w-36 rounded-xl border border-border/60 bg-white py-1 shadow-lg">
                 {nextStatuses.map((s) => (
                   <button
                     key={s.value}
@@ -267,9 +266,9 @@ function MessageRow({
                       onStatusChange(msg, s.value)
                       setShowStatusMenu(false)
                     }}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs hover:bg-gray-50"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs hover:bg-muted/50 transition-colors"
                   >
-                    <span className={cn('rounded-full px-2 py-0.5', s.color)}>{s.label}</span>
+                    <span className={cn('rounded-full px-2 py-0.5 ring-1 ring-inset', s.color)}>{s.label}</span>
                   </button>
                 ))}
               </div>
@@ -278,7 +277,7 @@ function MessageRow({
         </td>
 
         {/* Date */}
-        <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">
+        <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
           {formatDate(msg.created_at)}
         </td>
 
@@ -288,28 +287,28 @@ function MessageRow({
             <button
               onClick={() => copyText(msg.connection_note, 'note')}
               title="Copy connection note"
-              className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
             >
-              {copied === 'note' ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+              {copied === 'note' ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
             </button>
             <button
               onClick={onToggle}
               title="Expand"
-              className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
             >
               <ChevronRight className={cn('h-3.5 w-3.5 transition-transform', expanded && 'rotate-90')} />
             </button>
             <button
               onClick={onGoToLead}
               title="Go to lead"
-              className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
             >
               <ExternalLink className="h-3.5 w-3.5" />
             </button>
             <button
               onClick={() => onDelete(msg.id)}
               title="Delete"
-              className="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-500"
+              className="rounded-lg p-1.5 text-muted-foreground hover:bg-rose-50 hover:text-rose-500 transition-all"
             >
               <Trash2 className="h-3.5 w-3.5" />
             </button>
@@ -319,24 +318,24 @@ function MessageRow({
 
       {/* Expanded detail row */}
       {expanded && (
-        <tr className="bg-indigo-50/30">
+        <tr className="bg-muted/20">
           <td colSpan={5} className="px-6 py-4">
             <div className="grid gap-4 md:grid-cols-2">
               {/* Connection note */}
               <div>
                 <div className="mb-2 flex items-center justify-between">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                     Connection Note ({msg.connection_note.length}/300)
                   </p>
                   <button
                     onClick={() => copyText(msg.connection_note, 'note')}
-                    className="inline-flex items-center gap-1 rounded text-xs text-indigo-600 hover:text-indigo-800"
+                    className="inline-flex items-center gap-1 rounded text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
                   >
                     {copied === 'note' ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                     Copy
                   </button>
                 </div>
-                <p className="rounded-lg bg-white px-4 py-3 text-sm text-gray-800 leading-relaxed shadow-sm ring-1 ring-gray-200">
+                <p className="rounded-xl bg-white px-4 py-3 text-sm text-foreground/80 leading-relaxed shadow-sm ring-1 ring-border/60">
                   {msg.connection_note}
                 </p>
               </div>
@@ -344,13 +343,13 @@ function MessageRow({
               {/* Follow-up message */}
               <div>
                 <div className="mb-2 flex items-center justify-between">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                     Follow-up Message
                   </p>
                   {msg.followup_message && (
                     <button
                       onClick={() => copyText(msg.followup_message!, 'followup')}
-                      className="inline-flex items-center gap-1 rounded text-xs text-indigo-600 hover:text-indigo-800"
+                      className="inline-flex items-center gap-1 rounded text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
                     >
                       {copied === 'followup' ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                       Copy
@@ -358,11 +357,11 @@ function MessageRow({
                   )}
                 </div>
                 {msg.followup_message ? (
-                  <p className="rounded-lg bg-white px-4 py-3 text-sm text-gray-800 leading-relaxed shadow-sm ring-1 ring-gray-200">
+                  <p className="rounded-xl bg-white px-4 py-3 text-sm text-foreground/80 leading-relaxed shadow-sm ring-1 ring-border/60">
                     {msg.followup_message}
                   </p>
                 ) : (
-                  <p className="rounded-lg bg-gray-100 px-4 py-3 text-sm text-gray-400 italic">
+                  <p className="rounded-xl bg-muted/50 px-4 py-3 text-sm text-muted-foreground italic">
                     No follow-up generated
                   </p>
                 )}
@@ -373,17 +372,17 @@ function MessageRow({
             {(msg.sent_at || msg.connected_at || msg.replied_at) && (
               <div className="mt-3 flex flex-wrap gap-2">
                 {msg.sent_at && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-xs text-blue-700">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-200">
                     <MessageSquare className="h-3 w-3" /> Sent {formatDate(msg.sent_at)}
                   </span>
                 )}
                 {msg.connected_at && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2.5 py-1 text-xs text-indigo-700">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-200">
                     <UserCheck className="h-3 w-3" /> Connected {formatDate(msg.connected_at)}
                   </span>
                 )}
                 {msg.replied_at && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-1 text-xs text-green-700">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">
                     <MessageCircle className="h-3 w-3" /> Replied {formatDate(msg.replied_at)}
                   </span>
                 )}
@@ -396,7 +395,7 @@ function MessageRow({
                 href={msg.lead_linkedin_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:underline"
+                className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline transition-colors"
               >
                 <Linkedin className="h-3.5 w-3.5" />
                 Open LinkedIn Profile
@@ -415,27 +414,26 @@ function StatCard({
   label,
   value,
   icon: Icon,
-  color,
-  bg,
+  gradient,
   suffix,
 }: {
   label: string
   value: number
   icon: React.ComponentType<{ className?: string }>
-  color: string
-  bg: string
+  gradient: string
   suffix?: string
 }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between">
-        <p className="text-xs font-medium text-gray-500">{label}</p>
-        <div className={cn('flex h-7 w-7 items-center justify-center rounded-lg', bg)}>
-          <Icon className={cn('h-3.5 w-3.5', color)} />
+    <div className={cn('relative overflow-hidden rounded-2xl border border-border/60 bg-white p-4 shadow-sm card-lift')}>
+      <div className={cn('absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r', gradient)} />
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{label}</p>
+        <div className={cn('flex h-7 w-7 items-center justify-center rounded-xl bg-gradient-to-br shadow-sm', gradient)}>
+          <Icon className="h-3.5 w-3.5 text-white" />
         </div>
       </div>
-      <p className={cn('mt-2 text-2xl font-bold', color)}>{value}</p>
-      {suffix && <p className="mt-0.5 text-xs text-gray-400">{suffix}</p>}
+      <p className="text-2xl font-extrabold text-foreground">{value}</p>
+      {suffix && <p className="mt-0.5 text-xs text-muted-foreground">{suffix}</p>}
     </div>
   )
 }
@@ -444,18 +442,18 @@ function StatCard({
 
 function EmptyState({ onGoToLeads }: { onGoToLeads: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50 py-20 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100">
-        <Linkedin className="h-6 w-6 text-blue-600" />
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 bg-muted/30 py-20 text-center">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-md mb-4">
+        <Linkedin className="h-6 w-6 text-white" />
       </div>
-      <h3 className="mt-4 text-base font-semibold text-gray-900">No LinkedIn messages yet</h3>
-      <p className="mt-1.5 max-w-sm text-sm text-gray-500">
+      <h3 className="text-base font-bold text-foreground">No LinkedIn messages yet</h3>
+      <p className="mt-1.5 max-w-sm text-sm text-muted-foreground">
         Open a lead and use the <strong>LinkedIn</strong> tab to generate AI-crafted connection
         notes and follow-up messages.
       </p>
       <button
         onClick={onGoToLeads}
-        className="mt-6 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-blue-200 hover:opacity-90 hover:-translate-y-px transition-all"
       >
         <Sparkles className="h-4 w-4" />
         Go to Leads

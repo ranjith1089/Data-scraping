@@ -1,13 +1,11 @@
 import { useState } from 'react'
-import { CheckCircle2, Loader2, Zap } from 'lucide-react'
+import { CheckCircle2, Loader2, Zap, CreditCard } from 'lucide-react'
 import toast from 'react-hot-toast'
 import {
   useBillingCurrent,
   useRequestUpgrade,
   type BillingCurrent,
 } from '@/hooks/useBilling'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { cn, formatINR } from '@/lib/utils'
 
 export default function BillingPage() {
@@ -16,7 +14,8 @@ export default function BillingPage() {
   if (isLoading || !data) {
     return (
       <div className="max-w-5xl mx-auto py-12 text-center text-muted-foreground">
-        Loading…
+        <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-indigo-500" />
+        Loading billing data…
       </div>
     )
   }
@@ -24,8 +23,13 @@ export default function BillingPage() {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Billing & usage</h1>
-        <p className="text-muted-foreground mt-1">
+        <h1 className="text-2xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm">
+            <CreditCard className="h-4 w-4 text-white" />
+          </div>
+          Billing & Usage
+        </h1>
+        <p className="text-sm text-muted-foreground mt-0.5 ml-10">
           Current plan, this month's usage, and upgrade options.
         </p>
       </div>
@@ -40,28 +44,34 @@ export default function BillingPage() {
 function CurrentPlanCard({ data }: { data: BillingCurrent }) {
   const isFree = (data.plan.price_inr ?? 0) === 0
   return (
-    <Card>
-      <CardContent className="p-5 flex items-center justify-between flex-wrap gap-4">
+    <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-white p-5 shadow-sm">
+      <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-indigo-500 to-violet-600" />
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
             Current plan
           </p>
-          <p className="text-2xl font-bold mt-1">
-            {data.plan.name}
+          <div className="flex items-center gap-3">
+            <p className="text-2xl font-extrabold text-foreground">
+              {data.plan.name}
+            </p>
             {!isFree && (
-              <span className="text-base font-normal text-muted-foreground ml-2">
-                · {formatINR(data.plan.price_inr)}/month
+              <span className="text-sm font-medium text-muted-foreground">
+                {formatINR(data.plan.price_inr)}/month
               </span>
             )}
-          </p>
+            <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-indigo-500 to-violet-600 px-2.5 py-0.5 text-xs font-bold text-white shadow-sm">
+              <Zap className="h-3 w-3" /> Active
+            </span>
+          </div>
           {data.next_reset_at && (
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-1.5">
               Usage resets {new Date(data.next_reset_at).toLocaleDateString()}
             </p>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
 
@@ -88,25 +98,27 @@ function UsageBars({ data }: { data: BillingCurrent }) {
   ]
 
   return (
-    <Card>
-      <CardContent className="p-5 space-y-5">
+    <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-white p-5 shadow-sm">
+      <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-sky-400 to-indigo-500" />
+      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Usage this month</p>
+      <div className="space-y-5">
         {rows.map((r) => (
           <div key={r.label}>
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-sm font-medium">{r.label}</span>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm font-semibold text-foreground">{r.label}</span>
+              <span className="text-sm font-medium text-muted-foreground">
                 {r.used.toLocaleString()} / {r.limit.toLocaleString()}
               </span>
             </div>
-            <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+            <div className="h-2.5 w-full bg-muted rounded-full overflow-hidden">
               <div
                 className={cn(
-                  'h-full transition-all',
+                  'h-full transition-all rounded-full',
                   r.pct >= 95
-                    ? 'bg-red-500'
+                    ? 'bg-gradient-to-r from-rose-500 to-red-500'
                     : r.pct >= 80
-                      ? 'bg-amber-500'
-                      : 'bg-emerald-500',
+                      ? 'bg-gradient-to-r from-amber-400 to-orange-500'
+                      : 'bg-gradient-to-r from-emerald-400 to-teal-500',
                 )}
                 style={{ width: `${Math.min(r.pct, 100)}%` }}
               />
@@ -116,16 +128,16 @@ function UsageBars({ data }: { data: BillingCurrent }) {
             </p>
           </div>
         ))}
-        <div className="pt-2 border-t">
+        <div className="pt-3 border-t border-border/40">
           <p className="text-xs text-muted-foreground">
             AI tokens this month:{' '}
-            <span className="font-semibold text-foreground">
+            <span className="font-bold text-foreground">
               {data.usage.ai_tokens_this_month.toLocaleString()}
             </span>
           </p>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
 
@@ -193,59 +205,85 @@ function PlansGrid({ currentPlan }: { currentPlan: string }) {
     }
   }
 
+  const PLAN_GRADIENTS: Record<string, string> = {
+    starter:    'from-slate-400 to-gray-500',
+    growth:     'from-indigo-500 to-violet-600',
+    enterprise: 'from-amber-500 to-orange-500',
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {PLANS.map((p) => {
         const isCurrent = currentPlan === p.code
+        const gradient = PLAN_GRADIENTS[p.code] || 'from-indigo-500 to-violet-600'
         return (
-          <Card
+          <div
             key={p.code}
             className={cn(
-              'border-2',
-              isCurrent && 'border-indigo-500',
+              'relative overflow-hidden rounded-2xl border bg-white shadow-sm transition-all card-lift',
+              isCurrent ? 'border-indigo-300 shadow-indigo-100' : 'border-border/60'
             )}
           >
-            <CardContent className="p-5">
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="text-lg font-bold">{p.name}</h3>
+            <div className={cn('absolute top-0 inset-x-0 h-1 bg-gradient-to-r rounded-t-2xl', gradient)} />
+            <div className="p-5 pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <div className={cn('w-8 h-8 rounded-xl flex items-center justify-center bg-gradient-to-br shadow-sm', gradient)}>
+                  <Zap className="h-4 w-4 text-white" />
+                </div>
                 {isCurrent && (
-                  <span className="inline-flex items-center gap-1 text-xs font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full">
-                    <Zap className="h-3 w-3" /> Current
+                  <span className={cn('inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-gradient-to-r text-white shadow-sm', gradient)}>
+                    Active
                   </span>
                 )}
               </div>
-              <p className="text-2xl font-bold">
+              <h3 className="text-lg font-extrabold text-foreground mt-3">{p.name}</h3>
+              <p className="text-2xl font-extrabold text-foreground mt-0.5">
                 {p.price === 0 ? 'Free' : formatINR(p.price)}
                 {p.price > 0 && (
-                  <span className="text-sm font-normal text-muted-foreground">
+                  <span className="text-sm font-normal text-muted-foreground ml-1">
                     /month
                   </span>
                 )}
               </p>
-              <p className="text-sm text-muted-foreground mt-1 mb-4">
+              <p className="text-xs text-muted-foreground mt-1 mb-4">
                 {p.tagline}
               </p>
-              <ul className="space-y-1.5 mb-4">
+              <ul className="space-y-2 mb-5">
                 {p.points.map((pt) => (
                   <li key={pt} className="flex items-start gap-2 text-sm">
                     <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
-                    <span>{pt}</span>
+                    <span className="text-foreground/80">{pt}</span>
                   </li>
                 ))}
               </ul>
-              <Button
-                variant={isCurrent ? 'outline' : 'default'}
-                disabled={isCurrent || pending === p.code}
-                className="w-full"
-                onClick={() => handleRequest(p.code)}
-              >
-                {pending === p.code && (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                )}
-                {isCurrent ? 'Current plan' : `Upgrade to ${p.name}`}
-              </Button>
-            </CardContent>
-          </Card>
+              {isCurrent ? (
+                <button
+                  disabled
+                  className="w-full rounded-xl border border-border/60 py-2 text-sm font-semibold text-muted-foreground cursor-default"
+                >
+                  Current plan
+                </button>
+              ) : (
+                <button
+                  disabled={pending === p.code}
+                  onClick={() => handleRequest(p.code)}
+                  className={cn(
+                    'w-full rounded-xl py-2 text-sm font-bold text-white shadow-sm hover:opacity-90 transition-all disabled:opacity-50 bg-gradient-to-r',
+                    gradient
+                  )}
+                >
+                  {pending === p.code ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Requesting…
+                    </span>
+                  ) : (
+                    `Upgrade to ${p.name}`
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
         )
       })}
     </div>

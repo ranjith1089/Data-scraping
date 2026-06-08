@@ -163,23 +163,28 @@ export default function LeadDiscoveryPage() {
   const allNewSelected = newLeads.length > 0 && selected.size === newLeads.length
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Lead Discovery</h1>
-          <p className="mt-0.5 text-sm text-gray-500">
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm">
+              <Compass className="h-4 w-4 text-white" />
+            </div>
+            Lead Discovery
+          </h1>
+          <p className="mt-0.5 text-sm text-muted-foreground ml-10">
             Find new B2B prospects in India using Apollo.io — search by sector, role and location
           </p>
         </div>
         {importDone && (
-          <div className="flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-2.5">
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
-            <span className="text-sm font-medium text-green-800">
+          <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 ring-1 ring-inset ring-emerald-200">
+            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+            <span className="text-sm font-semibold text-emerald-800">
               {importDone.imported} imported
               {importDone.skipped > 0 && `, ${importDone.skipped} duplicates skipped`}
             </span>
-            <button onClick={() => navigate('/leads')} className="ml-2 text-xs text-green-700 underline">
+            <button onClick={() => navigate('/leads')} className="ml-2 text-xs font-bold text-emerald-700 hover:underline">
               View Leads →
             </button>
           </div>
@@ -187,11 +192,12 @@ export default function LeadDiscoveryPage() {
       </div>
 
       {/* Search form */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-white p-6 shadow-sm">
+        <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-indigo-500 to-violet-600" />
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {/* Sector */}
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               Sector
             </label>
             <select
@@ -199,7 +205,7 @@ export default function LeadDiscoveryPage() {
               onChange={(e) =>
                 setFilters((f) => ({ ...f, sector_code: e.target.value, target_roles: [] }))
               }
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-full rounded-xl border border-border px-3 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
             >
               {SECTOR_OPTIONS.map((s) => (
                 <option key={s.value} value={s.value}>{s.label}</option>
@@ -209,13 +215,13 @@ export default function LeadDiscoveryPage() {
 
           {/* Location — state */}
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               State
             </label>
             <select
               value={filters.location_state}
               onChange={(e) => setFilters((f) => ({ ...f, location_state: e.target.value }))}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-full rounded-xl border border-border px-3 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
             >
               <option value="">All India</option>
               {INDIAN_STATES.map((s) => (
@@ -226,13 +232,13 @@ export default function LeadDiscoveryPage() {
 
           {/* Company size */}
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               Company Size
             </label>
             <select
               value={filters.company_size}
               onChange={(e) => setFilters((f) => ({ ...f, company_size: e.target.value }))}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-full rounded-xl border border-border px-3 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
             >
               <option value="">Any size</option>
               {COMPANY_SIZES.map((s) => (
@@ -243,13 +249,13 @@ export default function LeadDiscoveryPage() {
 
           {/* Results per page */}
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               Results per page
             </label>
             <select
               value={filters.per_page}
               onChange={(e) => setFilters((f) => ({ ...f, per_page: Number(e.target.value) }))}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-full rounded-xl border border-border px-3 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
             >
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -260,9 +266,9 @@ export default function LeadDiscoveryPage() {
 
         {/* Target roles */}
         <div className="mt-5">
-          <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+          <label className="mb-2 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             Target Roles{' '}
-            <span className="font-normal text-gray-400">
+            <span className="font-normal text-muted-foreground/70">
               (defaults: {(DEFAULT_ROLES[filters.sector_code] || []).slice(0, 3).join(', ')}…)
             </span>
           </label>
@@ -275,13 +281,12 @@ export default function LeadDiscoveryPage() {
                   type="button"
                   onClick={() => toggleRole(role)}
                   className={cn(
-                    'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+                    'rounded-full border px-3 py-1.5 text-xs font-semibold transition-all',
                     active
-                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                      : 'border-gray-200 text-gray-600 hover:border-indigo-300 hover:text-indigo-600'
+                      ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white border-transparent shadow-sm'
+                      : 'bg-white border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted'
                   )}
                 >
-                  {active && <span className="mr-1">✓</span>}
                   {role}
                 </button>
               )
@@ -291,32 +296,32 @@ export default function LeadDiscoveryPage() {
 
         {/* Extra keywords */}
         <div className="mt-5">
-          <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-gray-500">
-            Extra Keywords <span className="font-normal text-gray-400">(e.g. React, AWS, Shopify)</span>
+          <label className="mb-2 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            Extra Keywords <span className="font-normal text-muted-foreground/70">(e.g. React, AWS, Shopify)</span>
           </label>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <input
               type="text"
               value={keywordInput}
               onChange={(e) => setKeywordInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addKeyword() } }}
               placeholder="Type and press Enter"
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="rounded-xl border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
             />
             <button
               type="button"
               onClick={addKeyword}
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50"
+              className="rounded-xl border border-border/60 px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
             >
               Add
             </button>
             {filters.keywords.map((kw) => (
               <span
                 key={kw}
-                className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700"
+                className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-200"
               >
                 {kw}
-                <button onClick={() => removeKeyword(kw)} className="text-gray-400 hover:text-gray-700">
+                <button onClick={() => removeKeyword(kw)} className="text-indigo-400 hover:text-indigo-700 transition-colors">
                   <X className="h-3 w-3" />
                 </button>
               </span>
@@ -329,7 +334,7 @@ export default function LeadDiscoveryPage() {
           <button
             onClick={() => handleSearch(1)}
             disabled={discoverMutation.isPending}
-            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-6 py-2.5 text-sm font-bold text-white shadow-md shadow-indigo-200 hover:opacity-90 hover:-translate-y-px transition-all disabled:opacity-50"
           >
             {discoverMutation.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -339,8 +344,8 @@ export default function LeadDiscoveryPage() {
             {discoverMutation.isPending ? 'Searching Apollo…' : 'Search Prospects'}
           </button>
           {results && (
-            <p className="text-sm text-gray-500">
-              {results.total.toLocaleString('en-IN')} total matches found
+            <p className="text-sm font-medium text-muted-foreground">
+              <span className="text-foreground font-bold">{results.total.toLocaleString('en-IN')}</span> total matches found
             </p>
           )}
         </div>
@@ -348,30 +353,30 @@ export default function LeadDiscoveryPage() {
 
       {/* Warning / info banner */}
       {results?.warning && (
-        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+        <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 ring-1 ring-inset ring-amber-200">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-          <p className="text-sm text-amber-800">{results.warning}</p>
+          <p className="text-sm font-medium text-amber-800">{results.warning}</p>
         </div>
       )}
 
       {/* Results */}
       {results && results.leads.length > 0 && (
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-border/60 bg-white shadow-sm">
           {/* Table header */}
-          <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+          <div className="flex items-center justify-between border-b border-border/60 px-5 py-4 bg-muted/30">
             <div className="flex items-center gap-3">
               <button
                 onClick={toggleSelectAll}
-                className="flex items-center gap-2 text-sm font-medium text-gray-700"
+                className="flex items-center gap-2 text-sm font-semibold text-foreground"
               >
                 {allNewSelected ? (
                   <CheckSquare className="h-4 w-4 text-indigo-600" />
                 ) : (
-                  <Square className="h-4 w-4 text-gray-400" />
+                  <Square className="h-4 w-4 text-muted-foreground" />
                 )}
                 {selected.size > 0 ? `${selected.size} selected` : 'Select all'}
               </button>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-muted-foreground">
                 ({newLeads.length} new · {results.leads.filter((l) => l.already_exists).length} already in CRM)
               </span>
             </div>
@@ -380,7 +385,7 @@ export default function LeadDiscoveryPage() {
               <button
                 onClick={handleImport}
                 disabled={importMutation.isPending}
-                className="inline-flex items-center gap-2 rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:opacity-90 disabled:opacity-50 transition-all"
               >
                 {importMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -394,18 +399,18 @@ export default function LeadDiscoveryPage() {
 
           <div className="overflow-auto">
             <table className="w-full text-sm">
-              <thead className="border-b border-gray-100 bg-gray-50">
+              <thead className="border-b border-border/60 bg-muted/40">
                 <tr>
                   <th className="w-10 px-4 py-3" />
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Company</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Contact</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Location</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Contact Info</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Size</th>
+                  <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Company</th>
+                  <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Contact</th>
+                  <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Location</th>
+                  <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Contact Info</th>
+                  <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Size</th>
                   <th className="w-24 px-4 py-3" />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-border/40">
                 {results.leads.map((lead) => {
                   const key = leadKey(lead)
                   const isSelected = selected.has(key)
@@ -418,30 +423,30 @@ export default function LeadDiscoveryPage() {
                       className={cn(
                         'transition-colors',
                         inCRM
-                          ? 'cursor-default bg-gray-50/50 opacity-60'
+                          ? 'cursor-default bg-muted/20 opacity-60'
                           : isSelected
                           ? 'cursor-pointer bg-indigo-50/60'
-                          : 'cursor-pointer hover:bg-gray-50'
+                          : 'cursor-pointer hover:bg-muted/30'
                       )}
                     >
                       {/* Checkbox */}
                       <td className="px-4 py-3">
                         {inCRM ? (
                           <span title="Already in CRM">
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                           </span>
                         ) : isSelected ? (
                           <CheckSquare className="h-4 w-4 text-indigo-600" />
                         ) : (
-                          <Square className="h-4 w-4 text-gray-300" />
+                          <Square className="h-4 w-4 text-muted-foreground/40" />
                         )}
                       </td>
 
                       {/* Company */}
                       <td className="px-4 py-3">
-                        <p className="font-medium text-gray-900">{lead.company_name}</p>
+                        <p className="font-semibold text-foreground">{lead.company_name}</p>
                         {lead.industry && (
-                          <p className="text-xs text-gray-400 capitalize">{lead.industry}</p>
+                          <p className="text-xs text-muted-foreground capitalize">{lead.industry}</p>
                         )}
                         {lead.website && (
                           <a
@@ -449,7 +454,7 @@ export default function LeadDiscoveryPage() {
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className="mt-0.5 flex items-center gap-1 text-xs text-indigo-500 hover:underline"
+                            className="mt-0.5 flex items-center gap-1 text-xs text-indigo-500 hover:text-indigo-700 hover:underline transition-colors"
                           >
                             <Globe className="h-3 w-3" />
                             {lead.website.replace(/https?:\/\/(www\.)?/, '')}
@@ -459,14 +464,14 @@ export default function LeadDiscoveryPage() {
 
                       {/* Contact */}
                       <td className="px-4 py-3">
-                        <p className="font-medium text-gray-900">{lead.contact_name}</p>
+                        <p className="font-semibold text-foreground">{lead.contact_name}</p>
                         {lead.designation && (
-                          <p className="text-xs text-gray-500">{lead.designation}</p>
+                          <p className="text-xs text-muted-foreground">{lead.designation}</p>
                         )}
                       </td>
 
                       {/* Location */}
-                      <td className="px-4 py-3 text-sm text-gray-600">
+                      <td className="px-4 py-3 text-sm text-foreground/70">
                         {[lead.city, lead.state].filter(Boolean).join(', ') || '—'}
                       </td>
 
@@ -474,16 +479,16 @@ export default function LeadDiscoveryPage() {
                       <td className="px-4 py-3">
                         <div className="space-y-1">
                           {lead.email && (
-                            <div className="flex items-center gap-1.5 text-xs text-gray-600">
-                              <Mail className="h-3 w-3 shrink-0 text-gray-400" />
-                              <span className={cn('truncate max-w-[140px]', lead.email.includes('*') && 'font-mono text-gray-400')}>
+                            <div className="flex items-center gap-1.5 text-xs text-foreground/70">
+                              <Mail className="h-3 w-3 shrink-0 text-muted-foreground" />
+                              <span className={cn('truncate max-w-[140px]', lead.email.includes('*') && 'font-mono text-muted-foreground')}>
                                 {lead.email}
                               </span>
                             </div>
                           )}
                           {lead.phone && (
-                            <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                              <Phone className="h-3 w-3 shrink-0 text-gray-400" />
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                              <Phone className="h-3 w-3 shrink-0 text-muted-foreground" />
                               {lead.phone}
                             </div>
                           )}
@@ -493,7 +498,7 @@ export default function LeadDiscoveryPage() {
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
-                              className="flex items-center gap-1.5 text-xs text-blue-500 hover:underline"
+                              className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 hover:underline transition-colors"
                             >
                               <Linkedin className="h-3 w-3 shrink-0" />
                               LinkedIn
@@ -505,27 +510,27 @@ export default function LeadDiscoveryPage() {
                       {/* Size */}
                       <td className="px-4 py-3">
                         {lead.company_size ? (
-                          <div className="flex items-center gap-1 text-xs text-gray-500">
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
                             <Users className="h-3 w-3" />
                             {lead.company_size}
                           </div>
                         ) : (
-                          <span className="text-xs text-gray-300">—</span>
+                          <span className="text-xs text-muted-foreground/40">—</span>
                         )}
                       </td>
 
                       {/* Status */}
                       <td className="px-4 py-3 text-right">
                         {inCRM ? (
-                          <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                          <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-200">
                             In CRM
                           </span>
                         ) : (
                           <span className={cn(
-                            'rounded-full px-2 py-0.5 text-xs font-medium',
+                            'rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset',
                             isSelected
-                              ? 'bg-indigo-100 text-indigo-700'
-                              : 'bg-gray-100 text-gray-500'
+                              ? 'bg-indigo-50 text-indigo-700 ring-indigo-200'
+                              : 'bg-muted text-muted-foreground ring-border/40'
                           )}>
                             {isSelected ? 'Selected' : 'New'}
                           </span>
@@ -540,15 +545,15 @@ export default function LeadDiscoveryPage() {
 
           {/* Pagination */}
           {results.total_pages > 1 && (
-            <div className="flex items-center justify-between border-t border-gray-200 px-5 py-4">
-              <p className="text-xs text-gray-500">
+            <div className="flex items-center justify-between border-t border-border/60 px-5 py-4">
+              <p className="text-xs text-muted-foreground">
                 Page {results.page} of {results.total_pages} · {results.total.toLocaleString('en-IN')} total
               </p>
               <div className="flex items-center gap-2">
                 <button
                   disabled={page <= 1 || discoverMutation.isPending}
                   onClick={() => handleSearch(page - 1)}
-                  className="inline-flex items-center gap-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                  className="inline-flex items-center gap-1 rounded-xl border border-border/60 px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 transition-all"
                 >
                   <ChevronLeft className="h-3.5 w-3.5" />
                   Prev
@@ -556,7 +561,7 @@ export default function LeadDiscoveryPage() {
                 <button
                   disabled={page >= results.total_pages || discoverMutation.isPending}
                   onClick={() => handleSearch(page + 1)}
-                  className="inline-flex items-center gap-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                  className="inline-flex items-center gap-1 rounded-xl border border-border/60 px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 transition-all"
                 >
                   Next
                   <ChevronRight className="h-3.5 w-3.5" />
@@ -574,24 +579,26 @@ export default function LeadDiscoveryPage() {
 
       {/* No results */}
       {results && results.leads.length === 0 && !discoverMutation.isPending && (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50 py-20">
-          <Compass className="h-10 w-10 text-gray-300" />
-          <p className="mt-3 text-sm font-medium text-gray-600">No prospects found</p>
-          <p className="mt-1 text-xs text-gray-400">Try a different sector, role or location</p>
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 bg-muted/30 py-20">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-md mb-4">
+            <Compass className="h-6 w-6 text-white" />
+          </div>
+          <p className="text-sm font-bold text-foreground">No prospects found</p>
+          <p className="mt-1 text-xs text-muted-foreground">Try a different sector, role or location</p>
         </div>
       )}
 
       {/* Sticky import bar */}
       {selected.size > 0 && (
         <div className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2">
-          <div className="flex items-center gap-4 rounded-2xl bg-gray-900 px-6 py-3.5 shadow-2xl">
-            <p className="text-sm font-medium text-white">
+          <div className="flex items-center gap-4 rounded-2xl bg-slate-900/95 backdrop-blur-sm px-6 py-3.5 shadow-2xl ring-1 ring-white/10">
+            <p className="text-sm font-semibold text-white">
               {selected.size} lead{selected.size !== 1 ? 's' : ''} selected
             </p>
             <button
               onClick={handleImport}
               disabled={importMutation.isPending}
-              className="inline-flex items-center gap-2 rounded-xl bg-green-500 px-4 py-2 text-sm font-semibold text-white hover:bg-green-400 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2 text-sm font-bold text-white hover:opacity-90 disabled:opacity-50 transition-all shadow-sm"
             >
               {importMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -602,7 +609,7 @@ export default function LeadDiscoveryPage() {
             </button>
             <button
               onClick={() => setSelected(new Set())}
-              className="text-gray-400 hover:text-white"
+              className="text-slate-400 hover:text-white transition-colors"
             >
               <X className="h-4 w-4" />
             </button>
@@ -617,28 +624,27 @@ export default function LeadDiscoveryPage() {
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50 py-20 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-100">
-        <Compass className="h-6 w-6 text-indigo-600" />
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 bg-muted/30 py-16 text-center">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-md mb-4">
+        <Compass className="h-6 w-6 text-white" />
       </div>
-      <h3 className="mt-4 text-base font-semibold text-gray-900">Find new prospects</h3>
-      <p className="mt-1.5 max-w-sm text-sm text-gray-500">
+      <h3 className="text-base font-bold text-foreground">Find new prospects</h3>
+      <p className="mt-1.5 max-w-sm text-sm text-muted-foreground">
         Select a sector, target roles, and location above — then click{' '}
-        <strong>Search Prospects</strong> to discover matching leads from Apollo.io&apos;s database of 275M+ contacts.
+        <strong className="text-foreground">Search Prospects</strong> to discover matching leads from Apollo.io's database of 275M+ contacts.
       </p>
-      <div className="mt-6 grid grid-cols-3 gap-3 text-xs text-gray-500">
-        <div className="rounded-lg border border-gray-200 bg-white p-3 text-center">
-          <p className="font-semibold text-gray-700">IT & Software</p>
-          <p className="mt-0.5">CTOs, VPs, Founders</p>
-        </div>
-        <div className="rounded-lg border border-gray-200 bg-white p-3 text-center">
-          <p className="font-semibold text-gray-700">Education</p>
-          <p className="mt-0.5">Principals, Directors</p>
-        </div>
-        <div className="rounded-lg border border-gray-200 bg-white p-3 text-center">
-          <p className="font-semibold text-gray-700">Agencies</p>
-          <p className="mt-0.5">Founders, CMOs</p>
-        </div>
+      <div className="mt-6 grid grid-cols-3 gap-3 text-xs">
+        {[
+          { title: 'IT & Software', sub: 'CTOs, VPs, Founders', gradient: 'from-indigo-500 to-violet-500' },
+          { title: 'Education', sub: 'Principals, Directors', gradient: 'from-blue-500 to-sky-500' },
+          { title: 'Agencies', sub: 'Founders, CMOs', gradient: 'from-violet-500 to-purple-500' },
+        ].map(({ title, sub, gradient }) => (
+          <div key={title} className="relative overflow-hidden rounded-xl border border-border/60 bg-white p-3 text-center shadow-sm">
+            <div className={`absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r ${gradient}`} />
+            <p className="font-bold text-foreground mt-1">{title}</p>
+            <p className="mt-0.5 text-muted-foreground">{sub}</p>
+          </div>
+        ))}
       </div>
     </div>
   )
