@@ -144,6 +144,17 @@ def start() -> None:
             max_instances=1,
         )
 
+        # Email Sequences (Phase 6) — process due enrollment steps every 5 min.
+        # Uses dotted-string reference so APScheduler can serialise the job
+        # into the Postgres jobstore across restarts.
+        scheduler.add_job(
+            "services.email_sequence_service:process_due_steps",
+            trigger=IntervalTrigger(minutes=5),
+            id="email_sequence_dispatch",
+            replace_existing=True,
+            max_instances=1,
+        )
+
         logger.info("[scheduler] APScheduler started")
     except Exception as exc:  # noqa: BLE001 — never block app startup
         logger.exception("[scheduler] failed to start: %s", exc)

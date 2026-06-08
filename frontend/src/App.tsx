@@ -32,6 +32,8 @@ import SocialTemplatesPage from './pages/social/TemplatesPage'
 import LeadDiscoveryPage from './pages/LeadDiscoveryPage'
 import LinkedInPage from './pages/LinkedInPage'
 import WhatsAppPage from './pages/WhatsAppPage'
+import EmailSequencesPage from './pages/EmailSequencesPage'
+import EmailSequenceDetailPage from './pages/EmailSequenceDetailPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -64,6 +66,9 @@ export default function App() {
           <Route path="linkedin" element={<LinkedInPage />} />
           {/* WhatsApp Outreach (Phase 5 — Meta Cloud API + AI messages) */}
           <Route path="whatsapp" element={<WhatsAppPage />} />
+          {/* Email Sequences (Phase 6 — drip campaigns with APScheduler) */}
+          <Route path="email-sequences" element={<EmailSequencesPage />} />
+          <Route path="email-sequences/:id" element={<EmailSequenceDetailPage />} />
           <Route path="sectors" element={<SectorsPage />} />
           <Route path="campaigns" element={<CampaignsPage />} />
           <Route path="campaigns/:id" element={<CampaignDetailPage />} />

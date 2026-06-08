@@ -56,6 +56,11 @@ import {
   WA_STATUSES,
 } from '@/hooks/useWhatsApp'
 import {
+  useEmailSequences,
+  ENROLLMENT_STATUSES,
+  type SequenceEnrollment,
+} from '@/hooks/useEmailSequences'
+import {
   cn,
   SECTOR_COLORS,
   SECTOR_NAMES,
@@ -71,7 +76,7 @@ import { format } from 'date-fns'
 import toast from 'react-hot-toast'
 import api from '@/lib/api'
 
-type TabKey = 'overview' | 'activity' | 'ai' | 'campaigns' | 'deals' | 'proposals' | 'linkedin' | 'whatsapp'
+type TabKey = 'overview' | 'activity' | 'ai' | 'campaigns' | 'deals' | 'proposals' | 'linkedin' | 'whatsapp' | 'sequences'
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'overview', label: 'Overview' },
@@ -80,6 +85,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'proposals', label: 'Proposals' },
   { key: 'linkedin', label: 'LinkedIn' },
   { key: 'whatsapp', label: 'WhatsApp' },
+  { key: 'sequences', label: 'Sequences' },
   { key: 'campaigns', label: 'Campaigns' },
   { key: 'deals', label: 'Deals' },
 ]
@@ -175,6 +181,35 @@ export default function LeadDetailPage() {
   const [waContext, setWaContext] = useState('')
   const [waCopied, setWaCopied] = useState<string | null>(null)
   const [waSendingId, setWaSendingId] = useState<string | null>(null)
+
+  // Sequences state
+  const { data: allSequences = [] } = useEmailSequences()
+  const [enrollingSeqId, setEnrollingSeqId] = useState<string | null>(null)
+  const [seqEnrollments, setSeqEnrollments] = useState<SequenceEnrollment[]>([])
+  const [seqEnrollmentsLoaded, setSeqEnrollmentsLoaded] = useState(false)
+
+  async function loadLeadEnrollments() {
+    if (!id || seqEnrollmentsLoaded) return
+    try {
+      // Fetch enrollments for this lead across all sequences
+      const results: SequenceEnrollment[] = []
+      for (const seq of allSequences) {
+        try {
+          const res = await import('@/lib/api').then(({ default: a }) =>
+            a.get<SequenceEnrollment[]>(`/email-sequences/${seq.id}/enrollments`)
+          )
+          const forThisLead = res.data.filter((e) => e.lead_id === id)
+          results.push(...forThisLead)
+        } catch {
+          // skip
+        }
+      }
+      setSeqEnrollments(results)
+      setSeqEnrollmentsLoaded(true)
+    } catch {
+      // ignore
+    }
+  }
 
   async function handleGenerateWaMessage() {
     if (!id) return
@@ -1326,6 +1361,136 @@ export default function LeadDetailPage() {
                 })}
               </div>
             )}
+          </div>
+        )}
+
+        {/* SEQUENCES TAB */}
+        {activeTab === 'sequences' && (
+          <div className="space-y-5 p-6">
+            <div className="flex items-center justify-between">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                <Mail className="h-4 w-4 text-indigo-500" />
+                Email Sequences
+              </h3>
+              <button
+                onClick={loadLeadEnrollments}
+                className="text-xs text-indigo-600 hover:text-indigo-800"
+              >
+                {seqEnrollmentsLoaded ? 'Refresh' : 'Load enrollments'}
+              </button>
+            </div>
+
+            {/* Current enrollments */}
+            {seqEnrollmentsLoaded && seqEnrollments.length > 0 && (
+              <div className="rounded-lg border border-gray-100 overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500">Sequence</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500">Status</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500">Step</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500">Next send</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {seqEnrollments.map((e) => {
+                      const statusMeta = ENROLLMENT_STATUSES.find((s) => s.value === e.status)
+                      return (
+                        <tr key={e.id} className="hover:bg-gray-50">
+                          <td className="px-3 py-2 text-sm font-medium text-gray-800">
+                            {e.sequence_name ?? 'Sequence'}
+                          </td>
+                          <td className="px-3 py-2">
+                            <span className={cn('rounded-full px-2 py-0.5 text-xs font-medium', statusMeta?.color ?? 'bg-gray-100 text-gray-500')}>
+                              {statusMeta?.label ?? e.status}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 text-xs text-gray-600">{e.current_step}</td>
+                          <td className="px-3 py-2 text-xs text-gray-400">
+                            {e.next_step_at
+                              ? new Date(e.next_step_at).toLocaleString('en-IN')
+                              : '—'}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {seqEnrollmentsLoaded && seqEnrollments.length === 0 && (
+              <p className="text-xs text-gray-400">This lead is not enrolled in any sequences.</p>
+            )}
+
+            {/* Enroll in a sequence */}
+            <div className="rounded-lg border border-indigo-100 bg-indigo-50/30 p-4">
+              <h4 className="text-sm font-semibold text-gray-900 mb-3">Enroll in a Sequence</h4>
+              {allSequences.filter((s) => s.status === 'active').length === 0 ? (
+                <p className="text-xs text-gray-500">
+                  No active sequences yet.{' '}
+                  <a href="/email-sequences" className="text-indigo-600 hover:underline">
+                    Create one first →
+                  </a>
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {allSequences
+                    .filter((s) => s.status === 'active')
+                    .map((seq) => {
+                      const alreadyEnrolled = seqEnrollments.some(
+                        (e) => e.sequence_id === seq.id && e.status === 'active'
+                      )
+                      return (
+                        <div
+                          key={seq.id}
+                          className="flex items-center justify-between rounded-lg bg-white border border-gray-200 px-3 py-2"
+                        >
+                          <div>
+                            <p className="text-sm font-medium text-gray-800">{seq.name}</p>
+                            <p className="text-xs text-gray-400">{seq.step_count} steps · {seq.enrolled_count} enrolled</p>
+                          </div>
+                          <button
+                            disabled={alreadyEnrolled || enrollingSeqId === seq.id || !id}
+                            onClick={async () => {
+                              if (!id) return
+                              setEnrollingSeqId(seq.id)
+                              try {
+                                const { data } = await api.post<SequenceEnrollment>(
+                                  `/email-sequences/${seq.id}/enroll`,
+                                  { lead_id: id }
+                                )
+                                setSeqEnrollments((prev) => [...prev, data])
+                                toast.success(`Enrolled in "${seq.name}"!`)
+                              } catch {
+                                toast.error('Enrollment failed (already enrolled?)')
+                              } finally {
+                                setEnrollingSeqId(null)
+                              }
+                            }}
+                            className={cn(
+                              'rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
+                              alreadyEnrolled
+                                ? 'bg-green-50 text-green-600 cursor-default'
+                                : 'bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50'
+                            )}
+                          >
+                            {alreadyEnrolled ? (
+                              <span className="flex items-center gap-1">
+                                <CheckCircle2 className="h-3 w-3" /> Enrolled
+                              </span>
+                            ) : enrollingSeqId === seq.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              'Enroll'
+                            )}
+                          </button>
+                        </div>
+                      )
+                    })}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
