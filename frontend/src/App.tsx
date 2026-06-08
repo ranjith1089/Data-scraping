@@ -11,6 +11,8 @@ import SectorsPage from './pages/SectorsPage'
 import CampaignsPage from './pages/CampaignsPage'
 import CampaignDetailPage from './pages/CampaignDetailPage'
 import CampaignEditPage from './pages/CampaignEditPage'
+import ProposalsPage from './pages/ProposalsPage'
+import ProposalDetailPage from './pages/ProposalDetailPage'
 import PipelinePage from './pages/PipelinePage'
 import AIAssistantPage from './pages/AIAssistantPage'
 import IntegrationsPage from './pages/IntegrationsPage'
@@ -57,6 +59,8 @@ export default function App() {
           <Route path="campaigns" element={<CampaignsPage />} />
           <Route path="campaigns/:id" element={<CampaignDetailPage />} />
           <Route path="campaigns/:id/edit" element={<CampaignEditPage />} />
+          <Route path="proposals" element={<ProposalsPage />} />
+          <Route path="proposals/:id" element={<ProposalDetailPage />} />
           <Route path="pipeline" element={<PipelinePage />} />
           {/*
             Canonical AI Assistant route is /ai — the Sidebar, TopBar breadcrumb

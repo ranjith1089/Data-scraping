@@ -14,6 +14,7 @@ import {
   Code2,
   CreditCard,
   Instagram,
+  FileSignature,
 } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
 import { useUIStore } from '@/store/uiStore'
@@ -37,6 +38,7 @@ const mainNav: NavItem[] = [
   { title: 'Leads', href: '/leads', icon: Users },
   { title: 'Sectors', href: '/sectors', icon: Briefcase },
   { title: 'Campaigns', href: '/campaigns', icon: Megaphone },
+  { title: 'Proposals', href: '/proposals', icon: FileSignature },
   { title: 'Pipeline', href: '/pipeline', icon: Target },
   { title: 'Forms', href: '/forms', icon: FileText },
   { title: 'Social', href: '/social', icon: Instagram },

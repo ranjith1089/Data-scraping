@@ -21,9 +21,12 @@ import {
   ExternalLink,
   Tag,
   Loader2,
+  FileSignature,
+  Download,
 } from 'lucide-react'
 import { useLead } from '@/hooks/useLeads'
 import { useLeadScore, useEmailGen, type EmailGenRequest } from '@/hooks/useAI'
+import { useProposals, useGenerateProposal, openProposalHtmlExport, downloadProposalDocx } from '@/hooks/useProposals'
 import {
   cn,
   SECTOR_COLORS,
@@ -34,17 +37,19 @@ import {
   getICPBadge,
   formatINR,
   timeAgo,
+  formatDate,
 } from '@/lib/utils'
 import { format } from 'date-fns'
 import toast from 'react-hot-toast'
 import api from '@/lib/api'
 
-type TabKey = 'overview' | 'activity' | 'ai' | 'campaigns' | 'deals'
+type TabKey = 'overview' | 'activity' | 'ai' | 'campaigns' | 'deals' | 'proposals'
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'overview', label: 'Overview' },
   { key: 'activity', label: 'Activity' },
   { key: 'ai', label: 'AI Actions' },
+  { key: 'proposals', label: 'Proposals' },
   { key: 'campaigns', label: 'Campaigns' },
   { key: 'deals', label: 'Deals' },
 ]
@@ -94,6 +99,12 @@ export default function LeadDetailPage() {
   const [newActivity, setNewActivity] = useState({ type: 'call', note: '', outcome: '' })
   const [showActivityForm, setShowActivityForm] = useState(false)
 
+  // Proposals state
+  const { data: proposals = [], isLoading: proposalsLoading } = useProposals(id)
+  const generateProposalMutation = useGenerateProposal()
+  const [proposalType, setProposalType] = useState<'service_proposal' | 'project_quote' | 'intro_letter'>('service_proposal')
+  const [proposalTone, setProposalTone] = useState<'professional' | 'friendly' | 'formal' | 'consultative'>('professional')
+
   async function handleScoreLead() {
     if (!id) return
     try {
@@ -120,6 +131,21 @@ export default function LeadDetailPage() {
       toast.success('Email generated')
     } catch {
       toast.error('Failed to generate email')
+    }
+  }
+
+  async function handleGenerateProposal() {
+    if (!id) return
+    try {
+      await generateProposalMutation.mutateAsync({
+        lead_id: id,
+        proposal_type: proposalType,
+        tone: proposalTone,
+      })
+      toast.success('Proposal generated!')
+      setActiveTab('proposals')
+    } catch {
+      toast.error('Failed to generate proposal. Check AI quota.')
     }
   }
 
@@ -648,6 +674,103 @@ export default function LeadDetailPage() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* PROPOSALS TAB */}
+        {activeTab === 'proposals' && (
+          <div className="space-y-5 p-6">
+            {/* Generate panel */}
+            <div className="rounded-lg border border-indigo-100 bg-indigo-50/40 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-900">Generate AI Proposal</h4>
+                  <p className="mt-0.5 text-xs text-gray-500">
+                    AI writes a full sector-specific sales proposal for this lead
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <select
+                  value={proposalType}
+                  onChange={(e) => setProposalType(e.target.value as typeof proposalType)}
+                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                >
+                  <option value="service_proposal">Service Proposal</option>
+                  <option value="project_quote">Project Quote</option>
+                  <option value="intro_letter">Introduction Letter</option>
+                </select>
+                <select
+                  value={proposalTone}
+                  onChange={(e) => setProposalTone(e.target.value as typeof proposalTone)}
+                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                >
+                  <option value="professional">Professional</option>
+                  <option value="consultative">Consultative</option>
+                  <option value="friendly">Friendly</option>
+                  <option value="formal">Formal</option>
+                </select>
+                <button
+                  onClick={handleGenerateProposal}
+                  disabled={generateProposalMutation.isPending}
+                  className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                >
+                  {generateProposalMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <FileSignature className="h-4 w-4" />
+                  )}
+                  Generate
+                </button>
+              </div>
+            </div>
+
+            {/* List of existing proposals */}
+            {proposalsLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+              </div>
+            ) : proposals.length === 0 ? (
+              <div className="py-10 text-center">
+                <FileSignature className="mx-auto h-8 w-8 text-gray-300" />
+                <p className="mt-2 text-sm text-gray-500">No proposals generated yet</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {proposals.map((p) => (
+                  <div key={p.id} className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 truncate max-w-xs">{p.title}</p>
+                      <p className="mt-0.5 text-xs text-gray-400">
+                        {p.proposal_type.replace(/_/g, ' ')} · {p.status} · {formatDate(p.created_at)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => openProposalHtmlExport(p.id)}
+                        title="View / Print as PDF"
+                        className="rounded-lg border border-gray-200 p-1.5 text-gray-500 hover:bg-gray-50"
+                      >
+                        <FileText className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => downloadProposalDocx(p.id)}
+                        title="Download Word"
+                        className="rounded-lg border border-gray-200 p-1.5 text-gray-500 hover:bg-gray-50"
+                      >
+                        <Download className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => navigate(`/proposals/${p.id}`)}
+                        className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100"
+                      >
+                        Open
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

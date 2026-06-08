@@ -19,6 +19,9 @@ from .automation_rule import AutomationRule
 from .lead_assignment_rule import LeadAssignmentRule
 from .public_form import PublicForm
 
+# AI Proposal module (Phase 1 — AI-generated sales proposals; migration 009).
+from .proposal import Proposal
+
 # Social module (Phase 1 — Instagram DM automation; migration 006).
 from .social.social_account import SocialAccount
 from .social.social_conversation import SocialConversation
@@ -50,6 +53,8 @@ __all__ = [
     "AutomationRule",
     "LeadAssignmentRule",
     "PublicForm",
+    # AI Proposal module
+    "Proposal",
     # Social module
     "SocialAccount",
     "SocialConversation",
