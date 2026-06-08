@@ -26,7 +26,7 @@ export default function ConversationsPage() {
   return (
     <div className="max-w-7xl mx-auto h-[calc(100vh-7rem)] flex flex-col">
       <div className="mb-4">
-        <h1 className="text-3xl font-bold tracking-tight">Conversations</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight text-foreground">Conversations</h1>
         <p className="text-muted-foreground mt-1">
           Every Instagram DM thread, in one inbox.
         </p>
