@@ -4,6 +4,7 @@ import { useAuthStore } from './store/authStore'
 import AppLayout from './components/layout/AppLayout'
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
+import LandingPage from './pages/LandingPage'
 import DashboardPage from './pages/DashboardPage'
 import LeadsPage from './pages/LeadsPage'
 import LeadDetailPage from './pages/LeadDetailPage'
@@ -44,23 +45,32 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+/** Root "/" — show landing page for guests, redirect to app for authenticated users */
+function PublicHome() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />
+  return <LandingPage />
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <Toaster position="top-right" />
       <Routes>
+        {/* Public marketing homepage */}
+        <Route path="/" element={<PublicHome />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+
+        {/* All authenticated app routes — pathless layout route */}
         <Route
-          path="/"
           element={
             <ProtectedRoute>
               <AppLayout />
             </ProtectedRoute>
           }
         >
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="leads" element={<LeadsPage />} />
           <Route path="leads/:id" element={<LeadDetailPage />} />
           {/* Lead Discovery (Phase 3 — Apollo.io people search) */}
