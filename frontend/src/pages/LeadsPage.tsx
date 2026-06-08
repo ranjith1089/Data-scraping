@@ -14,8 +14,10 @@ import {
   Zap,
   Users,
   Upload,
+  Wand2,
 } from 'lucide-react'
 import { useLeads, useDeleteLead, type Lead } from '@/hooks/useLeads'
+import { useEnrichLead, useBulkEnrichLeads } from '@/hooks/useEnrichment'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -145,6 +147,24 @@ export default function LeadsPage() {
       })()
     : null
   const deleteLead = useDeleteLead()
+  const enrichLead = useEnrichLead()
+  const [enrichingId, setEnrichingId] = useState<string | null>(null)
+
+  async function handleEnrich(leadId: string) {
+    setEnrichingId(leadId)
+    try {
+      const result = await enrichLead.mutateAsync({ leadId })
+      if (result.fields_updated.length > 0) {
+        toast.success(`Enriched ${result.fields_updated.length} field(s)`)
+      } else {
+        toast(result.message, { icon: 'ℹ️' })
+      }
+    } catch {
+      toast.error('Enrichment failed')
+    } finally {
+      setEnrichingId(null)
+    }
+  }
 
   const leads = useMemo<Lead[]>(() => data?.items ?? [], [data])
   const total = data?.total ?? 0
@@ -453,6 +473,13 @@ export default function LeadsPage() {
                             <DropdownMenuItem onClick={() => setSelectedLeadId(lead.id)}>
                               <Edit className="h-4 w-4 mr-2" />
                               Edit Lead
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleEnrich(lead.id)}
+                              disabled={enrichingId === lead.id}
+                            >
+                              <Wand2 className="h-4 w-4 mr-2 text-violet-500" />
+                              {enrichingId === lead.id ? 'Enriching…' : 'Enrich Lead'}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem

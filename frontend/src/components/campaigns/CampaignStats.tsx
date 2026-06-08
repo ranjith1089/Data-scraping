@@ -122,42 +122,62 @@ export default function CampaignStats({ campaignId }: CampaignStatsProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {/* Show overall as single row when no per-step data */}
-              <tr className="hover:bg-gray-50">
-                <td className="px-6 py-3">
-                  <span className="inline-flex items-center gap-2 text-sm font-medium text-gray-900">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
-                      1
+              {(stats.steps ?? []).length > 0 ? (
+                stats.steps.map((step) => (
+                  <tr key={step.step_id} className="hover:bg-gray-50">
+                    <td className="px-6 py-3">
+                      <span className="inline-flex items-center gap-2 text-sm font-medium text-gray-900">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
+                          {step.step_number}
+                        </span>
+                        Step {step.step_number}
+                        <span className="text-xs font-normal text-gray-400 capitalize">· {step.channel}</span>
+                      </span>
+                    </td>
+                    <td className="px-6 py-3 text-right text-sm text-gray-700">{formatNumber(step.sent)}</td>
+                    <td className="px-6 py-3 text-right text-sm text-gray-700">{formatNumber(step.opened)}</td>
+                    <td className="px-6 py-3 text-right text-sm text-gray-400">—</td>
+                    <td className="px-6 py-3 text-right text-sm text-gray-700">{formatNumber(step.replied)}</td>
+                    <td className="px-6 py-3 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <div className="h-1.5 w-16 overflow-hidden rounded-full bg-gray-100">
+                          <div
+                            className="h-full rounded-full bg-purple-500"
+                            style={{ width: `${Math.min(step.open_rate, 100)}%` }}
+                          />
+                        </div>
+                        <span className="text-sm font-medium text-gray-900">
+                          {step.open_rate.toFixed(1)}%
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                /* Fallback: campaign-level totals when no per-step data yet */
+                <tr className="hover:bg-gray-50">
+                  <td className="px-6 py-3">
+                    <span className="inline-flex items-center gap-2 text-sm font-medium text-gray-900">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
+                        —
+                      </span>
+                      All Steps
                     </span>
-                    All Steps
-                  </span>
-                </td>
-                <td className="px-6 py-3 text-right text-sm text-gray-700">
-                  {formatNumber(stats.sent)}
-                </td>
-                <td className="px-6 py-3 text-right text-sm text-gray-700">
-                  {formatNumber(stats.opened)}
-                </td>
-                <td className="px-6 py-3 text-right text-sm text-gray-700">
-                  {formatNumber(stats.clicked)}
-                </td>
-                <td className="px-6 py-3 text-right text-sm text-gray-700">
-                  {formatNumber(stats.replied)}
-                </td>
-                <td className="px-6 py-3 text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <div className="h-1.5 w-16 overflow-hidden rounded-full bg-gray-100">
-                      <div
-                        className="h-full rounded-full bg-purple-500"
-                        style={{ width: `${stats.open_rate}%` }}
-                      />
+                  </td>
+                  <td className="px-6 py-3 text-right text-sm text-gray-700">{formatNumber(stats.sent)}</td>
+                  <td className="px-6 py-3 text-right text-sm text-gray-700">{formatNumber(stats.opened)}</td>
+                  <td className="px-6 py-3 text-right text-sm text-gray-700">{formatNumber(stats.clicked)}</td>
+                  <td className="px-6 py-3 text-right text-sm text-gray-700">{formatNumber(stats.replied)}</td>
+                  <td className="px-6 py-3 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <div className="h-1.5 w-16 overflow-hidden rounded-full bg-gray-100">
+                        <div className="h-full rounded-full bg-purple-500" style={{ width: `${stats.open_rate}%` }} />
+                      </div>
+                      <span className="text-sm font-medium text-gray-900">{stats.open_rate.toFixed(1)}%</span>
                     </div>
-                    <span className="text-sm font-medium text-gray-900">
-                      {stats.open_rate.toFixed(1)}%
-                    </span>
-                  </div>
-                </td>
-              </tr>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

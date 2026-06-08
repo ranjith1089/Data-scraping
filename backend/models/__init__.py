@@ -19,6 +19,12 @@ from .automation_rule import AutomationRule
 from .lead_assignment_rule import LeadAssignmentRule
 from .public_form import PublicForm
 
+# AI Proposal module (Phase 1 — AI-generated sales proposals; migration 009).
+from .proposal import Proposal
+
+# Lead Enrichment module (Phase 2 — Apollo.io / Hunter.io; migration 010).
+from .enrichment_log import EnrichmentLog
+
 # Social module (Phase 1 — Instagram DM automation; migration 006).
 from .social.social_account import SocialAccount
 from .social.social_conversation import SocialConversation
@@ -50,6 +56,10 @@ __all__ = [
     "AutomationRule",
     "LeadAssignmentRule",
     "PublicForm",
+    # AI Proposal module
+    "Proposal",
+    # Lead Enrichment module
+    "EnrichmentLog",
     # Social module
     "SocialAccount",
     "SocialConversation",

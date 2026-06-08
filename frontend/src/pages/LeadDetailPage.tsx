@@ -21,9 +21,16 @@ import {
   ExternalLink,
   Tag,
   Loader2,
+  FileSignature,
+  Download,
+  Wand2,
+  CheckCircle2,
+  AlertCircle,
 } from 'lucide-react'
 import { useLead } from '@/hooks/useLeads'
 import { useLeadScore, useEmailGen, type EmailGenRequest } from '@/hooks/useAI'
+import { useProposals, useGenerateProposal, openProposalHtmlExport, downloadProposalDocx } from '@/hooks/useProposals'
+import { useEnrichLead, useEnrichmentLogs, FIELD_LABELS, type EnrichmentResult } from '@/hooks/useEnrichment'
 import {
   cn,
   SECTOR_COLORS,
@@ -34,17 +41,19 @@ import {
   getICPBadge,
   formatINR,
   timeAgo,
+  formatDate,
 } from '@/lib/utils'
 import { format } from 'date-fns'
 import toast from 'react-hot-toast'
 import api from '@/lib/api'
 
-type TabKey = 'overview' | 'activity' | 'ai' | 'campaigns' | 'deals'
+type TabKey = 'overview' | 'activity' | 'ai' | 'campaigns' | 'deals' | 'proposals'
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'overview', label: 'Overview' },
   { key: 'activity', label: 'Activity' },
   { key: 'ai', label: 'AI Actions' },
+  { key: 'proposals', label: 'Proposals' },
   { key: 'campaigns', label: 'Campaigns' },
   { key: 'deals', label: 'Deals' },
 ]
@@ -94,6 +103,32 @@ export default function LeadDetailPage() {
   const [newActivity, setNewActivity] = useState({ type: 'call', note: '', outcome: '' })
   const [showActivityForm, setShowActivityForm] = useState(false)
 
+  // Enrichment state
+  const enrichLeadMutation = useEnrichLead()
+  const [enrichResult, setEnrichResult] = useState<EnrichmentResult | null>(null)
+
+  async function handleEnrichLead() {
+    if (!id) return
+    try {
+      const result = await enrichLeadMutation.mutateAsync({ leadId: id })
+      setEnrichResult(result)
+      if (result.fields_updated.length > 0) {
+        toast.success(`Enriched: ${result.fields_updated.map(f => FIELD_LABELS[f] || f).join(', ')}`)
+        refetch()
+      } else {
+        toast(result.message, { icon: 'ℹ️' })
+      }
+    } catch {
+      toast.error('Enrichment failed. Check your API keys on Railway.')
+    }
+  }
+
+  // Proposals state
+  const { data: proposals = [], isLoading: proposalsLoading } = useProposals(id)
+  const generateProposalMutation = useGenerateProposal()
+  const [proposalType, setProposalType] = useState<'service_proposal' | 'project_quote' | 'intro_letter'>('service_proposal')
+  const [proposalTone, setProposalTone] = useState<'professional' | 'friendly' | 'formal' | 'consultative'>('professional')
+
   async function handleScoreLead() {
     if (!id) return
     try {
@@ -120,6 +155,21 @@ export default function LeadDetailPage() {
       toast.success('Email generated')
     } catch {
       toast.error('Failed to generate email')
+    }
+  }
+
+  async function handleGenerateProposal() {
+    if (!id) return
+    try {
+      await generateProposalMutation.mutateAsync({
+        lead_id: id,
+        proposal_type: proposalType,
+        tone: proposalTone,
+      })
+      toast.success('Proposal generated!')
+      setActiveTab('proposals')
+    } catch {
+      toast.error('Failed to generate proposal. Check AI quota.')
     }
   }
 
@@ -217,11 +267,29 @@ export default function LeadDetailPage() {
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <p className="text-sm text-gray-500">Contact: {lead.contact_name}</p>
+            <button
+              onClick={handleEnrichLead}
+              disabled={enrichLeadMutation.isPending}
+              title="Auto-fill missing fields using Apollo.io + Hunter.io"
+              className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-medium text-violet-700 hover:bg-violet-100 disabled:opacity-50"
+            >
+              {enrichLeadMutation.isPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Wand2 className="h-3.5 w-3.5" />
+              )}
+              Enrich Lead
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Enrichment result banner */}
+      {enrichResult && (
+        <EnrichmentBanner result={enrichResult} onDismiss={() => setEnrichResult(null)} />
+      )}
 
       {/* Tabs */}
       <div className="border-b border-gray-200">
@@ -515,6 +583,8 @@ export default function LeadDetailPage() {
         {/* AI ACTIONS TAB */}
         {activeTab === 'ai' && (
           <div className="space-y-6 p-6">
+            {/* Enrichment card */}
+            <EnrichmentCard leadId={id || ''} onEnrich={handleEnrichLead} isPending={enrichLeadMutation.isPending} />
             {/* Score Lead */}
             <div className="rounded-lg border border-gray-200 p-4">
               <div className="flex items-center justify-between">
@@ -651,6 +721,103 @@ export default function LeadDetailPage() {
           </div>
         )}
 
+        {/* PROPOSALS TAB */}
+        {activeTab === 'proposals' && (
+          <div className="space-y-5 p-6">
+            {/* Generate panel */}
+            <div className="rounded-lg border border-indigo-100 bg-indigo-50/40 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-900">Generate AI Proposal</h4>
+                  <p className="mt-0.5 text-xs text-gray-500">
+                    AI writes a full sector-specific sales proposal for this lead
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <select
+                  value={proposalType}
+                  onChange={(e) => setProposalType(e.target.value as typeof proposalType)}
+                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                >
+                  <option value="service_proposal">Service Proposal</option>
+                  <option value="project_quote">Project Quote</option>
+                  <option value="intro_letter">Introduction Letter</option>
+                </select>
+                <select
+                  value={proposalTone}
+                  onChange={(e) => setProposalTone(e.target.value as typeof proposalTone)}
+                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                >
+                  <option value="professional">Professional</option>
+                  <option value="consultative">Consultative</option>
+                  <option value="friendly">Friendly</option>
+                  <option value="formal">Formal</option>
+                </select>
+                <button
+                  onClick={handleGenerateProposal}
+                  disabled={generateProposalMutation.isPending}
+                  className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                >
+                  {generateProposalMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <FileSignature className="h-4 w-4" />
+                  )}
+                  Generate
+                </button>
+              </div>
+            </div>
+
+            {/* List of existing proposals */}
+            {proposalsLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+              </div>
+            ) : proposals.length === 0 ? (
+              <div className="py-10 text-center">
+                <FileSignature className="mx-auto h-8 w-8 text-gray-300" />
+                <p className="mt-2 text-sm text-gray-500">No proposals generated yet</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {proposals.map((p) => (
+                  <div key={p.id} className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 truncate max-w-xs">{p.title}</p>
+                      <p className="mt-0.5 text-xs text-gray-400">
+                        {p.proposal_type.replace(/_/g, ' ')} · {p.status} · {formatDate(p.created_at)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => openProposalHtmlExport(p.id)}
+                        title="View / Print as PDF"
+                        className="rounded-lg border border-gray-200 p-1.5 text-gray-500 hover:bg-gray-50"
+                      >
+                        <FileText className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => downloadProposalDocx(p.id)}
+                        title="Download Word"
+                        className="rounded-lg border border-gray-200 p-1.5 text-gray-500 hover:bg-gray-50"
+                      >
+                        <Download className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => navigate(`/proposals/${p.id}`)}
+                        className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100"
+                      >
+                        Open
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* CAMPAIGNS TAB */}
         {activeTab === 'campaigns' && (
           <div className="p-6">
@@ -679,6 +846,151 @@ export default function LeadDetailPage() {
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+// ─── Enrichment card (AI Actions tab) ────────────────────────────────────────
+
+function EnrichmentCard({
+  leadId,
+  onEnrich,
+  isPending,
+}: {
+  leadId: string
+  onEnrich: () => void
+  isPending: boolean
+}) {
+  const { data: logs = [] } = useEnrichmentLogs(leadId)
+  const latestLog = logs[0]
+
+  return (
+    <div className="rounded-lg border border-gray-200 p-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h4 className="text-sm font-medium text-gray-900">Lead Enrichment</h4>
+          <p className="mt-0.5 text-xs text-gray-500">
+            Auto-fill missing contact &amp; company data via Apollo.io + Hunter.io
+          </p>
+        </div>
+        <button
+          onClick={onEnrich}
+          disabled={isPending}
+          className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700 hover:bg-violet-100 disabled:opacity-50"
+        >
+          {isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Wand2 className="h-4 w-4" />
+          )}
+          Enrich Now
+        </button>
+      </div>
+
+      {latestLog && (
+        <div className="mt-4 rounded-lg border border-gray-100 bg-gray-50 p-3">
+          <div className="flex items-center justify-between text-xs text-gray-500">
+            <span>
+              Last enrichment via <strong>{latestLog.source}</strong> · {latestLog.status}
+            </span>
+            <span>{new Date(latestLog.created_at).toLocaleDateString()}</span>
+          </div>
+          {latestLog.fields_updated && latestLog.fields_updated.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {latestLog.fields_updated.map((f) => (
+                <span key={f} className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">
+                  {FIELD_LABELS[f] || f}
+                </span>
+              ))}
+            </div>
+          )}
+          {latestLog.error && (
+            <p className="mt-1.5 text-xs text-red-500">{latestLog.error}</p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Enrichment result banner ─────────────────────────────────────────────────
+
+function EnrichmentBanner({
+  result,
+  onDismiss,
+}: {
+  result: EnrichmentResult
+  onDismiss: () => void
+}) {
+  const isSuccess = result.fields_updated.length > 0
+  const isNoKey = result.status === 'no_api_key'
+
+  return (
+    <div
+      className={cn(
+        'flex items-start justify-between gap-4 rounded-xl border p-4',
+        isNoKey
+          ? 'border-amber-200 bg-amber-50'
+          : isSuccess
+          ? 'border-green-200 bg-green-50'
+          : 'border-gray-200 bg-gray-50'
+      )}
+    >
+      <div className="flex items-start gap-3">
+        {isNoKey ? (
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+        ) : isSuccess ? (
+          <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-600" />
+        ) : (
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-gray-400" />
+        )}
+        <div>
+          <p
+            className={cn(
+              'text-sm font-medium',
+              isNoKey ? 'text-amber-800' : isSuccess ? 'text-green-800' : 'text-gray-700'
+            )}
+          >
+            {result.message}
+          </p>
+
+          {result.fields_updated.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {result.fields_updated.map((f) => (
+                <span
+                  key={f}
+                  className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700"
+                >
+                  <CheckCircle2 className="h-3 w-3" />
+                  {FIELD_LABELS[f] || f}:{' '}
+                  <span className="font-normal">{String(result.fields_found[f] ?? '')}</span>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {result.skipped_fields.length > 0 && (
+            <p className="mt-1.5 text-xs text-gray-500">
+              Already had data (not overwritten):{' '}
+              {result.skipped_fields.map((f) => FIELD_LABELS[f] || f).join(', ')}
+            </p>
+          )}
+
+          {isNoKey && (
+            <p className="mt-1.5 text-xs text-amber-700">
+              Set <code className="rounded bg-amber-100 px-1 font-mono">APOLLO_API_KEY</code> or{' '}
+              <code className="rounded bg-amber-100 px-1 font-mono">HUNTER_API_KEY</code> in
+              Railway environment variables.
+            </p>
+          )}
+        </div>
+      </div>
+      <button
+        onClick={onDismiss}
+        className="shrink-0 rounded p-1 text-gray-400 hover:bg-gray-200"
+      >
+        ×
+      </button>
     </div>
   )
 }

@@ -133,6 +133,17 @@ def start() -> None:
             replace_existing=True,
         )
 
+        # Campaign email dispatch — runs every hour, walks all active
+        # campaigns and sends the next batch of emails/messages to leads
+        # that haven't received each step yet.
+        scheduler.add_job(
+            "services.campaign_runner:dispatch_active_campaigns",
+            trigger=IntervalTrigger(hours=1),
+            id="campaign_dispatch_active",
+            replace_existing=True,
+            max_instances=1,
+        )
+
         logger.info("[scheduler] APScheduler started")
     except Exception as exc:  # noqa: BLE001 — never block app startup
         logger.exception("[scheduler] failed to start: %s", exc)

@@ -45,3 +45,6 @@ apscheduler==3.10.4
 psycopg2-binary==2.9.9
 # Fernet symmetric encryption for all third-party credentials at rest.
 cryptography>=42.0.0
+# Word document export for AI-generated proposals (Phase 1).
+# Pure-Python, no system library dependencies — installs cleanly on Railway.
+python-docx==1.1.2
