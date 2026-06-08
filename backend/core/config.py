@@ -79,6 +79,17 @@ class Settings(BaseSettings):
     LINKEDIN_CLIENT_ID: str = ""
     LINKEDIN_CLIENT_SECRET: str = ""
 
+    # ------------------------------------------------------------------
+    # Lead Enrichment (Phase 2 — Apollo.io + Hunter.io)
+    # ------------------------------------------------------------------
+    # Apollo.io — People Match API. Free tier: 50 credits/month.
+    # Get key at https://app.apollo.io/#/settings/integrations/api
+    APOLLO_API_KEY: str = ""
+
+    # Hunter.io — Email Finder API. Free tier: 25 requests/month.
+    # Get key at https://hunter.io/api
+    HUNTER_API_KEY: str = ""
+
     # SMTP alternative to SendGrid
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587

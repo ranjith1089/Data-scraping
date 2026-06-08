@@ -76,6 +76,7 @@ try:
         proposal,
     )
     from routers.integrations import management as integrations_management
+    from routers import enrichment
     from routers.social import oauth as social_oauth
     from routers.social import webhook_inbound as social_webhook_inbound
     from routers.social import automations as social_automations
@@ -358,6 +359,8 @@ app.include_router(reply_analyser.router, prefix=PREFIX)
 app.include_router(vernacular.router, prefix=PREFIX)
 # AI Proposal Generation (Phase 1)
 app.include_router(proposal.router, prefix=PREFIX)
+# Lead Enrichment (Phase 2 — Apollo.io + Hunter.io)
+app.include_router(enrichment.router, prefix=PREFIX)
 
 # Public API (X-API-Key auth), public forms, and the public form shim/iframe
 app.include_router(public_api.router, prefix=PREFIX)
