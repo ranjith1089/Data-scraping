@@ -31,6 +31,12 @@ from .linkedin_message import LinkedInMessage
 # WhatsApp Outreach module (Phase 5 — Meta Cloud API + AI messages; migration 012).
 from .whatsapp_message import WhatsAppMessage
 
+# Email Sequences module (Phase 6 — drip campaigns; migration 013).
+from .email_sequence import EmailSequence, SequenceStep, SequenceEnrollment, SequenceEmailLog
+
+# Deal Activities module (Phase 7 — won/lost tracking + deal timeline; migration 014).
+from .deal_activity import DealActivity
+
 # Social module (Phase 1 — Instagram DM automation; migration 006).
 from .social.social_account import SocialAccount
 from .social.social_conversation import SocialConversation
@@ -70,6 +76,13 @@ __all__ = [
     "LinkedInMessage",
     # WhatsApp Outreach module
     "WhatsAppMessage",
+    # Email Sequences module
+    "EmailSequence",
+    "SequenceStep",
+    "SequenceEnrollment",
+    "SequenceEmailLog",
+    # Deal Activities module
+    "DealActivity",
     # Social module
     "SocialAccount",
     "SocialConversation",

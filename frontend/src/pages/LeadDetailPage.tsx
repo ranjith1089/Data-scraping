@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   ArrowLeft,
   Globe,
@@ -56,6 +56,19 @@ import {
   WA_STATUSES,
 } from '@/hooks/useWhatsApp'
 import {
+  useEmailSequences,
+  ENROLLMENT_STATUSES,
+  type SequenceEnrollment,
+} from '@/hooks/useEmailSequences'
+import {
+  useLeadDeals,
+  useCreateDeal,
+  useMarkWon,
+  useMarkLost,
+  DEAL_STATUS_META,
+  type Deal,
+} from '@/hooks/usePipelineDeals'
+import {
   cn,
   SECTOR_COLORS,
   SECTOR_NAMES,
@@ -71,7 +84,7 @@ import { format } from 'date-fns'
 import toast from 'react-hot-toast'
 import api from '@/lib/api'
 
-type TabKey = 'overview' | 'activity' | 'ai' | 'campaigns' | 'deals' | 'proposals' | 'linkedin' | 'whatsapp'
+type TabKey = 'overview' | 'activity' | 'ai' | 'campaigns' | 'deals' | 'proposals' | 'linkedin' | 'whatsapp' | 'sequences'
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'overview', label: 'Overview' },
@@ -80,6 +93,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'proposals', label: 'Proposals' },
   { key: 'linkedin', label: 'LinkedIn' },
   { key: 'whatsapp', label: 'WhatsApp' },
+  { key: 'sequences', label: 'Sequences' },
   { key: 'campaigns', label: 'Campaigns' },
   { key: 'deals', label: 'Deals' },
 ]
@@ -175,6 +189,75 @@ export default function LeadDetailPage() {
   const [waContext, setWaContext] = useState('')
   const [waCopied, setWaCopied] = useState<string | null>(null)
   const [waSendingId, setWaSendingId] = useState<string | null>(null)
+
+  // Sequences state
+  const { data: allSequences = [] } = useEmailSequences()
+  const [enrollingSeqId, setEnrollingSeqId] = useState<string | null>(null)
+  const [seqEnrollments, setSeqEnrollments] = useState<SequenceEnrollment[]>([])
+  const [seqEnrollmentsLoaded, setSeqEnrollmentsLoaded] = useState(false)
+
+  // Deals state
+  const { data: leadDeals = [], isLoading: dealsLoading } = useLeadDeals(id || '')
+  const createDealMutation = useCreateDeal()
+  const markWonMutation = useMarkWon()
+  const markLostMutation = useMarkLost()
+  const [showCreateDeal, setShowCreateDeal] = useState(false)
+  const [dealStages, setDealStages] = useState<{ id: string; name: string }[]>([])
+  const [dealForm, setDealForm] = useState({ title: '', stage_id: '', value_inr: '', probability: '20', close_date: '' })
+  const [dealStagesLoaded, setDealStagesLoaded] = useState(false)
+
+  async function loadDealStages() {
+    if (dealStagesLoaded) return
+    try {
+      const { data } = await api.get<{ id: string; name: string }[]>('/pipeline/stages')
+      setDealStages(data)
+      if (data.length > 0) setDealForm((f) => ({ ...f, stage_id: data[0].id }))
+      setDealStagesLoaded(true)
+    } catch { /* ignore */ }
+  }
+
+  async function handleCreateDeal(e: React.FormEvent) {
+    e.preventDefault()
+    if (!id || !dealForm.stage_id) return
+    try {
+      await createDealMutation.mutateAsync({
+        lead_id: id,
+        stage_id: dealForm.stage_id,
+        title: dealForm.title,
+        value_inr: dealForm.value_inr ? Number(dealForm.value_inr) : undefined,
+        probability: dealForm.probability ? Number(dealForm.probability) : undefined,
+        close_date: dealForm.close_date || undefined,
+      })
+      toast.success('Deal created!')
+      setShowCreateDeal(false)
+      setDealForm({ title: '', stage_id: dealStages[0]?.id ?? '', value_inr: '', probability: '20', close_date: '' })
+    } catch {
+      toast.error('Failed to create deal')
+    }
+  }
+
+  async function loadLeadEnrollments() {
+    if (!id || seqEnrollmentsLoaded) return
+    try {
+      // Fetch enrollments for this lead across all sequences
+      const results: SequenceEnrollment[] = []
+      for (const seq of allSequences) {
+        try {
+          const res = await import('@/lib/api').then(({ default: a }) =>
+            a.get<SequenceEnrollment[]>(`/email-sequences/${seq.id}/enrollments`)
+          )
+          const forThisLead = res.data.filter((e) => e.lead_id === id)
+          results.push(...forThisLead)
+        } catch {
+          // skip
+        }
+      }
+      setSeqEnrollments(results)
+      setSeqEnrollmentsLoaded(true)
+    } catch {
+      // ignore
+    }
+  }
 
   async function handleGenerateWaMessage() {
     if (!id) return
@@ -1329,6 +1412,136 @@ export default function LeadDetailPage() {
           </div>
         )}
 
+        {/* SEQUENCES TAB */}
+        {activeTab === 'sequences' && (
+          <div className="space-y-5 p-6">
+            <div className="flex items-center justify-between">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                <Mail className="h-4 w-4 text-indigo-500" />
+                Email Sequences
+              </h3>
+              <button
+                onClick={loadLeadEnrollments}
+                className="text-xs text-indigo-600 hover:text-indigo-800"
+              >
+                {seqEnrollmentsLoaded ? 'Refresh' : 'Load enrollments'}
+              </button>
+            </div>
+
+            {/* Current enrollments */}
+            {seqEnrollmentsLoaded && seqEnrollments.length > 0 && (
+              <div className="rounded-lg border border-gray-100 overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500">Sequence</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500">Status</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500">Step</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500">Next send</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {seqEnrollments.map((e) => {
+                      const statusMeta = ENROLLMENT_STATUSES.find((s) => s.value === e.status)
+                      return (
+                        <tr key={e.id} className="hover:bg-gray-50">
+                          <td className="px-3 py-2 text-sm font-medium text-gray-800">
+                            {e.sequence_name ?? 'Sequence'}
+                          </td>
+                          <td className="px-3 py-2">
+                            <span className={cn('rounded-full px-2 py-0.5 text-xs font-medium', statusMeta?.color ?? 'bg-gray-100 text-gray-500')}>
+                              {statusMeta?.label ?? e.status}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 text-xs text-gray-600">{e.current_step}</td>
+                          <td className="px-3 py-2 text-xs text-gray-400">
+                            {e.next_step_at
+                              ? new Date(e.next_step_at).toLocaleString('en-IN')
+                              : '—'}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {seqEnrollmentsLoaded && seqEnrollments.length === 0 && (
+              <p className="text-xs text-gray-400">This lead is not enrolled in any sequences.</p>
+            )}
+
+            {/* Enroll in a sequence */}
+            <div className="rounded-lg border border-indigo-100 bg-indigo-50/30 p-4">
+              <h4 className="text-sm font-semibold text-gray-900 mb-3">Enroll in a Sequence</h4>
+              {allSequences.filter((s) => s.status === 'active').length === 0 ? (
+                <p className="text-xs text-gray-500">
+                  No active sequences yet.{' '}
+                  <a href="/email-sequences" className="text-indigo-600 hover:underline">
+                    Create one first →
+                  </a>
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {allSequences
+                    .filter((s) => s.status === 'active')
+                    .map((seq) => {
+                      const alreadyEnrolled = seqEnrollments.some(
+                        (e) => e.sequence_id === seq.id && e.status === 'active'
+                      )
+                      return (
+                        <div
+                          key={seq.id}
+                          className="flex items-center justify-between rounded-lg bg-white border border-gray-200 px-3 py-2"
+                        >
+                          <div>
+                            <p className="text-sm font-medium text-gray-800">{seq.name}</p>
+                            <p className="text-xs text-gray-400">{seq.step_count} steps · {seq.enrolled_count} enrolled</p>
+                          </div>
+                          <button
+                            disabled={alreadyEnrolled || enrollingSeqId === seq.id || !id}
+                            onClick={async () => {
+                              if (!id) return
+                              setEnrollingSeqId(seq.id)
+                              try {
+                                const { data } = await api.post<SequenceEnrollment>(
+                                  `/email-sequences/${seq.id}/enroll`,
+                                  { lead_id: id }
+                                )
+                                setSeqEnrollments((prev) => [...prev, data])
+                                toast.success(`Enrolled in "${seq.name}"!`)
+                              } catch {
+                                toast.error('Enrollment failed (already enrolled?)')
+                              } finally {
+                                setEnrollingSeqId(null)
+                              }
+                            }}
+                            className={cn(
+                              'rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
+                              alreadyEnrolled
+                                ? 'bg-green-50 text-green-600 cursor-default'
+                                : 'bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50'
+                            )}
+                          >
+                            {alreadyEnrolled ? (
+                              <span className="flex items-center gap-1">
+                                <CheckCircle2 className="h-3 w-3" /> Enrolled
+                              </span>
+                            ) : enrollingSeqId === seq.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              'Enroll'
+                            )}
+                          </button>
+                        </div>
+                      )
+                    })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* CAMPAIGNS TAB */}
         {activeTab === 'campaigns' && (
           <div className="p-6">
@@ -1345,15 +1558,184 @@ export default function LeadDetailPage() {
 
         {/* DEALS TAB */}
         {activeTab === 'deals' && (
-          <div className="p-6">
-            <div className="py-12 text-center">
-              <IndianRupee className="mx-auto h-8 w-8 text-gray-300" />
-              <p className="mt-2 text-sm font-medium text-gray-900">No deals yet</p>
-              <p className="mt-1 text-xs text-gray-500">No deals are associated with this lead.</p>
-              <button className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
-                <Plus className="h-4 w-4" /> Create Deal
+          <div className="p-6 space-y-4">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-gray-900">Deals</h3>
+              <button
+                onClick={() => {
+                  loadDealStages()
+                  setShowCreateDeal((v) => !v)
+                }}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700"
+              >
+                <Plus className="h-3.5 w-3.5" /> New Deal
               </button>
             </div>
+
+            {/* Create form */}
+            {showCreateDeal && (
+              <form onSubmit={handleCreateDeal} className="rounded-xl border border-indigo-200 bg-indigo-50/30 p-4 space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="col-span-2">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Deal title *</label>
+                    <input
+                      required
+                      type="text"
+                      value={dealForm.title}
+                      onChange={(e) => setDealForm((f) => ({ ...f, title: e.target.value }))}
+                      placeholder="e.g. Enterprise SaaS — Q3"
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Stage *</label>
+                    <select
+                      value={dealForm.stage_id}
+                      onChange={(e) => setDealForm((f) => ({ ...f, stage_id: e.target.value }))}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    >
+                      {dealStages.map((s) => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Value (₹)</label>
+                    <input
+                      type="number" min={0}
+                      value={dealForm.value_inr}
+                      onChange={(e) => setDealForm((f) => ({ ...f, value_inr: e.target.value }))}
+                      placeholder="0"
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Probability (%)</label>
+                    <input
+                      type="number" min={0} max={100}
+                      value={dealForm.probability}
+                      onChange={(e) => setDealForm((f) => ({ ...f, probability: e.target.value }))}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Close date</label>
+                    <input
+                      type="date"
+                      value={dealForm.close_date}
+                      onChange={(e) => setDealForm((f) => ({ ...f, close_date: e.target.value }))}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <button
+                    type="submit"
+                    disabled={createDealMutation.isPending || !dealForm.title || !dealForm.stage_id}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                  >
+                    {createDealMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                    Create
+                  </button>
+                  <button type="button" onClick={() => setShowCreateDeal(false)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Deal list */}
+            {dealsLoading ? (
+              <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-indigo-400" /></div>
+            ) : leadDeals.length === 0 ? (
+              <div className="py-10 text-center">
+                <IndianRupee className="mx-auto h-7 w-7 text-gray-300" />
+                <p className="mt-2 text-sm font-medium text-gray-500">No deals yet</p>
+                <p className="text-xs text-gray-400 mt-1">Click "New Deal" to track a revenue opportunity.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {(leadDeals as Deal[]).map((deal) => {
+                  const statusMeta = DEAL_STATUS_META[deal.status] ?? DEAL_STATUS_META.open
+                  const weighted = ((deal.value_inr ?? 0) * (deal.probability ?? 0)) / 100
+                  return (
+                    <div key={deal.id} className="rounded-xl border border-gray-200 bg-white p-4 hover:border-indigo-200 transition-colors">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Link
+                              to={`/deals/${deal.id}`}
+                              className="text-sm font-semibold text-gray-900 hover:text-indigo-600 truncate"
+                            >
+                              {deal.title}
+                            </Link>
+                            <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium', statusMeta.color)}>
+                              {statusMeta.label}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-gray-500">
+                            {deal.value_inr != null && (
+                              <span className="flex items-center gap-0.5">
+                                <IndianRupee className="w-3 h-3" />
+                                {formatINR(deal.value_inr)}
+                              </span>
+                            )}
+                            {deal.probability != null && (
+                              <span>{deal.probability}% → {formatINR(weighted)} weighted</span>
+                            )}
+                            {deal.stage_name && <span className="text-gray-400">{deal.stage_name}</span>}
+                            {deal.close_date && (
+                              <span className={cn(
+                                'flex items-center gap-0.5',
+                                new Date(deal.close_date) < new Date() && deal.status === 'open' ? 'text-red-400' : ''
+                              )}>
+                                <Calendar className="w-3 h-3" />
+                                {new Date(deal.close_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex gap-1.5 shrink-0">
+                          {deal.status === 'open' && (
+                            <>
+                              <button
+                                onClick={async () => {
+                                  await markWonMutation.mutateAsync(deal.id)
+                                  toast.success('🎉 Won!')
+                                }}
+                                title="Mark Won"
+                                className="rounded-lg bg-green-50 border border-green-200 px-2 py-1 text-xs font-medium text-green-700 hover:bg-green-100"
+                              >
+                                Won
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  await markLostMutation.mutateAsync({ id: deal.id })
+                                  toast.success('Deal marked lost')
+                                }}
+                                title="Mark Lost"
+                                className="rounded-lg bg-red-50 border border-red-100 px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-100"
+                              >
+                                Lost
+                              </button>
+                            </>
+                          )}
+                          <Link
+                            to={`/deals/${deal.id}`}
+                            className="rounded-lg border border-gray-200 px-2 py-1 text-xs text-gray-500 hover:bg-gray-50"
+                          >
+                            View →
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         )}
       </div>

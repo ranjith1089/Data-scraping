@@ -80,6 +80,7 @@ try:
     from routers import lead_discovery
     from routers import linkedin as linkedin_router
     from routers import whatsapp as whatsapp_router
+    from routers import email_sequences as email_sequences_router
     from routers.social import oauth as social_oauth
     from routers.social import webhook_inbound as social_webhook_inbound
     from routers.social import automations as social_automations
@@ -370,6 +371,8 @@ app.include_router(lead_discovery.router, prefix=PREFIX)
 app.include_router(linkedin_router.router, prefix=PREFIX)
 # WhatsApp Outreach (Phase 5 — Meta Cloud API + AI messages + inbound webhook)
 app.include_router(whatsapp_router.router, prefix=PREFIX)
+# Email Sequences (Phase 6 — drip campaigns with APScheduler + SendGrid)
+app.include_router(email_sequences_router.router, prefix=PREFIX)
 
 # Public API (X-API-Key auth), public forms, and the public form shim/iframe
 app.include_router(public_api.router, prefix=PREFIX)
