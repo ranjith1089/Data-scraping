@@ -78,6 +78,7 @@ try:
     from routers.integrations import management as integrations_management
     from routers import enrichment
     from routers import lead_discovery
+    from routers import linkedin as linkedin_router
     from routers.social import oauth as social_oauth
     from routers.social import webhook_inbound as social_webhook_inbound
     from routers.social import automations as social_automations
@@ -364,6 +365,8 @@ app.include_router(proposal.router, prefix=PREFIX)
 app.include_router(enrichment.router, prefix=PREFIX)
 # Lead Discovery (Phase 3 — Apollo.io people search)
 app.include_router(lead_discovery.router, prefix=PREFIX)
+# LinkedIn Prospecting (Phase 4 — ProxyCurl + AI messages)
+app.include_router(linkedin_router.router, prefix=PREFIX)
 
 # Public API (X-API-Key auth), public forms, and the public form shim/iframe
 app.include_router(public_api.router, prefix=PREFIX)
