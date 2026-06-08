@@ -69,6 +69,16 @@ import {
   type Deal,
 } from '@/hooks/usePipelineDeals'
 import {
+  useLeadTasks,
+  useCreateTask,
+  useCompleteTask,
+  useReopenTask,
+  useDeleteTask,
+  PRIORITY_META,
+  TASK_TYPE_META,
+  type Task,
+} from '@/hooks/useTasks'
+import {
   cn,
   SECTOR_COLORS,
   SECTOR_NAMES,
@@ -84,18 +94,19 @@ import { format } from 'date-fns'
 import toast from 'react-hot-toast'
 import api from '@/lib/api'
 
-type TabKey = 'overview' | 'activity' | 'ai' | 'campaigns' | 'deals' | 'proposals' | 'linkedin' | 'whatsapp' | 'sequences'
+type TabKey = 'overview' | 'activity' | 'ai' | 'campaigns' | 'deals' | 'proposals' | 'linkedin' | 'whatsapp' | 'sequences' | 'tasks'
 
 const TABS: { key: TabKey; label: string }[] = [
-  { key: 'overview', label: 'Overview' },
-  { key: 'activity', label: 'Activity' },
-  { key: 'ai', label: 'AI Actions' },
-  { key: 'proposals', label: 'Proposals' },
-  { key: 'linkedin', label: 'LinkedIn' },
-  { key: 'whatsapp', label: 'WhatsApp' },
-  { key: 'sequences', label: 'Sequences' },
-  { key: 'campaigns', label: 'Campaigns' },
-  { key: 'deals', label: 'Deals' },
+  { key: 'overview',   label: 'Overview' },
+  { key: 'activity',   label: 'Activity' },
+  { key: 'tasks',      label: 'Tasks' },
+  { key: 'deals',      label: 'Deals' },
+  { key: 'ai',         label: 'AI Actions' },
+  { key: 'proposals',  label: 'Proposals' },
+  { key: 'linkedin',   label: 'LinkedIn' },
+  { key: 'whatsapp',   label: 'WhatsApp' },
+  { key: 'sequences',  label: 'Sequences' },
+  { key: 'campaigns',  label: 'Campaigns' },
 ]
 
 // Must mirror backend/schemas/lead.py::LeadStage. See STAGE_LABELS.
@@ -1738,7 +1749,164 @@ export default function LeadDetailPage() {
             )}
           </div>
         )}
+
+        {/* TASKS TAB */}
+        {activeTab === 'tasks' && (
+          <LeadTasksPanel leadId={id ?? ''} />
+        )}
       </div>
+    </div>
+  )
+}
+
+// ─── Lead tasks panel ─────────────────────────────────────────────────────────
+
+function LeadTasksPanel({ leadId }: { leadId: string }) {
+  const { data: tasks = [], isLoading } = useLeadTasks(leadId)
+  const createMutation   = useCreateTask()
+  const completeMutation = useCompleteTask()
+  const reopenMutation   = useReopenTask()
+  const deleteMutation   = useDeleteTask()
+  const [showForm, setShowForm] = useState(false)
+  const [form, setForm] = useState<{ title: string; task_type: Task['task_type']; priority: Task['priority']; due_date: string }>({
+    title: '', task_type: 'follow_up', priority: 'medium', due_date: '',
+  })
+
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault()
+    if (!form.title.trim()) return
+    try {
+      await createMutation.mutateAsync({
+        title: form.title,
+        task_type: form.task_type,
+        priority: form.priority,
+        due_date: form.due_date || undefined,
+        lead_id: leadId,
+      })
+      toast.success('Task created')
+      setShowForm(false)
+      setForm({ title: '', task_type: 'follow_up', priority: 'medium', due_date: '' })
+    } catch {
+      toast.error('Failed to create task')
+    }
+  }
+
+  const open = tasks.filter((t) => t.status !== 'done' && t.status !== 'cancelled')
+  const done = tasks.filter((t) => t.status === 'done')
+
+  return (
+    <div className="p-6 space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-gray-900">
+          Tasks
+          {open.length > 0 && (
+            <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-700">
+              {open.length} open
+            </span>
+          )}
+        </h3>
+        <button
+          onClick={() => setShowForm((v) => !v)}
+          className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700"
+        >
+          <Plus className="w-3.5 h-3.5" /> Add Task
+        </button>
+      </div>
+
+      {showForm && (
+        <form onSubmit={handleCreate} className="rounded-xl border border-indigo-200 bg-indigo-50/30 p-4 space-y-3">
+          <input
+            autoFocus required
+            type="text"
+            value={form.title}
+            onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+            placeholder="Task title..."
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+          />
+          <div className="grid grid-cols-3 gap-2">
+            <select value={form.task_type} onChange={(e) => setForm((f) => ({ ...f, task_type: e.target.value as Task['task_type'] }))}
+              className="rounded-lg border border-gray-300 px-2 py-1.5 text-xs">
+              {Object.entries(TASK_TYPE_META).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+            </select>
+            <select value={form.priority} onChange={(e) => setForm((f) => ({ ...f, priority: e.target.value as Task['priority'] }))}
+              className="rounded-lg border border-gray-300 px-2 py-1.5 text-xs">
+              {Object.entries(PRIORITY_META).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+            </select>
+            <input type="datetime-local" value={form.due_date}
+              onChange={(e) => setForm((f) => ({ ...f, due_date: e.target.value }))}
+              className="rounded-lg border border-gray-300 px-2 py-1.5 text-xs" />
+          </div>
+          <div className="flex gap-2">
+            <button type="submit" disabled={!form.title.trim() || createMutation.isPending}
+              className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50">
+              {createMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin inline" /> : 'Add'}
+            </button>
+            <button type="button" onClick={() => setShowForm(false)}
+              className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+
+      {isLoading ? (
+        <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-indigo-400" /></div>
+      ) : tasks.length === 0 && !showForm ? (
+        <div className="py-10 text-center">
+          <CheckCircle2 className="mx-auto h-8 w-8 text-gray-200" />
+          <p className="mt-2 text-sm text-gray-400">No tasks yet for this lead.</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {[...open, ...done].map((t) => {
+            const isDone = t.status === 'done'
+            const pm = PRIORITY_META[t.priority] ?? PRIORITY_META.medium
+            const tm = TASK_TYPE_META[t.task_type] ?? TASK_TYPE_META.other
+            const dueDate = t.due_date ? new Date(t.due_date) : null
+            return (
+              <div key={t.id} className={cn(
+                'group flex items-center gap-3 rounded-xl border p-3 transition-colors',
+                isDone ? 'border-gray-100 bg-gray-50/50 opacity-60'
+                  : t.is_overdue ? 'border-red-200 bg-red-50/30'
+                  : 'border-gray-200 hover:border-indigo-200'
+              )}>
+                <button
+                  onClick={async () => {
+                    if (isDone) { await reopenMutation.mutateAsync(t.id) }
+                    else { await completeMutation.mutateAsync(t.id); toast.success('✓ Done!') }
+                  }}
+                  className={cn(
+                    'flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-colors',
+                    isDone ? 'border-green-500 bg-green-500 text-white' : 'border-gray-300 hover:border-indigo-500'
+                  )}>
+                  {isDone && <Check className="w-3 h-3" />}
+                </button>
+                <div className="flex-1 min-w-0">
+                  <p className={cn('text-sm', isDone && 'line-through text-gray-400')}>{t.title}</p>
+                  <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                    <span className="text-[10px] text-gray-400">{tm.icon} {tm.label}</span>
+                    <span className={cn('rounded-full px-1.5 py-0.5 text-[9px] font-medium', pm.color)}>{pm.label}</span>
+                    {t.is_overdue && !isDone && (
+                      <span className="text-[9px] text-red-500 font-medium">⚠ Overdue</span>
+                    )}
+                    {dueDate && (
+                      <span className="text-[9px] text-gray-400">
+                        {formatDate(dueDate.toISOString())}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={async () => { await deleteMutation.mutateAsync(t.id) }}
+                  className="opacity-0 group-hover:opacity-100 rounded p-1 text-gray-300 hover:bg-red-50 hover:text-red-400 transition-opacity"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

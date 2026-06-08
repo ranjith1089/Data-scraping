@@ -82,6 +82,7 @@ try:
     from routers import whatsapp as whatsapp_router
     from routers import email_sequences as email_sequences_router
     from routers import reports as reports_router
+    from routers import tasks as tasks_router
     from routers.social import oauth as social_oauth
     from routers.social import webhook_inbound as social_webhook_inbound
     from routers.social import automations as social_automations
@@ -376,6 +377,8 @@ app.include_router(whatsapp_router.router, prefix=PREFIX)
 app.include_router(email_sequences_router.router, prefix=PREFIX)
 # Reports (Phase 8 — comprehensive reporting & analytics)
 app.include_router(reports_router.router, prefix=PREFIX)
+# Tasks (Phase 9 — tasks & follow-ups)
+app.include_router(tasks_router.router, prefix=PREFIX)
 
 # Public API (X-API-Key auth), public forms, and the public form shim/iframe
 app.include_router(public_api.router, prefix=PREFIX)

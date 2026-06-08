@@ -21,6 +21,7 @@ import {
   MessageCircle,
   Mail,
   BarChart2,
+  CheckSquare,
   ChevronDown,
 } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
@@ -50,6 +51,7 @@ const mainNav: NavItem[] = [
   { title: 'WhatsApp',   href: '/whatsapp',   icon: MessageCircle },
   { title: 'Sequences',  href: '/email-sequences', icon: Mail },
   { title: 'Pipeline',   href: '/pipeline',   icon: Target },
+  { title: 'Tasks',      href: '/tasks',      icon: CheckSquare },
   { title: 'Reports',    href: '/reports',    icon: BarChart2 },
   { title: 'Forms',      href: '/forms',      icon: FileText },
   { title: 'Social',     href: '/social',     icon: Instagram },
