@@ -18,6 +18,9 @@ import {
   Edit3,
   Save,
   X,
+  CheckSquare,
+  CheckCheck,
+  AlertTriangle,
 } from 'lucide-react'
 import {
   useDeal,
@@ -33,8 +36,18 @@ import {
   ACTIVITY_TYPE_META,
   type DealActivity,
 } from '@/hooks/usePipelineDeals'
+import {
+  useDealTasks,
+  useCreateTask,
+  useCompleteTask,
+  useReopenTask,
+  useDeleteTask,
+  PRIORITY_META,
+  TASK_TYPE_META,
+  type Task,
+} from '@/hooks/useTasks'
 import { cn, formatINR, formatDate } from '@/lib/utils'
-import { formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow, isToday } from 'date-fns'
 import toast from 'react-hot-toast'
 
 // ─── Activity item ────────────────────────────────────────────────────────────
@@ -491,11 +504,167 @@ export default function DealDetailPage() {
         <AddActivityForm dealId={deal.id} />
       </div>
 
+      {/* Tasks */}
+      <DealTasksCard dealId={deal.id} />
+
       {/* Meta */}
       <div className="text-xs text-gray-400 text-right">
         Created {formatDate(deal.created_at)}
         {deal.updated_at && ` · Updated ${formatDate(deal.updated_at)}`}
       </div>
+    </div>
+  )
+}
+
+// ─── Deal tasks card ──────────────────────────────────────────────────────────
+
+function DealTasksCard({ dealId }: { dealId: string }) {
+  const { data: tasks = [] } = useDealTasks(dealId)
+  const createMutation   = useCreateTask()
+  const completeMutation = useCompleteTask()
+  const reopenMutation   = useReopenTask()
+  const deleteMutation   = useDeleteTask()
+  const [showForm, setShowForm] = useState(false)
+  const [form, setForm] = useState<Partial<Task & { due_date_str: string }>>({
+    title: '', task_type: 'follow_up', priority: 'medium', due_date_str: '',
+  })
+
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault()
+    if (!form.title?.trim()) return
+    try {
+      await createMutation.mutateAsync({
+        title: form.title,
+        task_type: form.task_type ?? 'follow_up',
+        priority: form.priority ?? 'medium',
+        due_date: form.due_date_str || undefined,
+        deal_id: dealId,
+      })
+      toast.success('Task created')
+      setShowForm(false)
+      setForm({ title: '', task_type: 'follow_up', priority: 'medium', due_date_str: '' })
+    } catch {
+      toast.error('Failed to create task')
+    }
+  }
+
+  const open = tasks.filter((t) => t.status !== 'done' && t.status !== 'cancelled')
+  const done = tasks.filter((t) => t.status === 'done')
+
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+          <CheckSquare className="w-4 h-4 text-indigo-400" />
+          Tasks
+          {open.length > 0 && (
+            <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-700">
+              {open.length}
+            </span>
+          )}
+        </h3>
+        <button
+          onClick={() => setShowForm((v) => !v)}
+          className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50"
+        >
+          <Plus className="w-3.5 h-3.5" /> Add Task
+        </button>
+      </div>
+
+      {showForm && (
+        <form onSubmit={handleCreate} className="mb-4 rounded-lg border border-indigo-200 bg-indigo-50/30 p-3 space-y-2">
+          <input
+            autoFocus required
+            type="text"
+            value={form.title ?? ''}
+            onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+            placeholder="Task title..."
+            className="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm"
+          />
+          <div className="grid grid-cols-3 gap-2">
+            <select value={form.task_type ?? 'follow_up'}
+              onChange={(e) => setForm((f) => ({ ...f, task_type: e.target.value as Task['task_type'] }))}
+              className="rounded-lg border border-gray-300 px-2 py-1.5 text-xs">
+              {Object.entries(TASK_TYPE_META).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+            </select>
+            <select value={form.priority ?? 'medium'}
+              onChange={(e) => setForm((f) => ({ ...f, priority: e.target.value as Task['priority'] }))}
+              className="rounded-lg border border-gray-300 px-2 py-1.5 text-xs">
+              {Object.entries(PRIORITY_META).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+            </select>
+            <input type="datetime-local" value={form.due_date_str ?? ''}
+              onChange={(e) => setForm((f) => ({ ...f, due_date_str: e.target.value }))}
+              className="rounded-lg border border-gray-300 px-2 py-1.5 text-xs" />
+          </div>
+          <div className="flex gap-2">
+            <button type="submit" disabled={!form.title?.trim() || createMutation.isPending}
+              className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50">
+              Add
+            </button>
+            <button type="button" onClick={() => setShowForm(false)}
+              className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+
+      {tasks.length === 0 && !showForm ? (
+        <p className="text-sm text-gray-400 text-center py-4">No tasks yet. Click "Add Task" to create one.</p>
+      ) : (
+        <div className="space-y-2">
+          {[...open, ...done].map((t) => {
+            const isDone = t.status === 'done'
+            const pm = PRIORITY_META[t.priority] ?? PRIORITY_META.medium
+            const dueDate = t.due_date ? new Date(t.due_date) : null
+            return (
+              <div key={t.id} className={cn(
+                'group flex items-center gap-3 rounded-lg border p-3 transition-colors',
+                isDone ? 'border-gray-100 bg-gray-50/50 opacity-60'
+                  : t.is_overdue ? 'border-red-200 bg-red-50/30'
+                  : 'border-gray-200 hover:border-indigo-200'
+              )}>
+                <button
+                  onClick={async () => {
+                    if (isDone) { await reopenMutation.mutateAsync(t.id); toast.success('Reopened') }
+                    else { await completeMutation.mutateAsync(t.id); toast.success('✓ Done!') }
+                  }}
+                  className={cn(
+                    'flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded border-2 transition-colors',
+                    isDone ? 'border-green-500 bg-green-500 text-white' : 'border-gray-300 hover:border-indigo-500'
+                  )}>
+                  {isDone && <CheckCheck className="w-2.5 h-2.5" />}
+                </button>
+                <div className="flex-1 min-w-0">
+                  <span className={cn('text-sm', isDone && 'line-through text-gray-400')}>{t.title}</span>
+                  <div className="flex gap-2 mt-0.5 flex-wrap">
+                    <span className={cn('rounded-full px-1.5 py-0.5 text-[9px] font-medium', pm.color)}>{pm.label}</span>
+                    {t.is_overdue && !isDone && (
+                      <span className="inline-flex items-center gap-0.5 text-[9px] text-red-500">
+                        <AlertTriangle className="w-2.5 h-2.5" />Overdue
+                      </span>
+                    )}
+                    {dueDate && !t.is_overdue && isToday(dueDate) && !isDone && (
+                      <span className="text-[9px] text-amber-600">Due today</span>
+                    )}
+                    {dueDate && (
+                      <span className="text-[9px] text-gray-400">
+                        {formatDistanceToNow(dueDate, { addSuffix: true })}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={async () => { await deleteMutation.mutateAsync(t.id); toast.success('Deleted') }}
+                  className="opacity-0 group-hover:opacity-100 rounded p-1 text-gray-300 hover:bg-red-50 hover:text-red-400 transition-opacity"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

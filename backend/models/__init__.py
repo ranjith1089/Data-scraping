@@ -37,6 +37,9 @@ from .email_sequence import EmailSequence, SequenceStep, SequenceEnrollment, Seq
 # Deal Activities module (Phase 7 — won/lost tracking + deal timeline; migration 014).
 from .deal_activity import DealActivity
 
+# Tasks module (Phase 9 — tasks & follow-ups; migration 015).
+from .task import Task
+
 # Social module (Phase 1 — Instagram DM automation; migration 006).
 from .social.social_account import SocialAccount
 from .social.social_conversation import SocialConversation
@@ -83,6 +86,8 @@ __all__ = [
     "SequenceEmailLog",
     # Deal Activities module
     "DealActivity",
+    # Tasks module
+    "Task",
     # Social module
     "SocialAccount",
     "SocialConversation",
