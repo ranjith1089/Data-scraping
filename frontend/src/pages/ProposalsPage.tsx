@@ -189,7 +189,7 @@ function GenerateModal({ onClose, onGenerated }: GenerateModalProps) {
           <button
             onClick={handleGenerate}
             disabled={generateMutation.isPending || !leadId}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:opacity-90 disabled:opacity-50 transition-all"
           >
             {generateMutation.isPending ? (
               <><Loader2 className="h-4 w-4 animate-spin" /> Generating…</>
@@ -240,42 +240,37 @@ export default function ProposalsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 max-w-7xl mx-auto">
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Proposals</h1>
-          <p className="mt-0.5 text-sm text-gray-500">
-            AI-generated sales proposals for your leads
-          </p>
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground">Proposals</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">AI-generated sales proposals for your leads</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700"
-        >
+          className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-md shadow-teal-200 hover:opacity-90 hover:-translate-y-px transition-all">
           <Plus className="h-4 w-4" />
           Generate Proposal
         </button>
       </div>
 
       {/* Status filter */}
-      <div className="flex gap-2">
+      <div className="flex gap-1.5 flex-wrap">
         {['all', 'draft', 'sent', 'accepted', 'rejected'].map((s) => (
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
             className={cn(
-              'rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors',
+              'rounded-full px-3.5 py-1.5 text-xs font-semibold capitalize transition-all',
               statusFilter === s
-                ? 'bg-indigo-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-sm'
+                : 'bg-white border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted',
             )}
           >
             {s === 'all' ? 'All' : STATUS_BADGE[s]?.label ?? s}
             {s !== 'all' && (
-              <span className="ml-1.5 opacity-70">
-                ({proposals.filter((p) => p.status === s).length})
-              </span>
+              <span className="ml-1 opacity-70">({proposals.filter((p) => p.status === s).length})</span>
             )}
           </button>
         ))}
@@ -327,50 +322,50 @@ function ProposalCard({
   return (
     <div
       onClick={onClick}
-      className="group cursor-pointer rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-indigo-200 hover:shadow-md"
+      className="relative group cursor-pointer rounded-2xl border border-border/60 bg-white p-5 shadow-sm transition-all hover:border-primary/30 hover:shadow-md overflow-hidden card-lift"
     >
+      {/* Top gradient bar */}
+      <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-teal-400 to-emerald-500 rounded-t-2xl" />
+
       {/* Header row */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50">
-          <FileSignature className="h-4 w-4 text-indigo-600" />
+      <div className="flex items-start justify-between gap-3 mt-1">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 to-emerald-500 shadow-sm">
+          <FileSignature className="h-4 w-4 text-white" />
         </div>
-        <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-xs font-medium', badge.color)}>
+        <span className={cn('shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold', badge.color)}>
           {badge.label}
         </span>
       </div>
 
       {/* Title */}
-      <h3 className="mt-3 line-clamp-2 text-sm font-semibold leading-snug text-gray-900 group-hover:text-indigo-700">
+      <h3 className="mt-3 line-clamp-2 text-sm font-bold leading-snug text-foreground group-hover:text-primary">
         {proposal.title}
       </h3>
 
       {/* Meta */}
       <div className="mt-3 space-y-1.5">
         {proposal.lead_company && (
-          <div className="flex items-center gap-1.5 text-xs text-gray-500">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Building2 className="h-3.5 w-3.5 shrink-0" />
             <span className="truncate">{proposal.lead_company}</span>
           </div>
         )}
-        <div className="flex items-center gap-1.5 text-xs text-gray-400">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <FileText className="h-3.5 w-3.5 shrink-0" />
           <span>{TYPE_LABEL[proposal.proposal_type] || proposal.proposal_type}</span>
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-gray-400">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <Clock className="h-3.5 w-3.5 shrink-0" />
           <span>{formatDate(proposal.created_at)}</span>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3">
-        <button
-          onClick={onDelete}
-          className="text-xs text-gray-400 hover:text-red-500"
-        >
+      <div className="mt-4 flex items-center justify-between border-t border-border/40 pt-3">
+        <button onClick={onDelete} className="text-xs text-muted-foreground hover:text-destructive transition-colors">
           Delete
         </button>
-        <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-indigo-500" />
+        <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
       </div>
     </div>
   )
