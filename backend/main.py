@@ -177,6 +177,44 @@ async def _run_migrations() -> None:
         traceback.print_exc()
 
 
+async def _ensure_schema() -> None:
+    """Direct DDL safety-net that runs AFTER alembic.
+
+    When alembic works correctly this is entirely a no-op (IF NOT EXISTS
+    is a cheap catalogue check).  When alembic is stuck — e.g. migration
+    013 partially applied some tables on a previous deploy, causing every
+    subsequent ``upgrade head`` to fail with "table already exists" and
+    leaving the version pinned at 012 — this function still adds the
+    columns the app needs so users aren't blocked.
+
+    Only idempotent statements (ALTER TABLE ... ADD COLUMN IF NOT EXISTS)
+    are used here; nothing can break the schema if it runs twice.
+    """
+    from sqlalchemy import text as _text
+    from core.database import AsyncSessionLocal as _ASL
+
+    # Phase 1: student-admission columns added by migration 017
+    _admission_cols = [
+        ("parent_name",       "VARCHAR"),
+        ("parent_phone",      "VARCHAR"),
+        ("course_interested", "VARCHAR"),
+        ("board",             "VARCHAR"),
+        ("stream",            "VARCHAR"),
+        ("percentage_marks",  "DOUBLE PRECISION"),
+        ("school_name",       "VARCHAR"),
+    ]
+    try:
+        async with _ASL() as _s:
+            for _col, _typ in _admission_cols:
+                await _s.execute(_text(
+                    f"ALTER TABLE leads ADD COLUMN IF NOT EXISTS {_col} {_typ}"
+                ))
+            await _s.commit()
+        print("[startup] schema safety-net: admission columns OK", flush=True)
+    except Exception as _exc:
+        print(f"[startup] schema safety-net error: {_exc!r}", flush=True)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: run alembic upgrade head BEFORE serving traffic. This used
@@ -190,6 +228,14 @@ async def lifespan(app: FastAPI):
     except Exception as exc:  # noqa: BLE001
         print(f"[startup] migration step raised: {exc!r}", flush=True)
         traceback.print_exc()
+
+    # Schema safety-net: if alembic is stuck (partially-applied migration
+    # blocking the chain), ensure the columns we added in Phase 1 exist so
+    # the Leads page never returns a 500 due to a missing column.
+    try:
+        await _ensure_schema()
+    except Exception as exc:  # noqa: BLE001
+        print(f"[startup] schema safety-net raised: {exc!r}", flush=True)
 
     # Boot APScheduler in-process. This is best-effort — if the jobstore
     # table doesn't exist yet (first-run before migrations complete) the
