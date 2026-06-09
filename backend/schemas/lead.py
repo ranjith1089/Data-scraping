@@ -26,14 +26,21 @@ class CompanySize(str, Enum):
 
 
 class LeadSource(str, Enum):
-    MANUAL = "manual"
-    IMPORT = "import"
-    WEBSITE = "website"
-    REFERRAL = "referral"
-    LINKEDIN = "linkedin"
-    CAMPAIGN = "campaign"
-    API = "api"
-    OTHER = "other"
+    MANUAL        = "manual"
+    IMPORT        = "import"
+    WEBSITE       = "website"
+    REFERRAL      = "referral"
+    LINKEDIN      = "linkedin"
+    CAMPAIGN      = "campaign"
+    API           = "api"
+    OTHER         = "other"
+    # ── Admission / college-specific sources ──────────────────────────
+    PHONE_ENQUIRY = "phone_enquiry"
+    WALK_IN       = "walk_in"
+    STALL         = "stall"
+    SCHOOL_VISIT  = "school_visit"
+    INSTAGRAM     = "instagram"
+    FACEBOOK      = "facebook"
 
 
 class LeadCreate(BaseModel):
@@ -57,6 +64,14 @@ class LeadCreate(BaseModel):
     tags: List[str] = Field(default_factory=list)
     source: LeadSource = Field(default=LeadSource.MANUAL)
     custom_fields: Optional[dict] = None
+    # ── Admission / student fields (college & education sectors) ──────
+    parent_name: Optional[str] = Field(None, max_length=100)
+    parent_phone: Optional[str] = Field(None, max_length=20, pattern=r"^\+?[\d\s-]{7,20}$")
+    course_interested: Optional[str] = Field(None, max_length=200)
+    board: Optional[str] = Field(None, max_length=50)
+    stream: Optional[str] = Field(None, max_length=50)
+    percentage_marks: Optional[float] = Field(None, ge=0, le=100)
+    school_name: Optional[str] = Field(None, max_length=200)
 
 
 class LeadUpdate(BaseModel):
@@ -82,6 +97,14 @@ class LeadUpdate(BaseModel):
     custom_fields: Optional[dict] = None
     stage: Optional[LeadStage] = None
     assigned_to: Optional[UUID] = None
+    # ── Admission / student fields ─────────────────────────────────────
+    parent_name: Optional[str] = Field(None, max_length=100)
+    parent_phone: Optional[str] = Field(None, max_length=20, pattern=r"^\+?[\d\s-]{7,20}$")
+    course_interested: Optional[str] = Field(None, max_length=200)
+    board: Optional[str] = Field(None, max_length=50)
+    stream: Optional[str] = Field(None, max_length=50)
+    percentage_marks: Optional[float] = Field(None, ge=0, le=100)
+    school_name: Optional[str] = Field(None, max_length=200)
 
 
 class LeadResponse(BaseModel):
@@ -118,6 +141,14 @@ class LeadResponse(BaseModel):
     assigned_to: Optional[UUID] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
+    # ── Admission / student fields ─────────────────────────────────────
+    parent_name: Optional[str] = None
+    parent_phone: Optional[str] = None
+    course_interested: Optional[str] = None
+    board: Optional[str] = None
+    stream: Optional[str] = None
+    percentage_marks: Optional[float] = None
+    school_name: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 

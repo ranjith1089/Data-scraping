@@ -1,5 +1,5 @@
 from typing import Optional
-from sqlalchemy import String, Integer, BigInteger, Text, DateTime, text, ForeignKey
+from sqlalchemy import String, Integer, BigInteger, Float, Text, DateTime, text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID, JSONB, ARRAY
 from core.database import Base
@@ -55,6 +55,14 @@ class Lead(Base):
     last_contacted: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    # ── Admission / student fields (college & education sectors) ──────
+    parent_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    parent_phone: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    course_interested: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    board: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    stream: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    percentage_marks: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    school_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("now()")
     )
