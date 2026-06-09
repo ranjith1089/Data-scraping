@@ -198,8 +198,16 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* NOTE: deliberately NO `forwards` fill-mode. A retained `transform`
+   (even translateY(0)) turns this element into the containing block for
+   any `position: fixed` descendant — which clipped modals/overlays to the
+   page-content box instead of the viewport (backdrop stopped partway,
+   exposing the dot-pattern below). Without `forwards` the element returns
+   to a transform-free resting state after the 0.28s entrance — visually
+   identical to the final keyframe, so there's no flicker, and `fixed`
+   modals once again cover the full viewport. */
 .page-enter {
-  animation: page-enter 0.28s ease forwards;
+  animation: page-enter 0.28s ease;
 }
 
 /* ── Notification bell pulse ────────────────────────────────────────────────── */
