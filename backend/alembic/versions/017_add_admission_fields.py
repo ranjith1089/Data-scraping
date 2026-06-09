@@ -21,30 +21,16 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Use IF NOT EXISTS so this migration is safe to re-run on Railway
-    # even if a previous deploy partially applied it.
-    conn = op.get_bind()
-    conn.execute(sa.text(
-        "ALTER TABLE leads ADD COLUMN IF NOT EXISTS parent_name       VARCHAR"
-    ))
-    conn.execute(sa.text(
-        "ALTER TABLE leads ADD COLUMN IF NOT EXISTS parent_phone      VARCHAR"
-    ))
-    conn.execute(sa.text(
-        "ALTER TABLE leads ADD COLUMN IF NOT EXISTS course_interested VARCHAR"
-    ))
-    conn.execute(sa.text(
-        "ALTER TABLE leads ADD COLUMN IF NOT EXISTS board             VARCHAR"
-    ))
-    conn.execute(sa.text(
-        "ALTER TABLE leads ADD COLUMN IF NOT EXISTS stream            VARCHAR"
-    ))
-    conn.execute(sa.text(
-        "ALTER TABLE leads ADD COLUMN IF NOT EXISTS percentage_marks  DOUBLE PRECISION"
-    ))
-    conn.execute(sa.text(
-        "ALTER TABLE leads ADD COLUMN IF NOT EXISTS school_name       VARCHAR"
-    ))
+    # Use op.execute + IF NOT EXISTS so this is safe to re-run on Railway.
+    # op.get_bind() is deprecated in Alembic 1.10+ and unreliable in async
+    # setups; op.execute(sa.text(...)) is the correct pattern.
+    op.execute(sa.text("ALTER TABLE leads ADD COLUMN IF NOT EXISTS parent_name       VARCHAR"))
+    op.execute(sa.text("ALTER TABLE leads ADD COLUMN IF NOT EXISTS parent_phone      VARCHAR"))
+    op.execute(sa.text("ALTER TABLE leads ADD COLUMN IF NOT EXISTS course_interested VARCHAR"))
+    op.execute(sa.text("ALTER TABLE leads ADD COLUMN IF NOT EXISTS board             VARCHAR"))
+    op.execute(sa.text("ALTER TABLE leads ADD COLUMN IF NOT EXISTS stream            VARCHAR"))
+    op.execute(sa.text("ALTER TABLE leads ADD COLUMN IF NOT EXISTS percentage_marks  DOUBLE PRECISION"))
+    op.execute(sa.text("ALTER TABLE leads ADD COLUMN IF NOT EXISTS school_name       VARCHAR"))
 
 
 def downgrade() -> None:

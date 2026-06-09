@@ -18,7 +18,6 @@ depends_on = None
 
 
 def upgrade() -> None:
-    conn = op.get_bind()
     for col, ddl_type in [
         ("parent_name",       "VARCHAR"),
         ("parent_phone",      "VARCHAR"),
@@ -28,7 +27,7 @@ def upgrade() -> None:
         ("percentage_marks",  "DOUBLE PRECISION"),
         ("school_name",       "VARCHAR"),
     ]:
-        conn.execute(sa.text(
+        op.execute(sa.text(
             f"ALTER TABLE leads ADD COLUMN IF NOT EXISTS {col} {ddl_type}"
         ))
 
