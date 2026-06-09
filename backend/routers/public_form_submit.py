@@ -114,6 +114,9 @@ async def submit_public_form(
     custom.setdefault("source_form_name", form.name)
     custom.setdefault("source_form_id", str(form.id))
 
+    _ADMISSION_SECTORS = {"college", "education"}
+    is_admission = form.sector_code in _ADMISSION_SECTORS
+
     # Open a tenant-scoped session and create the lead under RLS.
     async for db in get_db_session(tenant_id):
         try:
@@ -128,9 +131,17 @@ async def submit_public_form(
                 city=(body.city or None),
                 district=(body.district or None),
                 state="Tamil Nadu",
-                source="website_form",
+                source="website",
                 custom_fields=custom,
                 tags=["website-form"],
+                # ── Admission fields (populated only for college/education) ──
+                parent_name=(body.parent_name if is_admission else None),
+                parent_phone=(body.parent_phone if is_admission else None),
+                course_interested=(body.course_interested if is_admission else None),
+                board=(body.board if is_admission else None),
+                stream=(body.stream if is_admission else None),
+                percentage_marks=(body.percentage_marks if is_admission else None),
+                school_name=(body.school_name if is_admission else None),
             )
             db.add(lead)
 
@@ -171,6 +182,156 @@ async def submit_public_form(
 # ---------------------------------------------------------------------
 # GET iframe-friendly HTML page
 # ---------------------------------------------------------------------
+
+_ADMISSION_SECTORS = {"college", "education"}
+
+# ── College / Admission enquiry form ─────────────────────────────────────────
+_IFRAME_COLLEGE_TEMPLATE = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>{form_name}</title>
+<style>
+  body {{ margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f5f3ff; color: #111827; }}
+  .card {{ max-width: 560px; margin: 20px auto; padding: 24px; background: #fff; border: 1px solid #ede9fe; border-radius: 14px; }}
+  .hdr {{ display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }}
+  .hdr-icon {{ width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, #7c3aed, #6d28d9); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; }}
+  h2 {{ margin: 0; font-size: 17px; font-weight: 700; color: #1e1b4b; }}
+  p.sub {{ margin: 2px 0 16px 44px; color: #6b7280; font-size: 12px; }}
+  .sec {{ margin: 14px 0 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: #7c3aed; border-bottom: 1px solid #ede9fe; padding-bottom: 4px; }}
+  label {{ display: block; margin: 10px 0 3px; font-size: 12px; font-weight: 500; color: #374151; }}
+  input, select, textarea {{ width: 100%; padding: 9px 11px; font-size: 13px; border: 1px solid #ddd6fe; border-radius: 8px; box-sizing: border-box; background: #faf9ff; }}
+  input:focus, select:focus, textarea:focus {{ outline: none; border-color: #7c3aed; box-shadow: 0 0 0 2px rgba(124,58,237,.15); }}
+  .row {{ display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }}
+  button {{ margin-top: 18px; width: 100%; padding: 11px 14px; font-size: 14px; font-weight: 600; color: #fff; background: linear-gradient(135deg, #7c3aed, #6d28d9); border: 0; border-radius: 9px; cursor: pointer; }}
+  button:hover {{ opacity: .9; }}
+  button:disabled {{ opacity: .5; cursor: not-allowed; }}
+  .err {{ margin-top: 10px; padding: 8px 10px; font-size: 12px; color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; }}
+  .ok  {{ margin-top: 10px; padding: 8px 10px; font-size: 12px; color: #065f46; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px; }}
+  .hp  {{ position: absolute; left: -9999px; }}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="hdr"><div class="hdr-icon">🎓</div><h2>{form_name}</h2></div>
+  <p class="sub">Fill in your details and our counselor will reach you within 24 hours.</p>
+  <form id="lf-form">
+
+    <div class="sec">Student Information</div>
+    <div class="row">
+      <label>Student Name *<input name="name" required autocomplete="name" placeholder="Full name" /></label>
+      <label>Student Phone *<input name="phone" type="tel" required autocomplete="tel" placeholder="+91 98765 43210" /></label>
+    </div>
+    <label>Student Email<input name="email" type="email" autocomplete="email" placeholder="student@email.com" /></label>
+
+    <div class="sec">Course of Interest</div>
+    <div class="row">
+      <label>Course *
+        <select name="course_interested" required>
+          <option value="">Select course…</option>
+          <option>B.Tech / B.E.</option><option>M.Tech / M.E.</option>
+          <option>B.Sc</option><option>M.Sc</option>
+          <option>BCA</option><option>MCA</option>
+          <option>BBA</option><option>MBA</option>
+          <option>B.Com</option><option>M.Com</option>
+          <option>BA</option><option>MA</option>
+          <option>B.Pharm</option><option>M.Pharm</option>
+          <option>MBBS</option><option>BDS</option>
+          <option>B.Ed</option><option>M.Ed</option>
+          <option>Diploma</option><option>Other</option>
+        </select>
+      </label>
+      <label>Stream (12th)
+        <select name="stream">
+          <option value="">Select stream…</option>
+          <option>Science (PCM)</option><option>Science (PCB)</option>
+          <option>Science (PCMB)</option><option>Commerce</option>
+          <option>Arts / Humanities</option><option>Vocational</option>
+          <option>Other</option>
+        </select>
+      </label>
+    </div>
+    <div class="row">
+      <label>Board
+        <select name="board">
+          <option value="">Select board…</option>
+          <option>State Board (TN)</option><option>CBSE</option>
+          <option>ICSE / ISC</option><option>NIOS</option>
+          <option>IB (International)</option><option>Other</option>
+        </select>
+      </label>
+      <label>12th % / Marks<input name="percentage_marks" type="number" min="0" max="100" step="0.01" placeholder="87.5" /></label>
+    </div>
+    <label>Previous School / Institution<input name="school_name" placeholder="Govt. Hr. Sec. School, Coimbatore" /></label>
+
+    <div class="sec">Parent / Guardian</div>
+    <div class="row">
+      <label>Parent Name<input name="parent_name" placeholder="Parent / Guardian name" /></label>
+      <label>Parent Phone<input name="parent_phone" type="tel" placeholder="+91 98765 43210" /></label>
+    </div>
+
+    <div class="sec">Location</div>
+    <div class="row">
+      <label>City<input name="city" autocomplete="address-level2" placeholder="Coimbatore" /></label>
+      <label>District<input name="district" placeholder="Coimbatore" /></label>
+    </div>
+
+    <input class="hp" name="_honeypot" tabindex="-1" autocomplete="off" />
+    <button type="submit">Submit Enquiry →</button>
+    <div id="lf-status"></div>
+  </form>
+</div>
+<script>
+(function() {{
+  var form = document.getElementById('lf-form');
+  var statusEl = document.getElementById('lf-status');
+  form.addEventListener('submit', function(e) {{
+    e.preventDefault();
+    if (form._honeypot && form._honeypot.value) return;
+    var fd = new FormData(form);
+    var payload = {{}};
+    ['name','email','phone','course_interested','stream','board','percentage_marks',
+     'school_name','parent_name','parent_phone','city','district'].forEach(function(k) {{
+      var v = fd.get(k);
+      if (v && v.trim()) {{
+        payload[k] = k === 'percentage_marks' ? parseFloat(v) : v.trim();
+      }}
+    }});
+    statusEl.className = '';
+    statusEl.textContent = '';
+    form.querySelector('button').disabled = true;
+    fetch('{submit_url}', {{
+      method: 'POST',
+      headers: {{ 'Content-Type': 'application/json' }},
+      body: JSON.stringify(payload)
+    }})
+    .then(function(r) {{ return r.json().then(function(j) {{ return {{ ok: r.ok, body: j }}; }}); }})
+    .then(function(res) {{
+      form.querySelector('button').disabled = false;
+      if (res.ok) {{
+        statusEl.className = 'ok';
+        statusEl.textContent = '✅ Thank you! Our counselor will contact you within 24 hours.';
+        form.reset();
+        if (res.body && res.body.redirect_url) {{
+          setTimeout(function() {{ window.top.location.href = res.body.redirect_url; }}, 1500);
+        }}
+      }} else {{
+        statusEl.className = 'err';
+        statusEl.textContent = (res.body && (res.body.detail || res.body.error)) || 'Something went wrong. Please try again.';
+      }}
+    }})
+    .catch(function() {{
+      form.querySelector('button').disabled = false;
+      statusEl.className = 'err';
+      statusEl.textContent = 'Network error — please try again.';
+    }});
+  }});
+}})();
+</script>
+</body>
+</html>
+"""
 
 _IFRAME_TEMPLATE = """<!doctype html>
 <html lang="en">
@@ -267,10 +428,18 @@ _IFRAME_TEMPLATE = """<!doctype html>
 async def form_iframe(public_token: str):
     form = await _resolve_form(public_token)
     submit_url = f"/api/v1/public/forms/{public_token}/submit"
-    html = _IFRAME_TEMPLATE.format(
-        form_name=form.name.replace("<", "&lt;"),
-        submit_url=submit_url,
-    )
+    safe_name = form.name.replace("<", "&lt;")
+    # Use a college-specific form layout for admission sectors
+    if form.sector_code in _ADMISSION_SECTORS:
+        html = _IFRAME_COLLEGE_TEMPLATE.format(
+            form_name=safe_name,
+            submit_url=submit_url,
+        )
+    else:
+        html = _IFRAME_TEMPLATE.format(
+            form_name=safe_name,
+            submit_url=submit_url,
+        )
     return HTMLResponse(content=html)
 
 
