@@ -69,7 +69,7 @@ export const SECTOR_NAMES: Record<string, string> = {
   it_ites: 'Technology & IT',
   agriculture: 'Agriculture',
   manufacturing: 'Manufacturing',
-  education: 'Education',
+  education: 'Schools & Coaching',
   college: 'Colleges & Universities',
   software: 'Software Products & SaaS',
   marketing_media: 'Marketing & Media',
@@ -215,9 +215,38 @@ export const STREAM_OPTIONS = [
   'Other',
 ]
 
-// Helper to detect if a sector is admission/college-oriented
+// ── School / coaching – class & programme options (education sector) ──────────
+// Used when the sector is "Schools & Coaching" (K-12, tuition, test-prep,
+// edtech) — as opposed to "Colleges & Universities" which uses ADMISSION_COURSES.
+export const SCHOOL_CLASS_OPTIONS = [
+  'Pre-KG / LKG / UKG',
+  'Class 1–5 (Primary)',
+  'Class 6–8 (Middle)',
+  'Class 9',
+  'Class 10',
+  'Class 11',
+  'Class 12',
+  'NEET Coaching',
+  'JEE / Engineering Coaching',
+  'Foundation (NEET / JEE)',
+  'Other Coaching / Tuition',
+]
+
+// Helper to detect if a sector is admission/student-oriented (drives the
+// student-enquiry form, parent fields, auto-tasks, admission sequences).
+// Covers BOTH higher-ed (college) and schools/coaching (education).
 export function isAdmissionSector(sectorCode?: string | null): boolean {
   return sectorCode === 'college' || sectorCode === 'education'
+}
+
+// Within admission sectors, distinguish the level so the form can show
+// level-appropriate labels: 'college' (higher ed) vs 'school' (K-12/coaching).
+export function getAdmissionKind(
+  sectorCode?: string | null,
+): 'college' | 'school' | null {
+  if (sectorCode === 'college') return 'college'
+  if (sectorCode === 'education') return 'school'
+  return null
 }
 
 export function getScoreBadge(score: number): { label: string; color: string } {

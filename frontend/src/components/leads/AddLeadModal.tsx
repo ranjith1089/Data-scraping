@@ -13,9 +13,11 @@ import {
   ADMISSION_SOURCE_OPTIONS,
   LEAD_SOURCE_OPTIONS,
   ADMISSION_COURSES,
+  SCHOOL_CLASS_OPTIONS,
   BOARD_OPTIONS,
   STREAM_OPTIONS,
   isAdmissionSector,
+  getAdmissionKind,
   cn,
 } from '@/lib/utils'
 
@@ -83,8 +85,19 @@ export default function AddLeadModal({ onClose, onCreated }: AddLeadModalProps) 
   const [error, setError] = useState<string | null>(null)
 
   const isCollege = isAdmissionSector(form.sector_code)
+  const admissionKind = getAdmissionKind(form.sector_code)   // 'college' | 'school' | null
+  const isSchool = admissionKind === 'school'
   const stageLabels = isCollege ? ADMISSION_STAGE_LABELS : STAGE_LABELS
   const sourceOptions = isCollege ? ADMISSION_SOURCE_OPTIONS : LEAD_SOURCE_OPTIONS
+
+  // Level-appropriate academic labels/options for the admission form
+  const courseLabel       = isSchool ? 'Class / Programme' : 'Course Interested In'
+  const coursePlaceholder = isSchool ? 'Select class…' : 'Select course…'
+  const courseOptions     = isSchool ? SCHOOL_CLASS_OPTIONS : ADMISSION_COURSES
+  const streamLabel       = isSchool ? 'Stream (if 11th / 12th)' : 'Stream (12th)'
+  const boardLabel        = isSchool ? 'Board' : 'Board (12th / Previous)'
+  const pctLabel          = isSchool ? 'Last Class %' : '12th / Entrance Percentage (%)'
+  const prevSchoolLabel   = isSchool ? 'Current School' : 'Previous School / Institution'
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -199,9 +212,11 @@ export default function AddLeadModal({ onClose, onCreated }: AddLeadModalProps) 
                   {isCollege ? 'New Student Enquiry' : 'Add Lead'}
                 </h2>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {isCollege
-                    ? 'Capture student admission enquiry details'
-                    : 'Create a new prospect in your pipeline'}
+                  {isSchool
+                    ? 'Capture school / coaching admission enquiry'
+                    : isCollege
+                      ? 'Capture college admission enquiry details'
+                      : 'Create a new prospect in your pipeline'}
                 </p>
               </div>
             </div>
@@ -298,7 +313,7 @@ export default function AddLeadModal({ onClose, onCreated }: AddLeadModalProps) 
                       className={INPUT_CLS}
                     />
                   </Field>
-                  <Field label="Previous School / Institution" icon={<Building2 className="h-3.5 w-3.5" />}>
+                  <Field label={prevSchoolLabel} icon={<Building2 className="h-3.5 w-3.5" />}>
                     <input
                       type="text"
                       value={form.school_name}
@@ -335,19 +350,19 @@ export default function AddLeadModal({ onClose, onCreated }: AddLeadModalProps) 
                 {/* Academic info */}
                 <SectionTitle icon={<BookOpen className="h-4 w-4" />} label="Academic Details" />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Field label="Course Interested In">
+                  <Field label={courseLabel}>
                     <select
                       value={form.course_interested}
                       onChange={(e) => update('course_interested', e.target.value)}
                       className={SELECT_CLS}
                     >
-                      <option value="">Select course…</option>
-                      {ADMISSION_COURSES.map((c) => (
+                      <option value="">{coursePlaceholder}</option>
+                      {courseOptions.map((c) => (
                         <option key={c} value={c}>{c}</option>
                       ))}
                     </select>
                   </Field>
-                  <Field label="Stream (12th)">
+                  <Field label={streamLabel}>
                     <select
                       value={form.stream}
                       onChange={(e) => update('stream', e.target.value)}
@@ -361,7 +376,7 @@ export default function AddLeadModal({ onClose, onCreated }: AddLeadModalProps) 
                   </Field>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Field label="Board (12th / Previous)">
+                  <Field label={boardLabel}>
                     <select
                       value={form.board}
                       onChange={(e) => update('board', e.target.value)}
@@ -373,7 +388,7 @@ export default function AddLeadModal({ onClose, onCreated }: AddLeadModalProps) 
                       ))}
                     </select>
                   </Field>
-                  <Field label="12th / Entrance Percentage (%)">
+                  <Field label={pctLabel}>
                     <input
                       type="number"
                       min={0}
