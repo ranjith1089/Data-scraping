@@ -53,6 +53,14 @@ export interface Lead {
   assigned_to: string | null
   created_at: string
   updated_at: string | null
+  // ── Admission / student fields ─────────────────────────────────────
+  parent_name: string | null
+  parent_phone: string | null
+  course_interested: string | null
+  board: string | null
+  stream: string | null
+  percentage_marks: number | null
+  school_name: string | null
 }
 
 // Backend returns {items, total, page, per_page, total_pages}. The

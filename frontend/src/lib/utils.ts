@@ -115,6 +115,111 @@ export const COMPANY_SIZE_OPTIONS = [
   { value: '1000+', label: '1000+ employees' },
 ]
 
+// ── Lead source labels (mirrors backend LeadSource enum) ──────────────────────
+export const LEAD_SOURCE_LABELS: Record<string, string> = {
+  manual:        'Manual Entry',
+  import:        'CSV Import',
+  website:       'Website Form',
+  referral:      'Referral',
+  linkedin:      'LinkedIn',
+  campaign:      'Campaign',
+  api:           'API',
+  other:         'Other',
+  // Admission / college-specific sources
+  phone_enquiry: 'Phone Enquiry',
+  walk_in:       'Walk-in',
+  stall:         'Education Stall',
+  school_visit:  'School Visit',
+  instagram:     'Instagram',
+  facebook:      'Facebook',
+}
+
+export const LEAD_SOURCE_OPTIONS = Object.entries(LEAD_SOURCE_LABELS).map(
+  ([value, label]) => ({ value, label })
+)
+
+// Sources specifically relevant for college/admission workflows
+export const ADMISSION_SOURCE_OPTIONS = [
+  { value: 'phone_enquiry', label: '📞 Phone Enquiry' },
+  { value: 'website',       label: '🌐 Website Form' },
+  { value: 'walk_in',       label: '🚶 Walk-in' },
+  { value: 'stall',         label: '🏫 Education Stall' },
+  { value: 'school_visit',  label: '🏫 School Visit' },
+  { value: 'instagram',     label: '📸 Instagram' },
+  { value: 'facebook',      label: '👍 Facebook' },
+  { value: 'referral',      label: '🤝 Referral' },
+  { value: 'other',         label: '💬 Other' },
+]
+
+// ── Admission stage labels (college/university context) ───────────────────────
+// Uses the same underlying stage codes as STAGE_LABELS — only the display
+// text changes when viewing college-sector leads.
+export const ADMISSION_STAGE_LABELS: Record<string, string> = {
+  new:         '🔔 New Enquiry',
+  contacted:   '📞 Contacted',
+  qualified:   '🗣️ Counseled',
+  proposal:    '📋 Applied',
+  negotiation: '📁 Docs Submitted',
+  won:         '✅ Enrolled',
+  lost:        '❌ Not Joining',
+  nurture:     '🕐 Follow-up Later',
+}
+
+// Helper: returns the right stage label based on sector context
+export function getStageLabel(stage: string, sectorCode?: string | null): string {
+  const isAdmission = sectorCode === 'college' || sectorCode === 'education'
+  if (isAdmission) return ADMISSION_STAGE_LABELS[stage] ?? stage
+  return STAGE_LABELS[stage] ?? stage
+}
+
+// ── College admission – course, board, stream options ────────────────────────
+export const ADMISSION_COURSES = [
+  'B.Tech / B.E.',
+  'M.Tech / M.E.',
+  'B.Sc',
+  'M.Sc',
+  'BCA',
+  'MCA',
+  'BBA',
+  'MBA',
+  'B.Com',
+  'M.Com',
+  'BA',
+  'MA',
+  'B.Pharm',
+  'M.Pharm',
+  'MBBS',
+  'BDS',
+  'B.Ed',
+  'M.Ed',
+  'Diploma',
+  'Other',
+]
+
+export const BOARD_OPTIONS = [
+  'State Board (TN)',
+  'CBSE',
+  'ICSE / ISC',
+  'NIOS',
+  'IB (International)',
+  'Other',
+]
+
+export const STREAM_OPTIONS = [
+  'Science (PCM)',
+  'Science (PCB)',
+  'Science (PCMB)',
+  'Commerce',
+  'Arts / Humanities',
+  'Vocational',
+  'Other',
+]
+
+// Helper to detect if a sector is admission/college-oriented
+export function isAdmissionSector(sectorCode?: string | null): boolean {
+  return sectorCode === 'college' || sectorCode === 'education'
+}
+
 export function getScoreBadge(score: number): { label: string; color: string } {
   if (score >= 80) return { label: 'Hot', color: 'text-red-600 bg-red-50' }
   if (score >= 60) return { label: 'Warm', color: 'text-orange-600 bg-orange-50' }
