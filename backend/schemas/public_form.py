@@ -70,6 +70,10 @@ class PublicFormSubmission(BaseModel):
     'phone'). A 'company' field gets stored as company_name; if absent
     we fall back to the contact's name so the lead row has a valid
     company_name (required by the Lead model).
+
+    Admission / college-specific fields (ignored for non-admission sectors):
+    parent_name, parent_phone, course_interested, board, stream,
+    percentage_marks, school_name.
     """
 
     name: Optional[str] = Field(None, max_length=100)
@@ -81,3 +85,11 @@ class PublicFormSubmission(BaseModel):
     city: Optional[str] = Field(None, max_length=100)
     district: Optional[str] = Field(None, max_length=100)
     custom_fields: Optional[dict[str, Any]] = Field(default_factory=dict)
+    # ── Admission / student fields ────────────────────────────────────
+    parent_name: Optional[str] = Field(None, max_length=100)
+    parent_phone: Optional[str] = Field(None, max_length=20)
+    course_interested: Optional[str] = Field(None, max_length=200)
+    board: Optional[str] = Field(None, max_length=50)
+    stream: Optional[str] = Field(None, max_length=50)
+    percentage_marks: Optional[float] = Field(None, ge=0, le=100)
+    school_name: Optional[str] = Field(None, max_length=200)

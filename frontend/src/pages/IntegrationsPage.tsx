@@ -482,10 +482,28 @@ const PROVIDER_CREDENTIAL_FIELDS: Record<string, CredentialFieldDef[]> = {
     },
     {
       key: 'page_id',
-      label: 'Default Page ID (optional)',
+      label: 'Facebook Page ID',
       placeholder: '1234567890',
+      help: 'Numeric ID of your Facebook Page. Matches inbound Lead Ads webhook events to this account.',
+      type: 'text',
+      required: true,
+      group: 'config',
+    },
+    {
+      key: 'sector_code',
+      label: 'Default Sector for Lead Ads',
+      placeholder: 'college',
+      help: 'Leads from Lead Ads will be assigned this sector (e.g. "college" for admission campaigns).',
       type: 'text',
       group: 'config',
+    },
+    {
+      key: 'app_secret',
+      label: 'App Secret (webhook signature)',
+      placeholder: 'abc123…',
+      help: 'Meta App → Settings → Basic → App Secret. Used to verify webhook payloads.',
+      type: 'password',
+      group: 'credentials',
     },
   ],
   google_ads: [
@@ -729,6 +747,25 @@ function ManageIntegrationModal({
           )}
           {integration.last_error && (
             <Field label="Last error" value={integration.last_error} error />
+          )}
+
+          {/* Meta Lead Ads webhook setup guide */}
+          {integration.provider === 'meta_ads' && (
+            <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 space-y-2">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-blue-700">📡 Lead Ads Webhook Setup</p>
+              <p className="text-xs text-blue-800">
+                When a student fills your Facebook / Instagram Lead Ad, it auto-creates an enquiry here.
+              </p>
+              <div className="rounded-xl bg-white border border-blue-100 p-2.5 space-y-1.5 text-xs text-blue-900 font-mono">
+                <p className="font-sans font-semibold text-[10px] uppercase tracking-wide text-blue-600">Meta App → Webhooks → Page → leadgen</p>
+                <p>Callback URL:</p>
+                <p className="bg-blue-50 rounded px-2 py-1 break-all select-all">
+                  {window.location.origin.replace('app.', 'api.').replace(':5173', ':8000')}/api/v1/webhooks/meta-leads
+                </p>
+                <p className="mt-1">Verify Token: set <code className="bg-blue-100 px-1 rounded">META_WEBHOOK_VERIFY_TOKEN</code> on Railway (default: <code className="bg-blue-100 px-1 rounded">aveonapex-meta-webhook</code>)</p>
+              </div>
+              <p className="text-[11px] text-blue-700">Also set <code className="bg-blue-100 px-1 rounded">META_APP_SECRET</code> env var on Railway for signature verification.</p>
+            </div>
           )}
 
           {fieldDefs.length > 0 ? (
