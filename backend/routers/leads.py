@@ -1,6 +1,7 @@
 """Lead management routes with full-text search and bulk operations."""
 
 import math
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
 from typing import List, Optional
 
@@ -140,6 +141,36 @@ async def create_lead(
         import logging as _lg
 
         _lg.getLogger(__name__).warning("lead.created webhook fan-out failed: %s", exc)
+
+    # ── Auto-task: follow-up task for admission leads ─────────────────────
+    # College / education leads always need a same-day follow-up call.
+    # Create one automatically so the counselor never misses a fresh enquiry.
+    _ADMISSION_SECTORS = {"college", "education"}
+    if lead.sector_code in _ADMISSION_SECTORS:
+        try:
+            from models.task import Task as _Task
+
+            student = lead.contact_name or lead.company_name
+            course = lead.course_interested or "Enquiry"
+            task_title = f"📞 Follow up with {student} — {course}"[:200]
+
+            _task = _Task(
+                tenant_id=current_user.tenant_id,
+                created_by=current_user.id,
+                assigned_to=current_user.id,
+                lead_id=lead.id,
+                title=task_title,
+                task_type="follow_up",
+                priority="high",
+                status="pending",
+                due_date=datetime.now(timezone.utc) + timedelta(days=1),
+            )
+            db.add(_task)
+            await db.flush()
+        except Exception as exc:  # noqa: BLE001
+            import logging as _lg2
+
+            _lg2.getLogger(__name__).warning("auto-task creation failed: %s", exc)
 
     return response
 

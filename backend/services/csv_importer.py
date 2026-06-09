@@ -33,6 +33,19 @@ VALID_FIELDS = {
     "linkedin_url",
     "source",
     "annual_revenue_inr",
+    # ── Admission / student fields (college & education sectors) ──────
+    "parent_name",
+    "parent_phone",
+    "course_interested",
+    "board",
+    "stream",
+    "percentage_marks",
+    "school_name",
+}
+
+# Columns that store simple strings and can be set directly without special parsing.
+_STRING_ONLY_FIELDS = VALID_FIELDS - {
+    "company_name", "sector_code", "company_size", "annual_revenue_inr", "percentage_marks",
 }
 
 VALID_COMPANY_SIZES = {"micro", "small", "medium", "large", "enterprise"}
@@ -128,8 +141,17 @@ class CSVImporter:
                 except ValueError:
                     pass
 
+            percentage = None
+            if row.get("percentage_marks"):
+                try:
+                    pct = float(row["percentage_marks"])
+                    if 0 <= pct <= 100:
+                        percentage = pct
+                except ValueError:
+                    pass
+
             if existing_lead:
-                # Update existing
+                # Update existing — apply any non-empty column from the row
                 for field in VALID_FIELDS - REQUIRED_FIELDS:
                     val = row.get(field)
                     if val is not None:
@@ -137,6 +159,8 @@ class CSVImporter:
                             val = revenue
                         elif field == "company_size":
                             val = company_size
+                        elif field == "percentage_marks":
+                            val = percentage
                         if val is not None:
                             setattr(existing_lead, field, val)
                 updated += 1
@@ -161,7 +185,15 @@ class CSVImporter:
                     email=email,
                     phone=row.get("phone"),
                     linkedin_url=row.get("linkedin_url"),
-                    source="import",
+                    source=row.get("source") or "import",
+                    # ── Admission / student fields ─────────────────────
+                    parent_name=row.get("parent_name"),
+                    parent_phone=row.get("parent_phone"),
+                    course_interested=row.get("course_interested"),
+                    board=row.get("board"),
+                    stream=row.get("stream"),
+                    percentage_marks=percentage,
+                    school_name=row.get("school_name"),
                 )
                 db.add(lead)
                 imported += 1
