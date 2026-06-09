@@ -4,10 +4,12 @@ import toast from 'react-hot-toast'
 import {
   Plus, Play, Pause, CheckCircle2, FileEdit,
   MoreHorizontal, X, Megaphone, Mail, BarChart2, MessageSquare,
+  GraduationCap, Loader2, BookOpen,
 } from 'lucide-react'
 import {
   useCampaigns, useStartCampaign, usePauseCampaign,
-  useDeleteCampaign, type Campaign,
+  useDeleteCampaign, useCreateCampaign, useBulkUpsertCampaignSteps,
+  type Campaign, type CampaignStepPayload,
 } from '@/hooks/useCampaigns'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -25,13 +27,118 @@ const STATUS_CONFIG: Record<string, { label: string; dot: string; cls: string; i
 
 function rate(n: number, d: number) { return d ? Math.round((n / d) * 100) : 0 }
 
+// ── Pre-built Admission Email Sequence ──────────────────────────────────────
+const ADMISSION_STEPS: CampaignStepPayload[] = [
+  {
+    step_number: 1,
+    channel: 'email',
+    delay_days: 0,
+    subject: '🎓 Thank you for your enquiry — {{company_name}}',
+    body: `Hi {{contact_name}},
+
+Thank you for showing interest in our institution! We received your enquiry about {{course_interested}} and are delighted to connect with you.
+
+Our admissions counselor will reach out within 24 hours to schedule a free counseling session tailored to your goals.
+
+In the meantime, feel free to explore:
+→ Our campus facilities
+→ Scholarship opportunities
+→ Placement records
+
+We look forward to guiding you on your academic journey. 🌟
+
+Warm regards,
+The Admissions Team`,
+    ai_generated: false,
+  },
+  {
+    step_number: 2,
+    channel: 'email',
+    delay_days: 2,
+    subject: '📅 Schedule your free counseling session — spots filling fast',
+    body: `Hi {{contact_name}},
+
+We hope you're doing well! We wanted to follow up on your enquiry for {{course_interested}}.
+
+We have a few counseling slots available this week — these sessions are:
+✅ 100% free
+✅ 30 minutes one-on-one
+✅ Covers eligibility, fee structure & scholarship options
+
+👉 Reply to this email with your preferred date/time, or call us directly to book your slot.
+
+Don't miss out — seats are limited and admissions close soon!
+
+Best regards,
+Admissions Team`,
+    ai_generated: false,
+  },
+  {
+    step_number: 3,
+    channel: 'email',
+    delay_days: 5,
+    subject: '📋 Your application for {{course_interested}} — next steps',
+    body: `Hi {{contact_name}},
+
+We noticed you haven't completed your application yet. Here's a quick summary of what you need:
+
+📌 Documents Required:
+  • 12th Marksheet / Transfer Certificate
+  • ID Proof (Aadhaar / Passport)
+  • 2 Passport-size photos
+
+📌 Next Steps:
+  1. Complete online application form
+  2. Submit documents
+  3. Appear for counseling
+  4. Confirm seat with fee payment
+
+The application window closes soon. Secure your seat in {{course_interested}} before it's too late!
+
+Reach us anytime — we're here to help.
+
+Admissions Team`,
+    ai_generated: false,
+  },
+  {
+    step_number: 4,
+    channel: 'email',
+    delay_days: 10,
+    subject: '⏰ Last chance to secure your seat — {{course_interested}}',
+    body: `Hi {{contact_name}},
+
+This is our final reminder — the admission deadline for {{course_interested}} is approaching.
+
+We've reserved a spot for you based on your enquiry, but we can only hold it for a few more days.
+
+🎯 Why choose us?
+  • Industry-experienced faculty
+  • Strong placement record
+  • NAAC-accredited institution
+  • Scholarship available for merit students
+
+Take action today. Reply to this email or call us to confirm your enrollment.
+
+We hope to welcome you to our campus soon! 🎓
+
+Warm regards,
+Admissions Team`,
+    ai_generated: false,
+  },
+]
+
 export default function CampaignsPage() {
   const navigate = useNavigate()
   const { data, isLoading, refetch } = useCampaigns()
   const startCampaign = useStartCampaign()
   const pauseCampaign = usePauseCampaign()
   const deleteCampaign = useDeleteCampaign()
+  const createCampaign = useCreateCampaign()
+  const upsertSteps = useBulkUpsertCampaignSteps()
+
   const [showBuilder, setShowBuilder] = useState(false)
+  const [showAdmissionModal, setShowAdmissionModal] = useState(false)
+  const [admissionCreating, setAdmissionCreating] = useState(false)
 
   const campaigns: Campaign[] = data?.items ?? []
 
@@ -49,6 +156,28 @@ export default function CampaignsPage() {
     catch { toast.error('Failed to delete campaign') }
   }
 
+  async function handleCreateAdmissionSequence() {
+    setAdmissionCreating(true)
+    try {
+      const campaign = await createCampaign.mutateAsync({
+        name: '🎓 Admission Email Sequence',
+        channel: 'email',
+        sector_codes: ['college'],
+        ai_tone: 'friendly',
+        daily_limit: 50,
+      })
+      await upsertSteps.mutateAsync({ campaignId: campaign.id, steps: ADMISSION_STEPS })
+      toast.success('Admission sequence created — 4 steps ready!')
+      setShowAdmissionModal(false)
+      refetch()
+      navigate(`/campaigns/${campaign.id}`)
+    } catch {
+      toast.error('Failed to create sequence. Please try again.')
+    } finally {
+      setAdmissionCreating(false)
+    }
+  }
+
   return (
     <div className="space-y-5 max-w-7xl mx-auto">
 
@@ -58,11 +187,20 @@ export default function CampaignsPage() {
           <h1 className="text-2xl font-extrabold tracking-tight text-foreground">Campaigns</h1>
           <p className="text-muted-foreground text-sm mt-0.5">Manage your automated outreach campaigns.</p>
         </div>
-        <button onClick={() => setShowBuilder(true)}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 px-4 py-2 text-sm font-bold text-white shadow-md shadow-rose-200 hover:opacity-90 hover:-translate-y-px transition-all">
-          <Plus className="h-4 w-4" />
-          Create Campaign
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => setShowAdmissionModal(true)}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-bold text-violet-700 hover:bg-violet-100 hover:-translate-y-px transition-all"
+          >
+            <GraduationCap className="h-4 w-4" />
+            🎓 Admission Sequence
+          </button>
+          <button onClick={() => setShowBuilder(true)}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 px-4 py-2 text-sm font-bold text-white shadow-md shadow-rose-200 hover:opacity-90 hover:-translate-y-px transition-all">
+            <Plus className="h-4 w-4" />
+            Create Campaign
+          </button>
+        </div>
       </div>
 
       {/* Campaign list */}
@@ -76,13 +214,22 @@ export default function CampaignsPage() {
             </div>
             <h3 className="text-base font-bold text-foreground">No campaigns yet</h3>
             <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
-              Create your first AI-powered outreach campaign to start engaging with leads automatically.
+              Create your first campaign or use the Admission Sequence template to get started instantly.
             </p>
-            <button onClick={() => setShowBuilder(true)}
-              className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 px-4 py-2 text-sm font-bold text-white shadow-md shadow-rose-200 hover:opacity-90 transition-all">
-              <Plus className="h-4 w-4" />
-              Create First Campaign
-            </button>
+            <div className="flex items-center justify-center gap-2 mt-5 flex-wrap">
+              <button
+                onClick={() => setShowAdmissionModal(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-bold text-violet-700 hover:bg-violet-100 transition-all"
+              >
+                <GraduationCap className="h-4 w-4" />
+                Use Admission Template
+              </button>
+              <button onClick={() => setShowBuilder(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 px-4 py-2 text-sm font-bold text-white shadow-md shadow-rose-200 hover:opacity-90 transition-all">
+                <Plus className="h-4 w-4" />
+                Create From Scratch
+              </button>
+            </div>
           </div>
         ) : campaigns.map((campaign) => {
           const openRate = rate(campaign.open_count, campaign.sent_count)
@@ -95,11 +242,9 @@ export default function CampaignsPage() {
             <div key={campaign.id}
               className="group rounded-2xl bg-white border border-border/60 shadow-sm hover:shadow-md hover:border-primary/30 transition-all cursor-pointer overflow-hidden"
               onClick={() => navigate(`/campaigns/${campaign.id}`)}>
-              {/* Top accent */}
               <div className={cn('h-0.5 w-full', campaign.status === 'active' ? 'bg-gradient-to-r from-emerald-400 to-teal-500' : campaign.status === 'paused' ? 'bg-gradient-to-r from-amber-400 to-orange-400' : campaign.status === 'completed' ? 'bg-gradient-to-r from-blue-400 to-violet-500' : 'bg-muted')} />
 
               <div className="flex flex-col md:flex-row items-start md:items-center p-4 gap-4">
-                {/* Icon + info */}
                 <div className="flex items-start gap-3 flex-1 min-w-0">
                   <div className={cn(
                     'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm',
@@ -121,7 +266,7 @@ export default function CampaignsPage() {
                         {statusCfg.label}
                       </span>
                       {sectorName && (
-                        <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground hidden sm:inline-flex">
+                        <span className="hidden sm:inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
                           {sectorName}
                         </span>
                       )}
@@ -132,7 +277,6 @@ export default function CampaignsPage() {
                   </div>
                 </div>
 
-                {/* Stats */}
                 <div className="flex items-center gap-5 bg-muted/30 md:bg-transparent rounded-xl p-3 md:p-0 w-full md:w-auto shrink-0">
                   <div className="flex flex-col items-center min-w-[50px]">
                     <div className="flex items-center gap-1 text-muted-foreground mb-0.5">
@@ -164,7 +308,6 @@ export default function CampaignsPage() {
                     </div>
                   </div>
 
-                  {/* Actions */}
                   <div className="ml-auto md:ml-4" onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -218,6 +361,96 @@ export default function CampaignsPage() {
             />
           </div>
         </div>
+      )}
+
+      {/* Admission Sequence Modal */}
+      {showAdmissionModal && (
+        <>
+          <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" onClick={() => !admissionCreating && setShowAdmissionModal(false)} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="w-full max-w-xl rounded-2xl bg-white shadow-2xl overflow-hidden">
+              {/* Header */}
+              <div className="relative overflow-hidden px-6 py-5 border-b border-border/60 bg-gradient-to-br from-violet-50 to-purple-50">
+                <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-violet-500 to-purple-600" />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-sm">
+                      <GraduationCap className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-base font-bold text-foreground">Admission Email Sequence</h2>
+                      <p className="text-xs text-muted-foreground mt-0.5">4-step pre-built campaign for college admissions</p>
+                    </div>
+                  </div>
+                  {!admissionCreating && (
+                    <button onClick={() => setShowAdmissionModal(false)}
+                      className="rounded-xl p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
+                      <X className="h-5 w-5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Steps preview */}
+              <div className="p-6 space-y-3 max-h-[50vh] overflow-y-auto scrollbar-thin">
+                <p className="text-xs text-muted-foreground mb-2">
+                  These 4 emails will be created as draft steps — you can edit the copy before activating the campaign.
+                  Template variables like <code className="bg-muted px-1 rounded text-[10px]">{'{{contact_name}}'}</code> are replaced at send time.
+                </p>
+                {ADMISSION_STEPS.map((step) => (
+                  <div key={step.step_number}
+                    className="rounded-xl border border-border/60 bg-muted/20 p-3.5 flex gap-3">
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shrink-0 text-white text-xs font-bold shadow-sm">
+                      {step.step_number}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-xs font-bold text-foreground truncate">{step.subject}</span>
+                        <span className="shrink-0 rounded-full bg-violet-50 border border-violet-100 px-1.5 py-0.5 text-[10px] font-semibold text-violet-700">
+                          Day {step.delay_days}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground line-clamp-2">
+                        {step.body?.split('\n').find(l => l.trim().length > 5) ?? ''}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <BookOpen className="h-3.5 w-3.5 text-violet-400" />
+                      <span className="text-[10px] text-muted-foreground">Email</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-between gap-3 border-t border-border/60 px-6 py-4 bg-muted/20">
+                <p className="text-xs text-muted-foreground">
+                  Created as <strong>Draft</strong> — activate when ready.
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAdmissionModal(false)}
+                    disabled={admissionCreating}
+                    className="rounded-xl border border-border/60 px-4 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted transition-all disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCreateAdmissionSequence}
+                    disabled={admissionCreating}
+                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 px-5 py-2 text-sm font-bold text-white shadow-md shadow-violet-200 hover:opacity-90 hover:-translate-y-px transition-all disabled:opacity-60"
+                  >
+                    {admissionCreating
+                      ? <><Loader2 className="h-4 w-4 animate-spin" /> Creating…</>
+                      : <><GraduationCap className="h-4 w-4" /> Create Sequence</>}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
       )}
     </div>
   )

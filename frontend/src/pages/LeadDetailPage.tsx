@@ -89,6 +89,7 @@ import {
   formatINR,
   timeAgo,
   formatDate,
+  isAdmissionSector,
 } from '@/lib/utils'
 import { format } from 'date-fns'
 import toast from 'react-hot-toast'
@@ -1267,6 +1268,47 @@ export default function LeadDetailPage() {
                 </span>
               )}
             </div>
+
+            {/* Quick Templates — admission sectors only */}
+            {isAdmissionSector(lead.sector_code) && (
+              <div className="rounded-xl border border-violet-100 bg-violet-50/40 p-4">
+                <h4 className="mb-3 text-xs font-bold uppercase tracking-widest text-violet-700">
+                  🎓 Admission Quick Templates
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {[
+                    {
+                      label: '✅ Enquiry Received',
+                      text: `Hi ${lead.contact_name || 'there'}, thank you for enquiring about ${lead.course_interested || 'our courses'} at our institution! 🎓 Our admissions counselor will reach out within 24 hours to schedule your session. For any queries, simply reply here. — Admissions Team`,
+                    },
+                    {
+                      label: '📅 Counseling Invite',
+                      text: `Hi ${lead.contact_name || 'there'}, we'd love to invite you for a personalized counseling session for ${lead.course_interested || 'your course of interest'}! 🎯 Please bring your 12th marksheet, ID proof, and passport photos. Reply to confirm your slot. — Admissions`,
+                    },
+                    {
+                      label: '📋 Document Reminder',
+                      text: `Hi ${lead.contact_name || 'there'}, a quick reminder to submit your documents for ${lead.course_interested || 'admission'} processing:\n✅ 12th Marksheet\n✅ Transfer Certificate\n✅ ID Proof\n✅ Passport Photos\n\nDeadline is approaching! Reply for any help. — Admissions`,
+                    },
+                    {
+                      label: '🎉 Enrollment Confirm',
+                      text: `🎉 Congratulations ${lead.contact_name || 'there'}! Your enrollment for ${lead.course_interested || 'your chosen course'} is confirmed. Welcome to the family! Classes begin soon — we'll share the schedule shortly. — Admissions Team`,
+                    },
+                  ].map((tmpl) => (
+                    <button
+                      key={tmpl.label}
+                      type="button"
+                      onClick={() => setWaContext(tmpl.text)}
+                      className="flex items-start gap-2 rounded-lg border border-violet-200 bg-white p-2.5 text-left text-xs text-violet-800 hover:border-violet-400 hover:bg-violet-50 transition-all"
+                    >
+                      <span className="font-semibold shrink-0">{tmpl.label}</span>
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-[10px] text-violet-500">
+                  Click a template to pre-fill the context below, then click Generate to personalise with AI.
+                </p>
+              </div>
+            )}
 
             {/* Generate panel */}
             <div className="rounded-lg border border-green-100 bg-green-50/30 p-4">
