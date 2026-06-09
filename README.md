@@ -8,6 +8,7 @@ AI-powered, multi-tenant B2B lead generation SaaS for sales teams targeting comp
 
 - [Tech Stack](#tech-stack)
 - [Features](#features)
+  - [Admission / Education CRM](#admission--education-crm)
 - [Architecture](#architecture)
 - [Quick Start (Docker)](#quick-start-docker)
 - [Local Development](#local-development)
@@ -17,6 +18,8 @@ AI-powered, multi-tenant B2B lead generation SaaS for sales teams targeting comp
 - [Database Schema](#database-schema)
 - [Plans and Pricing](#plans-and-pricing)
 - [License](#license)
+
+> **See also:** [PRODUCT.md](PRODUCT.md) — product spec, ICP & roadmap · [PROCESS.md](PROCESS.md) — engineering process, migrations & deploy runbook
 
 ---
 
@@ -53,21 +56,25 @@ All AI features are routed through a centralized `services/claude_service.py` (a
 | 5 | **Personalisation Engine** | `POST /api/v1/ai/personalise-batch` | Batch personalises campaign step emails for up to 50 leads with company-specific openings, subject lines, and body content. |
 | 6 | **Reply Analyser** | `POST /api/v1/ai/analyse-reply` | Analyses incoming email replies for sentiment (positive/neutral/negative/out_of_office), intent (interested/not_interested/asking_for_info/wants_demo/unsubscribe/referring_someone), suggests a response, and recommends a pipeline stage change. |
 
-### Industry Sectors (9 supported)
+### Industry Sectors (11 supported)
 
-Each sector has a dedicated AI persona, curated pain points, and value propositions stored in the `sectors` table:
+Each sector has a dedicated AI persona, curated pain points, and value propositions stored in the `sectors` table. Selecting a sector reshapes the whole UI — form fields, pipeline-stage vocabulary, lead sources, and AI prompts all adapt to context.
 
-| Code | Sector |
-|------|--------|
-| `tech` | Technology & IT Services |
-| `agriculture` | Agriculture & Allied Sectors |
-| `manufacturing` | Manufacturing |
-| `education` | Education |
-| `marketing` | Marketing, Media & Services |
-| `finance` | Finance & Professional Services |
-| `construction` | Construction & Real Estate |
-| `retail` | Retail & E-commerce |
-| `energy` | Energy & Utilities |
+| Code | Sector | Workflow |
+|------|--------|----------|
+| `it_ites` | Technology & IT | B2B |
+| `agriculture` | Agriculture | B2B |
+| `manufacturing` | Manufacturing | B2B |
+| `software` | Software Products & SaaS | B2B |
+| `marketing_media` | Marketing & Media | B2B |
+| `finance_professional` | Finance & Professional | B2B |
+| `construction_real_estate` | Construction & Real Estate | B2B |
+| `retail_ecommerce` | Retail & E-commerce | B2B |
+| `energy_utilities` | Energy & Utilities | B2B |
+| `college` | Colleges & Universities | 🎓 Admission |
+| `education` | Schools & Coaching | 🏫 Admission |
+
+The two **admission sectors** (`college`, `education`) switch the app into a student-enquiry CRM — see [Admission / Education CRM](#admission--education-crm) below. The split is by *level*: `college` covers higher-ed (UG/PG courses, streams, 12th board & marks), while `education` covers K-12 schools, tuition, and NEET/JEE coaching (class/programme, current school). Both share the same admission workflow (parent contacts, admission pipeline stages, auto-tasks, drip sequences) but present level-appropriate labels and option lists.
 
 ### Core Platform Features
 
@@ -88,6 +95,21 @@ Each sector has a dedicated AI persona, curated pain points, and value propositi
 - **AI usage tracking** -- per-tenant monthly call count, token spend, model mix, and most recent interactions, logged via an isolated session that survives StreamingResponse cleanup and RLS policies
 - **API key management** for external integrations
 
+### Admission / Education CRM
+
+When a tenant operates in an **admission sector** (`college` or `education`), the platform transforms from a generic B2B CRM into a purpose-built student-admission system. This is driven by a single `isAdmissionSector(sector_code)` check on the frontend and an `_ADMISSION_SECTORS` set on the backend — no separate app, no forked codebase.
+
+- **Context-aware lead form** — the *Add Lead* modal renders a *New Student Enquiry* form with student, parent/guardian, academic, and location sections instead of the B2B company form. Labels and option lists adapt to level: a college enquiry asks for *Course Interested In / Stream (12th) / 12th %*, while a school/coaching enquiry asks for *Class · Programme / Current School / Last Class %*.
+- **Student data model** — leads carry admission columns: `parent_name`, `parent_phone`, `course_interested`, `board`, `stream`, `percentage_marks`, `school_name` (migration 017; back-filled idempotently by 018 and a startup safety-net).
+- **Admission pipeline vocabulary** — the same underlying stage codes display as *New Enquiry → Contacted → Counseled → Applied → Docs Submitted → Enrolled / Not Joining / Follow-up Later*.
+- **Admission lead sources** — Phone Enquiry, Walk-in, Education Stall, School Visit, Instagram, Facebook, Referral, Website.
+- **Auto-task on enquiry** — creating a college/education lead automatically spawns a high-priority "Follow up with {student} — {course}" task due in 24h (best-effort, never blocks lead creation).
+- **Pre-built admission email sequence** — a one-click 4-step drip (Day 0 / 2 / 5 / 10: Enquiry → Brochure → Counseling invite → Last-call) created from the Campaigns page.
+- **Admission WhatsApp quick templates** — Enquiry Received, Counseling Invite, Document Reminder, Enrollment Confirm — pre-fill the AI WhatsApp composer on the lead detail page.
+- **Bulk student CSV import** — a dedicated *Student Enquiries* import mode maps academic columns (course, board, stream, %, parent details) alongside the standard B2B mode.
+- **Meta Lead Ads → student leads** — Facebook/Instagram Lead Ad submissions land via the `/webhooks/meta-leads` webhook, are mapped to the student schema, tagged with their source, and (for admission sectors) get the same auto-task treatment.
+- **Student public form** — the hosted/iframe enquiry form switches to a violet-themed admission layout (course/stream/board selects, parent fields) when the form's sector is an admission sector.
+
 ---
 
 ## Architecture
@@ -96,80 +118,71 @@ Each sector has a dedicated AI persona, curated pain points, and value propositi
 
 ```
 CRM/
-├── backend/
-│   ├── main.py                  # FastAPI app entry point
-│   ├── requirements.txt         # Python dependencies
-│   ├── Dockerfile
-│   ├── alembic/                 # Database migrations
+├── backend/                       # FastAPI + SQLAlchemy (async) + Alembic
+│   ├── main.py                    # App entry: router wiring, lifespan (migrations + schema safety-net), /health endpoints
+│   ├── requirements.txt
+│   ├── Dockerfile                 # python:3.11-slim; uvicorn entry
 │   ├── alembic.ini
+│   ├── alembic/
+│   │   └── versions/              # 19 sequential migrations (001 … 019); `alembic upgrade head` runs at startup
 │   ├── core/
-│   │   ├── config.py            # Settings (Pydantic BaseSettings)
-│   │   ├── dependencies.py      # DI: get_db, get_current_user, require_role
-│   │   ├── security.py          # JWT creation/validation, password hashing
-│   │   └── exceptions.py        # Custom exception handlers
-│   ├── models/                  # SQLAlchemy ORM models
-│   │   ├── tenant.py
-│   │   ├── user.py
-│   │   ├── lead.py
-│   │   ├── campaign.py
-│   │   ├── campaign_step.py
-│   │   ├── outreach_log.py
-│   │   ├── deal.py
-│   │   ├── pipeline_stage.py
-│   │   ├── activity.py
-│   │   ├── ai_interaction.py
-│   │   ├── api_key.py
-│   │   ├── plan.py
-│   │   └── sector.py
-│   ├── schemas/                 # Pydantic v2 request/response schemas
-│   │   ├── auth.py
-│   │   ├── lead.py
-│   │   ├── campaign.py
-│   │   ├── pipeline.py
-│   │   ├── activity.py
-│   │   ├── ai.py
-│   │   ├── analytics.py
-│   │   ├── tenant.py
-│   │   ├── user.py
-│   │   ├── sector.py
-│   │   └── import_export.py
-│   ├── routers/                 # API route handlers
-│   │   ├── auth.py
-│   │   ├── tenants.py
-│   │   ├── users.py
-│   │   ├── leads.py
-│   │   ├── campaigns.py
-│   │   ├── outreach.py
-│   │   ├── pipeline.py
-│   │   ├── activities.py
-│   │   ├── analytics.py
-│   │   ├── import_export.py
-│   │   ├── webhooks.py
-│   │   └── ai/
-│   │       ├── email_gen.py
-│   │       ├── lead_scorer.py
-│   │       ├── chat.py
-│   │       ├── sector_brief.py
-│   │       ├── personalise.py
-│   │       └── reply_analyser.py
-│   └── services/
-│       ├── claude_service.py    # Central Anthropic API client
-│       ├── analytics_service.py # Dashboard aggregation queries
-│       ├── campaign_runner.py   # Campaign step execution engine
-│       ├── csv_importer.py      # CSV parsing and lead creation
-│       ├── email_service.py     # SendGrid integration
-│       ├── sector_config.py     # Sector metadata and AI personas
-│       └── whatsapp_service.py  # WhatsApp Business API integration
-├── frontend/
+│   │   ├── config.py              # Pydantic settings (DATABASE_URL normalisation, AI provider)
+│   │   ├── database.py            # Async engine + AsyncSessionLocal + Base
+│   │   ├── dependencies.py        # get_db, get_current_user, require_role, require_superuser
+│   │   ├── security.py            # JWT create/validate, password hashing
+│   │   └── crypto.py              # Fernet encrypt/decrypt for integration credentials
+│   ├── models/                    # SQLAlchemy ORM (35+ models)
+│   │   ├── tenant.py user.py lead.py sector.py plan.py
+│   │   ├── campaign.py campaign_step.py outreach_log.py email_sequence.py
+│   │   ├── deal.py deal_activity.py pipeline_stage.py activity.py task.py
+│   │   ├── proposal.py enrichment_log.py linkedin_message.py whatsapp_message.py
+│   │   ├── integration.py integration_event.py api_key.py ai_interaction.py
+│   │   ├── public_form.py webhook_endpoint.py webhook_subscription.py
+│   │   ├── automation_rule.py lead_assignment_rule.py
+│   │   └── social/                # Instagram/Meta DM automation models
+│   ├── schemas/                   # Pydantic v2 request/response models (+ schemas/social/)
+│   ├── routers/                   # 45+ route modules
+│   │   ├── auth.py tenants.py admin_tenants.py users.py billing.py
+│   │   ├── leads.py pipeline.py activities.py tasks.py analytics.py reports.py
+│   │   ├── campaigns.py email_sequences.py outreach.py
+│   │   ├── import_export.py public_forms.py public_form_submit.py public_api.py
+│   │   ├── integrations/          # connector management
+│   │   ├── webhooks.py            # SendGrid + Meta Lead Ads (/webhooks/meta-leads)
+│   │   ├── webhook_subscriptions.py api_keys.py
+│   │   ├── enrichment.py lead_discovery.py linkedin.py whatsapp.py
+│   │   ├── ai/                    # email_gen, lead_scorer, chat, sector_brief,
+│   │   │                          # personalise, reply_analyser, proposal, vernacular, sector_analysis
+│   │   └── social/                # oauth, webhook_inbound, automations, conversations,
+│   │                              # templates, campaigns, analytics, posts, consents
+│   └── services/                  # Business logic
+│       ├── claude_service.py      # Provider-agnostic AI facade (ai_service)
+│       ├── analytics_service.py campaign_runner.py email_sequence_service.py
+│       ├── csv_importer.py email_service.py sector_config.py
+│       ├── proposal_service.py enrichment_service.py lead_discovery_service.py
+│       ├── linkedin_service.py whatsapp_service.py whatsapp_ai_service.py
+│       ├── scheduler.py           # APScheduler (token refresh, due-step processing)
+│       ├── webhook_dispatcher.py  # Outbound webhook fan-out (lead.created, …)
+│       ├── integrations/          # base + meta_ads, google_ads, linkedin_ads,
+│       │                          # sendgrid, smtp, whatsapp, ga4, fb_pixel, …
+│       └── social/                # rule_engine, action_executor, instagram_service, …
+├── frontend/                      # React 18 + TypeScript + Vite + Tailwind
 │   ├── src/
-│   ├── index.html
-│   ├── package.json
-│   ├── vite.config.ts
-│   ├── tailwind.config.js
-│   ├── tsconfig.json
-│   └── Dockerfile
-├── schema.sql                   # Full PostgreSQL schema with RLS policies
-└── docker-compose.yml           # All services: db, redis, minio, backend, frontend
+│   │   ├── pages/                 # 35+ pages (Leads, Pipeline, Campaigns, EmailSequences,
+│   │   │                          # Tasks, Proposals, WhatsApp, LinkedIn, Integrations,
+│   │   │                          # Reports, Billing, Admin*, social/, auth/, Landing)
+│   │   ├── components/            # leads/ pipeline/ campaigns/ ai/ analytics/
+│   │   │                          # integrations/ admin/ layout/ settings/ ui/
+│   │   ├── hooks/                 # 20 React-Query hooks (useLeads, useEmailSequences, …)
+│   │   ├── lib/                   # api client, utils (SECTOR_NAMES, isAdmissionSector, …)
+│   │   └── store/                 # auth/global state
+│   ├── index.html  package.json  vite.config.ts  tailwind.config.js  Dockerfile
+├── docs/                          # SOCIAL_PHASE1.md, etc.
+├── scripts/                       # import_tn_colleges.py (bulk seed helper)
+├── schema.sql                     # Full PostgreSQL schema with RLS policies (reference)
+├── docker-compose.yml             # db, redis, minio, backend, frontend
+├── render.yaml                    # Render.com blueprint (backup deploy)
+├── postman_collection.json        # Full API collection
+├── README.md  PRODUCT.md  PROCESS.md
 ```
 
 ### Multi-Tenancy
@@ -726,6 +739,8 @@ Pluggable connector module for third-party ad platforms. Credentials are encrypt
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
 | POST | `/webhooks/sendgrid` | No | SendGrid event webhook (open, click, bounce, delivered, spamreport) |
+| GET | `/webhooks/meta-leads` | No | Meta Lead Ads webhook verification (`hub.challenge`, validated against `META_WEBHOOK_VERIFY_TOKEN`) |
+| POST | `/webhooks/meta-leads` | Signature | Meta Lead Ads `leadgen` notifications. Resolves the tenant by matching `page_id` to a connected `meta_ads` integration, fetches the lead from the Graph API, maps Facebook/Instagram fields to the (student) lead schema, and fires the `lead.created` fan-out. Always returns 200. |
 
 ### AI Endpoints (`/api/v1/ai`)
 
@@ -942,18 +957,24 @@ The full schema is defined in `schema.sql` and automatically applied on first Do
 | Table | Description |
 |-------|-------------|
 | `users` | Team members with email, tenant role (owner/admin/member), password hash, and the orthogonal platform-wide `is_superuser` flag |
-| `leads` | B2B leads with company info, contact details, sector, score, stage |
+| `leads` | Leads with company/contact info, sector, score, stage — plus admission columns (`parent_name`, `parent_phone`, `course_interested`, `board`, `stream`, `percentage_marks`, `school_name`) for student enquiries |
 | `campaigns` | Email campaigns with sector targeting, status, daily limits |
 | `campaign_steps` | Individual steps in a campaign sequence (subject, body, delay) |
 | `outreach_log` | Email send/delivery/open/click/reply tracking per lead |
+| `email_sequences` / `email_sequence_steps` / `email_sequence_enrollments` / `email_sequence_logs` | Drip-sequence engine: definitions, ordered steps, per-lead enrolment with scheduler state, and per-send delivery records |
 | `ai_interactions` | Log of every AI API call (tokens, model, input/output summary). Written via an isolated session to survive StreamingResponse lifecycle + RLS. |
 | `activities` | Activity log (calls, emails, meetings, notes, tasks) per lead |
-| `deals` | Pipeline deals with stage, value (INR), probability, close date |
+| `tasks` | Standalone tasks (incl. auto-generated admission follow-ups) with assignee, priority, due date |
+| `deals` / `deal_activities` | Pipeline deals (stage, INR value, probability, close date) and their activity trail |
 | `pipeline_stages` | Customisable pipeline stages per tenant |
+| `proposals` | AI-generated proposals per lead/deal |
+| `enrichment_logs` / `linkedin_messages` / `whatsapp_messages` | Channel & enrichment activity records |
+| `public_forms` / `webhook_endpoints` / `webhook_subscriptions` | Hosted lead-capture forms and outbound webhook config |
+| `social_*` | Instagram/Meta DM automation (accounts, conversations, messages, templates, campaigns, consents, follow-gates) |
 | `api_keys` | API keys for external integrations |
 | `integrations` | Per-tenant third-party connector instances with encrypted credentials |
 | `integration_events` | Audit log for connector sync events AND super-admin tenant lifecycle actions |
-| `apscheduler_jobs` | APScheduler persistent job store (token refresh, delayed retries) |
+| `apscheduler_jobs` | APScheduler persistent job store (token refresh, delayed retries, due-step processing) |
 
 > **Note on `tenants`:** Although the table is global (no RLS), migration 004 added `status` (`active`/`suspended`/`cancelled`), `owner_id`, `suspended_at`, `cancelled_at`, and `updated_at` columns to power the super-admin lifecycle feature. The legacy `is_active` column is kept as a compatibility mirror.
 
@@ -1004,6 +1025,10 @@ docker-compose logs db
 
 **Production login returns 500**
 - Hit `/health/db` on the backend host — the response includes `alembic_version` and `migration_result` captured from the startup subprocess. If `migration_result.status` is anything other than `ok`, read `output_tail` for the actual alembic traceback.
+
+**A query 500s with `column <table>.<col> does not exist` (UndefinedColumn)**
+- The ORM expects a column the database doesn't have — a migration didn't apply. The usual root cause is a **multi-statement `op.execute()`** in an earlier migration: `asyncpg` rejects it with `cannot insert multiple commands into a prepared statement`, rolling back that migration and freezing `alembic_version`, so every later migration silently never runs.
+- **Immediate fix:** run the idempotent DDL directly in Railway → Postgres → Data → Query (`ALTER TABLE <t> ADD COLUMN IF NOT EXISTS <col> <type>;`), or hit `GET /health/db/repair`. **Root fix:** split the offending migration into single statements. Full runbook in [PROCESS.md §11](PROCESS.md#11-troubleshooting-runbook).
 
 **`alembic upgrade head` fails with `DuplicateTable: apscheduler_jobs`**
 - APScheduler lazily creates its job store on first boot. Migration 003 uses `CREATE TABLE IF NOT EXISTS` via raw SQL specifically to be idempotent against this race. If you see the error, you're on an older revision of 003 — pull latest.

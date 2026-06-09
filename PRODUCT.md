@@ -40,8 +40,9 @@ Replace the manual grind of prospecting, writing cold emails, scoring leads, and
 
 ### Secondary ICP
 
+- **Colleges, universities, schools, and coaching institutes** running *student admissions* — not selling B2B, but managing inbound enquiries, parent follow-ups, counseling, and enrolment. The admission sectors (`college`, `education`) turn AveonApex into a purpose-built admission CRM for this segment. This has become a first-class vertical, not just a B2B sub-case.
 - Marketing agencies running outbound for multiple clients (each client becomes a sub-tenant in a future roadmap phase).
-- Education institutes and ed-tech startups selling B2B to schools / colleges.
+- Ed-tech startups selling B2B to schools / colleges.
 - Manufacturing and industrial suppliers whose buyers cluster around specific districts / cities.
 
 ### Non-ICP (explicitly out of scope)
@@ -115,7 +116,17 @@ Three value pillars:
 
 - Dashboard with lead counts, conversion rates, pipeline value, AI-generated insights.
 - Per-tenant AI usage tracking — call count, token spend, model mix.
-- `GET /health/db` exposes startup migration output so production alembic failures are observable without shelling into the container.
+- `GET /health/db` exposes startup migration output so production alembic failures are observable without shelling into the container; `GET /health/db/repair` force-applies idempotent schema fixes on demand.
+
+### 5.7 Admission / Education CRM
+
+For tenants in an **admission sector** (`college` = Colleges & Universities, `education` = Schools & Coaching), the same platform reshapes itself into a student-admission system — one `isAdmissionSector()` check, no forked product.
+
+- **Student enquiry capture** — the lead form becomes a *New Student Enquiry* form with student, parent/guardian, academic, and location sections. Labels adapt by level: a college enquiry asks for course/stream/12th %, a school/coaching enquiry asks for class·programme/current school/last-class %.
+- **Admission pipeline** — stages read as Enquiry → Contacted → Counseled → Applied → Docs Submitted → Enrolled, with admission-specific lead sources (Walk-in, Education Stall, School Visit, Phone Enquiry, Instagram, Facebook).
+- **Automated follow-up** — every new enquiry spawns a high-priority 24h follow-up task; a one-click 4-step admission email drip (Day 0/2/5/10) and a set of admission WhatsApp quick-templates handle nurture.
+- **Channel ingestion** — Facebook/Instagram Lead Ads flow straight in via the Meta Lead Ads webhook; bulk student CSV import and a violet-themed public enquiry form cover stall/website capture.
+- **Split by level** — `college` owns higher-ed; `education` owns K-12, tuition, and NEET/JEE coaching — so the two sectors are distinct rather than overlapping.
 
 ---
 
@@ -165,24 +176,28 @@ These are the rules the codebase has earned the hard way. They are not aspiratio
 ### Shipped
 
 - ✅ Multi-tenant core with RLS
-- ✅ Nine sector personas with AI-grounded prompts
-- ✅ All six AI features (email gen, scorer, chat, sector brief, personalise batch, reply analyser)
-- ✅ Deal pipeline and activity log
-- ✅ CSV import/export
-- ✅ SendGrid webhook integration
+- ✅ Eleven sector personas with AI-grounded prompts (incl. two admission sectors)
+- ✅ All six core AI features (email gen, scorer, chat, sector brief, personalise batch, reply analyser) + proposal & vernacular generation
+- ✅ Deal pipeline, activity log, and standalone **tasks** module
+- ✅ CSV import/export (incl. a dedicated student-enquiry import mode)
+- ✅ SendGrid webhook integration + full **email-sequence (drip)** engine
 - ✅ Provider-agnostic AI layer (OpenRouter default, Anthropic fallback)
 - ✅ Super-admin tenant management console
 - ✅ Third-party integration module (Meta / Google / LinkedIn)
-- ✅ APScheduler-backed delayed follow-ups and token refresh
-- ✅ Production observability via `/health/db` migration capture
+- ✅ **WhatsApp Business API** outreach with AI-assisted composing
+- ✅ **LinkedIn** messaging + **lead enrichment** & **lead discovery** pipelines
+- ✅ **Instagram/Meta DM automation** (social module) with rule engine & consent tracking
+- ✅ **Proposals** generation and public hosted/iframe lead-capture **forms**
+- ✅ **Admission / Education CRM** — student enquiry form, admission pipeline, auto-tasks, admission drip sequence, WhatsApp templates, Meta Lead Ads ingestion, student CSV import, college-vs-school split
+- ✅ APScheduler-backed delayed follow-ups, due-step processing, and token refresh
+- ✅ Production observability via `/health/db` migration capture + `/health/db/repair`
 
 ### Next up (Q2 2026)
 
-- **WhatsApp Business API outreach** — treat WA as a first-class channel alongside email.
 - **Sub-tenants for agencies** — let a marketing agency manage multiple client workspaces from one login.
-- **Lead enrichment pipeline** — automatic company size, revenue, and tech stack enrichment on lead creation.
 - **Custom fields at the schema level** — admin UI to add new columns to the `leads` table per tenant.
 - **Team performance dashboards** — per-rep activity, pipeline, and conversion metrics.
+- **Admission analytics** — enquiry-to-enrolment funnel, source ROI, and counselor performance for the education vertical.
 
 ### Later (H2 2026)
 
