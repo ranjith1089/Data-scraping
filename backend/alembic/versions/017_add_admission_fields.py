@@ -21,13 +21,30 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column("leads", sa.Column("parent_name",       sa.String(), nullable=True))
-    op.add_column("leads", sa.Column("parent_phone",      sa.String(), nullable=True))
-    op.add_column("leads", sa.Column("course_interested", sa.String(), nullable=True))
-    op.add_column("leads", sa.Column("board",             sa.String(), nullable=True))
-    op.add_column("leads", sa.Column("stream",            sa.String(), nullable=True))
-    op.add_column("leads", sa.Column("percentage_marks",  sa.Float(),  nullable=True))
-    op.add_column("leads", sa.Column("school_name",       sa.String(), nullable=True))
+    # Use IF NOT EXISTS so this migration is safe to re-run on Railway
+    # even if a previous deploy partially applied it.
+    conn = op.get_bind()
+    conn.execute(sa.text(
+        "ALTER TABLE leads ADD COLUMN IF NOT EXISTS parent_name       VARCHAR"
+    ))
+    conn.execute(sa.text(
+        "ALTER TABLE leads ADD COLUMN IF NOT EXISTS parent_phone      VARCHAR"
+    ))
+    conn.execute(sa.text(
+        "ALTER TABLE leads ADD COLUMN IF NOT EXISTS course_interested VARCHAR"
+    ))
+    conn.execute(sa.text(
+        "ALTER TABLE leads ADD COLUMN IF NOT EXISTS board             VARCHAR"
+    ))
+    conn.execute(sa.text(
+        "ALTER TABLE leads ADD COLUMN IF NOT EXISTS stream            VARCHAR"
+    ))
+    conn.execute(sa.text(
+        "ALTER TABLE leads ADD COLUMN IF NOT EXISTS percentage_marks  DOUBLE PRECISION"
+    ))
+    conn.execute(sa.text(
+        "ALTER TABLE leads ADD COLUMN IF NOT EXISTS school_name       VARCHAR"
+    ))
 
 
 def downgrade() -> None:
