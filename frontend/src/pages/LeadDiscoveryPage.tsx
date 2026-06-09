@@ -45,7 +45,7 @@ interface FilterState {
 }
 
 const DEFAULT_FILTERS: FilterState = {
-  sector_code: 'it_ites',
+  sector_code: 'college',
   target_roles: [],
   location_state: '',
   location_city: '',

@@ -56,6 +56,8 @@ export const SECTOR_COLORS: Record<string, string> = {
   agriculture: '#22C55E',
   manufacturing: '#F59E0B',
   education: '#A855F7',
+  college: '#7C3AED',          // violet — colleges & universities
+  software: '#0EA5E9',         // sky — software product / SaaS
   marketing_media: '#EC4899',
   finance_professional: '#14B8A6',
   construction_real_estate: '#92400E',
@@ -68,6 +70,8 @@ export const SECTOR_NAMES: Record<string, string> = {
   agriculture: 'Agriculture',
   manufacturing: 'Manufacturing',
   education: 'Education',
+  college: 'Colleges & Universities',
+  software: 'Software Products & SaaS',
   marketing_media: 'Marketing & Media',
   finance_professional: 'Finance & Professional',
   construction_real_estate: 'Construction & Real Estate',
