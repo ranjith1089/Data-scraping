@@ -500,8 +500,66 @@ async def health_db():
             for name, sql in checks.items():
                 res = await session.execute(text(sql))
                 present[name] = res.first() is not None
+
+            # Also report the Phase-1 admission columns explicitly so we can
+            # confirm whether migration 017 / the safety-net actually landed.
+            admission_cols = [
+                "parent_name", "parent_phone", "course_interested",
+                "board", "stream", "percentage_marks", "school_name",
+            ]
+            for col in admission_cols:
+                res = await session.execute(text(
+                    "SELECT 1 FROM information_schema.columns "
+                    "WHERE table_name = 'leads' AND column_name = :c"
+                ), {"c": col})
+                present[f"leads.{col}"] = res.first() is not None
             info["schema"] = present
     except Exception as exc:  # noqa: BLE001
         info["status"] = "error"
         info["error"] = repr(exc)
     return info
+
+
+@app.get("/health/db/repair")
+async def health_db_repair():
+    """On-demand schema repair — force-adds the Phase-1 admission columns.
+
+    Unauthenticated and idempotent (ADD COLUMN IF NOT EXISTS), so it is
+    safe to hit from a browser. Each column is added in its own
+    transaction via a raw connection, completely independent of alembic
+    state — so this fixes the "column leads.parent_name does not exist"
+    error even when the alembic version chain is stuck.
+
+    Returns per-column results so you can see exactly what happened
+    without digging through rate-limited deploy logs.
+    """
+    from sqlalchemy import text as _text
+    from core.database import engine as _engine
+
+    cols = [
+        ("parent_name",       "VARCHAR"),
+        ("parent_phone",      "VARCHAR"),
+        ("course_interested", "VARCHAR"),
+        ("board",             "VARCHAR"),
+        ("stream",            "VARCHAR"),
+        ("percentage_marks",  "DOUBLE PRECISION"),
+        ("school_name",       "VARCHAR"),
+    ]
+    results: dict = {}
+    for col, typ in cols:
+        try:
+            async with _engine.begin() as conn:
+                await conn.execute(_text(
+                    f"ALTER TABLE leads ADD COLUMN IF NOT EXISTS {col} {typ}"
+                ))
+            results[col] = "ok"
+        except Exception as exc:  # noqa: BLE001
+            results[col] = f"error: {exc!r}"
+
+    ok = sum(1 for v in results.values() if v == "ok")
+    return {
+        "status": "ok" if ok == len(cols) else "partial",
+        "added_or_present": f"{ok}/{len(cols)}",
+        "columns": results,
+        "next": "Reload the Leads page — it should work now.",
+    }
