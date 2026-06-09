@@ -75,15 +75,21 @@ export function useImportDiscoveredLeads() {
 // ─── Static data ─────────────────────────────────────────────────────────────
 
 export const SECTOR_ROLES: Record<string, string[]> = {
-  it_ites: ['CTO', 'VP Engineering', 'Head of Technology', 'CEO', 'Founder', 'Technical Director', 'Engineering Manager', 'Co-Founder'],
-  education: ['Principal', 'Director', 'Academic Head', 'Vice Chancellor', 'L&D Manager', 'Training Manager', 'Head of Learning', 'Dean'],
-  marketing_media: ['Founder', 'CEO', 'Marketing Director', 'Head of Growth', 'Creative Director', 'Managing Director', 'CMO'],
+  it_ites:          ['CTO', 'VP Engineering', 'Head of Technology', 'CEO', 'Founder', 'Technical Director', 'Engineering Manager', 'Co-Founder'],
+  education:        ['Principal', 'Director', 'Academic Head', 'Vice Chancellor', 'L&D Manager', 'Training Manager', 'Head of Learning', 'Dean'],
+  college:          ['Principal', 'Dean', 'Vice Chancellor', 'Registrar', 'Director of Admissions', 'Head of Department', 'Academic Director', 'Pro-Vice Chancellor'],
+  software:         ['CEO', 'CTO', 'Founder', 'Co-Founder', 'VP Product', 'VP Engineering', 'Head of Sales', 'Product Manager', 'Chief Product Officer'],
+  manufacturing:    ['Plant Head', 'Operations Manager', 'MD', 'CEO', 'GM Manufacturing', 'Quality Head', 'Purchase Manager', 'Plant Manager', 'Director Operations'],
+  marketing_media:  ['Founder', 'CEO', 'Marketing Director', 'Head of Growth', 'Creative Director', 'Managing Director', 'CMO'],
 }
 
 export const DEFAULT_ROLES: Record<string, string[]> = {
-  it_ites: ['CTO', 'VP Engineering', 'CEO', 'Founder'],
-  education: ['Principal', 'Director', 'Academic Head'],
-  marketing_media: ['Founder', 'CEO', 'Marketing Director'],
+  it_ites:          ['CTO', 'VP Engineering', 'CEO', 'Founder'],
+  education:        ['Principal', 'Director', 'Academic Head'],
+  college:          ['Principal', 'Dean', 'Vice Chancellor', 'Registrar'],
+  software:         ['CEO', 'CTO', 'Founder', 'Co-Founder'],
+  manufacturing:    ['Plant Head', 'Operations Manager', 'MD', 'CEO'],
+  marketing_media:  ['Founder', 'CEO', 'Marketing Director'],
 }
 
 export const INDIAN_STATES = [
@@ -104,6 +110,9 @@ export const COMPANY_SIZES = [
 ]
 
 export const SECTOR_OPTIONS = [
+  { value: 'college',          label: 'Colleges & Universities' },
+  { value: 'software',         label: 'Software Products & SaaS' },
+  { value: 'manufacturing',    label: 'Manufacturing' },
   { value: 'it_ites',          label: 'IT & Software' },
   { value: 'education',        label: 'Education & EdTech' },
   { value: 'marketing_media',  label: 'Marketing & Agencies' },

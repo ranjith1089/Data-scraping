@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 class DiscoverRequest(BaseModel):
     """Search Apollo.io for potential leads matching the given criteria."""
 
-    sector_code: str = "it_ites"
+    sector_code: str = "college"
     # Job titles to target. If empty, the service uses sector defaults.
     target_roles: List[str] = Field(default_factory=list)
     # Indian state name (e.g. "Tamil Nadu", "Karnataka"). None → all India.

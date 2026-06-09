@@ -32,6 +32,50 @@ _HTTP_TIMEOUT = 20.0
 # ---------------------------------------------------------------------------
 
 _SECTOR_CONFIGS: dict[str, dict] = {
+    # ── Core three industries ────────────────────────────────────────────────────
+    "college": {
+        "keywords": [
+            "college", "university", "deemed university", "autonomous college",
+            "engineering college", "medical college", "professional institution",
+            "higher education", "degree college", "NAAC", "NBA accredited",
+        ],
+        "default_titles": [
+            "Principal", "Dean", "Vice Chancellor", "Pro-Vice Chancellor",
+            "Registrar", "Director of Admissions",
+            "Head of Department", "HOD", "Academic Director",
+            "Controller of Examinations", "Director",
+        ],
+    },
+    "software": {
+        "keywords": [
+            "software product", "saas", "software company", "b2b saas",
+            "product startup", "tech startup", "isv", "independent software vendor",
+            "cloud software", "enterprise software", "platform company",
+        ],
+        "default_titles": [
+            "CEO", "Founder", "Co-Founder",
+            "CTO", "Chief Technology Officer",
+            "VP Product", "VP of Product", "Chief Product Officer", "CPO",
+            "VP Engineering", "VP of Engineering",
+            "Head of Sales", "VP Sales",
+        ],
+    },
+    "manufacturing": {
+        "keywords": [
+            "manufacturing", "industrial", "factory", "production", "oem",
+            "fabrication", "process industry", "auto component", "engineering company",
+            "ISO certified manufacturer",
+        ],
+        "default_titles": [
+            "Plant Head", "Plant Manager",
+            "Operations Manager", "Head of Operations",
+            "General Manager Manufacturing", "GM Manufacturing",
+            "MD", "Managing Director", "CEO",
+            "Quality Head", "Head of Quality",
+            "Purchase Manager", "Director Operations",
+        ],
+    },
+    # ── Additional industries ────────────────────────────────────────────────────
     "it_ites": {
         "keywords": ["software", "saas", "information technology", "it services", "tech startup", "product company"],
         "default_titles": [
