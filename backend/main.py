@@ -180,21 +180,19 @@ async def _run_migrations() -> None:
 async def _ensure_schema() -> None:
     """Direct DDL safety-net that runs AFTER alembic.
 
-    When alembic works correctly this is entirely a no-op (IF NOT EXISTS
-    is a cheap catalogue check).  When alembic is stuck — e.g. migration
-    013 partially applied some tables on a previous deploy, causing every
-    subsequent ``upgrade head`` to fail with "table already exists" and
-    leaving the version pinned at 012 — this function still adds the
-    columns the app needs so users aren't blocked.
+    Uses engine.begin() (raw async connection, no ORM) so it is
+    completely independent of session/transaction state. Each column is
+    attempted in its own transaction so one failure doesn't block others.
 
-    Only idempotent statements (ALTER TABLE ... ADD COLUMN IF NOT EXISTS)
-    are used here; nothing can break the schema if it runs twice.
+    asyncpg does not allow multi-statement strings — every op.execute()
+    in the migrations must be a single statement.  This function also
+    serves as a guaranteed fallback when alembic is stuck.
     """
     from sqlalchemy import text as _text
-    from core.database import AsyncSessionLocal as _ASL
+    from core.database import engine as _engine
 
-    # Phase 1: student-admission columns added by migration 017
-    _admission_cols = [
+    # Phase 1: student-admission columns (migration 017)
+    _cols = [
         ("parent_name",       "VARCHAR"),
         ("parent_phone",      "VARCHAR"),
         ("course_interested", "VARCHAR"),
@@ -203,16 +201,22 @@ async def _ensure_schema() -> None:
         ("percentage_marks",  "DOUBLE PRECISION"),
         ("school_name",       "VARCHAR"),
     ]
-    try:
-        async with _ASL() as _s:
-            for _col, _typ in _admission_cols:
-                await _s.execute(_text(
+    _ok, _fail = [], []
+    for _col, _typ in _cols:
+        try:
+            async with _engine.begin() as _conn:
+                await _conn.execute(_text(
                     f"ALTER TABLE leads ADD COLUMN IF NOT EXISTS {_col} {_typ}"
                 ))
-            await _s.commit()
-        print("[startup] schema safety-net: admission columns OK", flush=True)
-    except Exception as _exc:
-        print(f"[startup] schema safety-net error: {_exc!r}", flush=True)
+            _ok.append(_col)
+        except Exception as _exc:
+            _fail.append(_col)
+            print(f"[startup] schema safety-net col {_col} FAILED: {_exc!r}", flush=True)
+    print(
+        f"[startup] schema safety-net: {len(_ok)}/{len(_cols)} cols added"
+        f" ok={_ok} fail={_fail}",
+        flush=True,
+    )
 
 
 @asynccontextmanager

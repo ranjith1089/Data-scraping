@@ -95,14 +95,11 @@ def upgrade() -> None:
     op.create_index("ix_deal_activities_deal", "deal_activities", ["deal_id"])
     op.create_index("ix_deal_activities_tenant", "deal_activities", ["tenant_id"])
 
+    op.execute("ALTER TABLE deal_activities ENABLE ROW LEVEL SECURITY")
     op.execute(
-        """
-        ALTER TABLE deal_activities ENABLE ROW LEVEL SECURITY;
-
-        CREATE POLICY deal_activities_tenant_isolation
-          ON deal_activities
-          USING (tenant_id = current_setting('app.current_tenant', true)::uuid);
-        """
+        "CREATE POLICY deal_activities_tenant_isolation"
+        " ON deal_activities"
+        " USING (tenant_id = current_setting('app.current_tenant', true)::uuid)"
     )
 
 

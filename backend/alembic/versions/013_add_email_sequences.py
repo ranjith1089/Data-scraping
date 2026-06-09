@@ -69,15 +69,12 @@ def upgrade() -> None:
     op.create_index("ix_email_sequences_tenant", "email_sequences", ["tenant_id"])
     op.create_index("ix_email_sequences_status", "email_sequences", ["status"])
 
-    # RLS
+    # RLS — split into separate calls; asyncpg rejects multi-statement strings
+    op.execute("ALTER TABLE email_sequences ENABLE ROW LEVEL SECURITY")
     op.execute(
-        """
-        ALTER TABLE email_sequences ENABLE ROW LEVEL SECURITY;
-
-        CREATE POLICY email_sequences_tenant_isolation
-          ON email_sequences
-          USING (tenant_id = current_setting('app.current_tenant', true)::uuid);
-        """
+        "CREATE POLICY email_sequences_tenant_isolation"
+        " ON email_sequences"
+        " USING (tenant_id = current_setting('app.current_tenant', true)::uuid)"
     )
 
     # ── email_sequence_steps ──────────────────────────────────────────────────
@@ -146,14 +143,11 @@ def upgrade() -> None:
         ["tenant_id"],
     )
 
+    op.execute("ALTER TABLE email_sequence_steps ENABLE ROW LEVEL SECURITY")
     op.execute(
-        """
-        ALTER TABLE email_sequence_steps ENABLE ROW LEVEL SECURITY;
-
-        CREATE POLICY email_sequence_steps_tenant_isolation
-          ON email_sequence_steps
-          USING (tenant_id = current_setting('app.current_tenant', true)::uuid);
-        """
+        "CREATE POLICY email_sequence_steps_tenant_isolation"
+        " ON email_sequence_steps"
+        " USING (tenant_id = current_setting('app.current_tenant', true)::uuid)"
     )
 
     # ── email_sequence_enrollments ────────────────────────────────────────────
@@ -246,14 +240,11 @@ def upgrade() -> None:
         ["sequence_id", "lead_id"],
     )
 
+    op.execute("ALTER TABLE email_sequence_enrollments ENABLE ROW LEVEL SECURITY")
     op.execute(
-        """
-        ALTER TABLE email_sequence_enrollments ENABLE ROW LEVEL SECURITY;
-
-        CREATE POLICY email_sequence_enrollments_tenant_isolation
-          ON email_sequence_enrollments
-          USING (tenant_id = current_setting('app.current_tenant', true)::uuid);
-        """
+        "CREATE POLICY email_sequence_enrollments_tenant_isolation"
+        " ON email_sequence_enrollments"
+        " USING (tenant_id = current_setting('app.current_tenant', true)::uuid)"
     )
 
     # ── email_sequence_logs ───────────────────────────────────────────────────
@@ -323,14 +314,11 @@ def upgrade() -> None:
         ["tenant_id"],
     )
 
+    op.execute("ALTER TABLE email_sequence_logs ENABLE ROW LEVEL SECURITY")
     op.execute(
-        """
-        ALTER TABLE email_sequence_logs ENABLE ROW LEVEL SECURITY;
-
-        CREATE POLICY email_sequence_logs_tenant_isolation
-          ON email_sequence_logs
-          USING (tenant_id = current_setting('app.current_tenant', true)::uuid);
-        """
+        "CREATE POLICY email_sequence_logs_tenant_isolation"
+        " ON email_sequence_logs"
+        " USING (tenant_id = current_setting('app.current_tenant', true)::uuid)"
     )
 
 
