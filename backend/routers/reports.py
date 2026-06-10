@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta, timezone, date
+from functools import wraps
 from typing import Optional
 from uuid import UUID
 
@@ -57,9 +58,75 @@ def _months_ago(n: int, ref: datetime | None = None) -> datetime:
     return ref.replace(year=year, month=month, day=1, hour=0, minute=0, second=0, microsecond=0)
 
 
+_SCORE_BUCKETS = ["0–19", "20–39", "40–59", "60–79", "80–100"]
+
+
+def _empty_leads(days: int = 90, **_):
+    return {
+        "growth": [], "by_sector": [], "by_stage": [],
+        "by_score": [{"bucket": b, "count": 0} for b in _SCORE_BUCKETS],
+        "by_icp": [],
+        "totals": {"total": 0, "with_email": 0, "with_phone": 0, "enriched": 0, "hot": 0},
+        "days": days, "degraded": True,
+    }
+
+
+def _empty_revenue(months: int = 12, **_):
+    return {
+        "monthly_won": [], "win_loss_trend": [], "pipeline_by_stage": [],
+        "status_counts": {"open": 0, "won": 0, "lost": 0, "on_hold": 0},
+        "avg_deal_size": 0.0, "top_deals": [], "months": months, "degraded": True,
+    }
+
+
+def _empty_outreach(**_):
+    return {
+        "email_campaigns": [],
+        "whatsapp": {"total": 0, "sent": 0, "delivered": 0, "read": 0,
+                     "received": 0, "failed": 0, "pending": 0, "reply_rate": 0},
+        "linkedin": {"total": 0, "pending": 0, "sent": 0, "connected": 0,
+                     "replied": 0, "connection_rate": 0, "reply_rate": 0},
+        "email_sequences": {"total_sequences": 0, "active_enrollments": 0, "completed": 0,
+                            "paused": 0, "total_enrollments": 0, "emails_sent": 0,
+                            "replied": 0, "completion_rate": 0, "reply_rate": 0},
+        "channel_summary": [], "degraded": True,
+    }
+
+
+def _empty_activities(weeks: int = 8, **_):
+    return {"weekly": [], "by_type": [], "recent": [], "weeks": weeks, "degraded": True}
+
+
+def _resilient(empty_factory):
+    """Decorator: if a report endpoint raises (e.g. a table from a not-yet-
+    applied migration is missing), roll the session back and return a
+    valid empty-shaped payload tagged ``degraded`` instead of a 500. The
+    Reports page then renders (empty) rather than showing the error screen,
+    and self-heals to real data once the underlying tables exist. The real
+    exception is logged for diagnosis.
+    """
+    def deco(fn):
+        @wraps(fn)
+        async def wrapper(*args, **kwargs):
+            try:
+                return await fn(*args, **kwargs)
+            except Exception:
+                logger.exception("reports: %s failed — returning degraded payload", fn.__name__)
+                db = kwargs.get("db")
+                if db is not None:
+                    try:
+                        await db.rollback()
+                    except Exception:
+                        pass
+                return empty_factory(**kwargs)
+        return wrapper
+    return deco
+
+
 # ─── Lead report ──────────────────────────────────────────────────────────────
 
 @router.get("/leads")
+@_resilient(_empty_leads)
 async def leads_report(
     days: int = 90,
     db: AsyncSession = Depends(get_db),
@@ -94,14 +161,16 @@ async def leads_report(
     ]
 
     # ── by sector ─────────────────────────────────────────────────────────────
+    # NOTE: the column is `sector_code` (not `sector`) — using the wrong name
+    # raised AttributeError and 500'd the entire Leads report.
     sector_rows = await db.execute(
-        select(Lead.sector, func.count(Lead.id).label("count"))
-        .where(Lead.tenant_id == tenant_id, Lead.sector.isnot(None))
-        .group_by(Lead.sector)
+        select(Lead.sector_code, func.count(Lead.id).label("count"))
+        .where(Lead.tenant_id == tenant_id, Lead.sector_code.isnot(None))
+        .group_by(Lead.sector_code)
         .order_by(func.count(Lead.id).desc())
         .limit(10)
     )
-    by_sector = [{"sector": r.sector, "count": r.count} for r in sector_rows.fetchall()]
+    by_sector = [{"sector": r.sector_code, "count": r.count} for r in sector_rows.fetchall()]
 
     # ── by stage ──────────────────────────────────────────────────────────────
     stage_rows = await db.execute(
@@ -131,13 +200,14 @@ async def leads_report(
     by_score = [{"bucket": b, "count": raw_scores.get(b, 0)} for b in bucket_order]
 
     # ── by ICP fit ────────────────────────────────────────────────────────────
+    # NOTE: the column is `icp_match` (not `icp_fit`).
     icp_rows = await db.execute(
-        select(Lead.icp_fit, func.count(Lead.id).label("count"))
-        .where(Lead.tenant_id == tenant_id, Lead.icp_fit.isnot(None))
-        .group_by(Lead.icp_fit)
+        select(Lead.icp_match, func.count(Lead.id).label("count"))
+        .where(Lead.tenant_id == tenant_id, Lead.icp_match.isnot(None))
+        .group_by(Lead.icp_match)
         .order_by(func.count(Lead.id).desc())
     )
-    by_icp = [{"icp_fit": r.icp_fit, "count": r.count} for r in icp_rows.fetchall()]
+    by_icp = [{"icp_fit": r.icp_match, "count": r.count} for r in icp_rows.fetchall()]
 
     # ── totals ────────────────────────────────────────────────────────────────
     total = await db.scalar(select(func.count(Lead.id)).where(Lead.tenant_id == tenant_id)) or 0
@@ -168,6 +238,7 @@ async def leads_report(
 # ─── Revenue report ───────────────────────────────────────────────────────────
 
 @router.get("/revenue")
+@_resilient(_empty_revenue)
 async def revenue_report(
     months: int = 12,
     db: AsyncSession = Depends(get_db),
@@ -319,6 +390,7 @@ async def revenue_report(
 # ─── Outreach report ──────────────────────────────────────────────────────────
 
 @router.get("/outreach")
+@_resilient(_empty_outreach)
 async def outreach_report(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -468,6 +540,7 @@ async def outreach_report(
 # ─── Activity report ──────────────────────────────────────────────────────────
 
 @router.get("/activities")
+@_resilient(_empty_activities)
 async def activities_report(
     weeks: int = 8,
     db: AsyncSession = Depends(get_db),
