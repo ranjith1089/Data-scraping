@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from typing import List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -139,6 +139,7 @@ async def delete_form(
 @router.get("/{form_id}/embed", response_model=PublicFormEmbed)
 async def get_embed_snippets(
     form_id: UUID,
+    request: Request,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -151,7 +152,18 @@ async def get_embed_snippets(
     form = result.scalar_one_or_none()
     if not form:
         raise HTTPException(status_code=404, detail="Form not found")
-    base = (settings.PUBLIC_BASE_URL or "https://YOUR_BACKEND").rstrip("/")
+
+    # Resolve the public base URL for the embed snippets. Prefer an explicit
+    # PUBLIC_BASE_URL, but fall back to the real request host when it's unset
+    # or still pointing at localhost (the common production case where the env
+    # var was never configured). request.base_url honours the proxy headers
+    # uvicorn applies on Railway, so it resolves to the real https backend URL
+    # — never the hardcoded localhost that ends up in customers' embed code.
+    configured = (settings.PUBLIC_BASE_URL or "").rstrip("/")
+    if not configured or "localhost" in configured or "127.0.0.1" in configured:
+        base = str(request.base_url).rstrip("/")
+    else:
+        base = configured
     submit_url = f"{base}/api/v1/public/forms/{form.public_token}/submit"
     script_snippet = (
         f'<script async\n'
